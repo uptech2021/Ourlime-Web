@@ -37,7 +37,7 @@
     "events": "^3.3.0",
     "firebase": "^10.13.2",
     "firebase-tools": "^13.19.0",
-    "framer-motion": "^11.8.0",
+    "framer-motion": "^11.9.0",
     "gsap": "^3.12.5",
     "ldrs": "^1.0.2",
     "leaflet": "^1.9.4",
