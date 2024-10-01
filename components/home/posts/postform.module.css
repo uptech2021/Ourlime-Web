@@ -1,0 +1,33 @@
+.iconsLayout{
+  @apply w-full sm:w-auto flex justify-evenly sm:flex-col sm:gap-2;
+}
+
+.iconWrapper{
+    @apply sm:px-3 sm:w-full rounded-sm sm:flex sm:flex-row sm:items-center gap-3 sm:mr-5 bg-gray-100 cursor-pointer;
+}
+
+.icon{
+    @apply p-1 w-10 h-8 cursor-pointer rounded-sm text-xl bg-gray-100 text-green-400;
+}
+
+.iconType{
+    @apply hidden sm:inline text-sm;
+}
+
+.filterIcons{
+    @apply p-2 text-sm flex flex-row items-center justify-center gap-1 bg-gray-200 rounded-full cursor-pointer;
+}
+
+.filterIcons:first-child{
+    @apply p-2;
+}
+.filterIcons:last-child{
+    @apply p-0;
+}
+
+.filterIcons:last-child svg{
+    @apply ml-1;
+}
+.filterIcons:last-child span{
+    @apply mr-1;
+}

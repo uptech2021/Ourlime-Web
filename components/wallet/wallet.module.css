@@ -1,0 +1,4 @@
+.noSpinners {
+  @apply [appearance:textfield] [-moz-appearance:textfield] [&::-webkit-inner-spin-button]:appearance-none [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:m-0 [&::-webkit-outer-spin-button]:m-0 
+  overflow-visible outline-none text-6xl text-gray-500 transition-[width] duration-200 ease-in-out;
+}

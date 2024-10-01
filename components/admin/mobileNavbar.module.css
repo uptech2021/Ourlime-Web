@@ -1,0 +1,6 @@
+.listItem {
+  @apply flex flex-row items-center text-[#ffffffb3] list-none p-[5%] relative cursor-pointer z-10;
+}
+.mobileListItem{
+    @apply flex flex-row items-center text-white/70 list-none p-5 gap-5 relative cursor-pointer z-10;
+}

@@ -1,0 +1,14 @@
+.mobileBtn {
+    @apply bg-gray-200 border border-gray-300 rounded px-2 py-1 cursor-pointer text-xs;
+  }
+  .pcBtn {
+    @apply bg-gray-200 border border-gray-300 rounded px-2 py-1 cursor-pointer text-sm;
+  }
+  .BtnActive {
+    @apply bg-redTheme text-white;
+  }
+  
+  .BtnInactive {
+    @apply text-black;
+  }
+  

@@ -1,0 +1,7 @@
+.filterButtons{
+    @apply bg-none px-4 py-2 bg-gray-200 text-gray-700 hover:bg-gray-300 w-full sm:w-auto
+}
+
+.active{
+    @apply bg-[#4caf50] text-white
+}

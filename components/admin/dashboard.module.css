@@ -1,0 +1,8 @@
+.stats{
+    @apply p-2 mb-2 bg-white rounded-xl flex flex-col items-start shadow-lg cursor-pointer;
+}
+
+.statsIcon{
+    @apply w-8 h-8 p-2 text-xl rounded-full
+}
+

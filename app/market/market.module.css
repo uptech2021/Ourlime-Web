@@ -1,0 +1,26 @@
+/* Default horizontal layout */
+.button-container {
+  @apply flex flex-row; 
+}
+
+@media (max-width: 768px) { 
+  .button-container {
+    @apply flex flex-col; /* Vertical layout for mobile */
+  }
+}
+.typeBtn{
+    @apply bg-none py-2 px-4 shadow-md border-0 cursor-pointer text-wrap;
+    font-size: 14px; /* Default font size */
+}
+
+@media (max-width: 768px) { 
+  .typeBtn {
+    font-size: 12px; /* Smaller font size for mobile */
+  }
+}
+
+
+
+.active{
+    @apply bg-[#4caf50] text-white;
+}
