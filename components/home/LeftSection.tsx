@@ -1,10 +1,16 @@
-import Image from 'next/image';
-import ourlimeImage from '@/public/images/logo.png';
 import userPicture from '@/public/images/home/userPicture.png';
-import { useState } from 'react';
+import { ProfileData, UserData } from '@/types/global';
 import { Avatar, Input, Skeleton } from '@nextui-org/react';
 import { Settings, Users } from 'lucide-react';
-export default function LeftSection() {
+import Image from 'next/image';
+import { useState } from 'react';
+
+type LeftSectionProps = {
+	user: UserData;
+	profile: ProfileData;
+};
+
+export default function LeftSection({user, profile}: LeftSectionProps) {
 	const [searchQuery, setSearchQuery] = useState('');
 	const filteredNames = [
 		'Aaron Hazzard',
@@ -20,7 +26,7 @@ export default function LeftSection() {
 			<div className="flex flex-col items-center rounded-xl bg-white p-5 shadow-md">
 				<div className="w-1/2 rounded-full p-1">
 					<Avatar
-						src={ourlimeImage.src}
+						src={profile.profilePicture}
 						alt="profile picture"
 						className="h-full w-full"
 						isBordered
@@ -30,20 +36,22 @@ export default function LeftSection() {
 					/>
 				</div>
 				<div className="w-full text-center">
-					<p className="mb-0 text-xl font-semibold">Ourlime Admin</p>
-					<p className="mt-0 text-gray-500">@ourlime_admin</p>
+					<p className="mb-0 text-xl font-semibold">
+						{profile.firstName} {profile.lastName}
+					</p>
+					<p className="mt-0 text-gray-500">@{user.userName}</p>
 				</div>
 				<div className="mt-4 flex w-full justify-center gap-5">
 					<div className="text-center">
-						<p className="text-sm font-medium">11</p>
+						<p className="text-sm font-medium">{profile.following || 0}</p>
 						<p className="text-gray-700">Following</p>
 					</div>
 					<div className="text-center">
-						<p className="text-sm font-medium">16</p>
+						<p className="text-sm font-medium">{profile.posts || 0}</p>
 						<p className="text-gray-700">Posts</p>
 					</div>
 					<div className="text-center">
-						<p className="text-sm font-medium">6</p>
+						<p className="text-sm font-medium">{profile.followers || 0}</p>
 						<p className="text-gray-700">Followers</p>
 					</div>
 				</div>
@@ -59,7 +67,7 @@ export default function LeftSection() {
 					<form className="flex w-full justify-center px-3">
 						<Input
 							type="text"
-							labelPlacement='outside'
+							labelPlacement="outside"
 							label="Search"
 							value={searchQuery}
 							onChange={(e) => setSearchQuery(e.target.value)}

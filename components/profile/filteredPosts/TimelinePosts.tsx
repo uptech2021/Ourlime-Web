@@ -1,3 +1,4 @@
+import { formatDate } from '@/helpers/Posts';
 import { SocialPosts } from '@/types/global';
 import {
 	Avatar,
@@ -11,6 +12,7 @@ import React from 'react';
 import ReactPlayer from 'react-player';
 
 export default function TimelinePosts({ timelinePosts }: { timelinePosts: SocialPosts[] }) {
+
 	return (
 		<div>
 			{timelinePosts.map((post, index) => (
@@ -29,7 +31,7 @@ export default function TimelinePosts({ timelinePosts }: { timelinePosts: Social
 							/>
 						</div>
 						<p className="text-lg font-semibold">{post.username}</p>
-						<p className="ml-auto text-sm text-gray-500">{post.time}</p>
+						<p className="ml-auto text-sm text-gray-500">{formatDate(post.time)}</p>
 					</div>
 					<div className="mt-3">
 						<p className="text-base">{post.content}</p>

@@ -25,7 +25,7 @@ export default function LoginPage() {
 				setLoading(false);
 			})
 			.catch((error) => {
-				console.error('Error during home redirect:', error);
+				// console.error('Error during home redirect:', error);
 				setLoading(false);
 			});
 	}, [router]);
@@ -57,15 +57,15 @@ export default function LoginPage() {
 			const user = userCredential.user;
 
 			if (!user.emailVerified) {
-				console.log('Email not verified');
+				// console.log('Email not verified');
 				setError('Please verify your email before logging in.');
 				return;
 			}
 
-			console.log(user.emailVerified, ' is verified');
+			// console.log(user.emailVerified, ' is verified');
     		window.location.replace('/');
 		} catch (error: any) {
-			console.error('Login error', error.code);
+			// console.error('Login error', error.code);
 			switch (error.code) {
 				case 'auth/user-not-found':
 					setError('No user found with this email.');

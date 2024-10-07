@@ -1,88 +1,150 @@
 'use client';
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Button, Input } from "@nextui-org/react";
+import SettingsSidebar from "@/components/settings/nav/page";
+import { doc, setDoc, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/firebaseConfig';
+import { ResizeListener } from '@/helpers/Resize';
+import { useRouter } from 'next/navigation';
+import { loginRedirect } from '@/helpers/Auth';
 
 export default function Social() {
-	const [Fname, setFName] = useState('');
-	const [Tname, setTName] = useState('');
-	const [Vname, setVName] = useState('');
-	const [Lname, setLName] = useState('');
-	const [Iname, setIName] = useState('');
-	const [Yname, setYName] = useState('');
+  const [socialLinks, setSocialLinks] = useState({
+    facebook: '',
+    twitter: '',
+    vkontakte: '',
+    linkedin: '',
+    instagram: '',
+    youtube: ''
+  });
+  const router = useRouter();
+  const [, setIsPc] = useState<boolean>(false);
+  const user = auth;
+  const [isLoading, setIsLoading] = useState(false);
 
- 
-  const [showSuccessMessage, setShowSuccessMessage] = useState(false); 
-  const handleSave = () => {
-   
-    setShowSuccessMessage(true);
-    setTimeout(() => {
-      setShowSuccessMessage(false);
-    }, 3000); 
+
+  const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  useEffect(() => {
+    const fetchSocialLinks = async () => {
+      const user = auth.currentUser;
+      if (user) {
+        const docRef = doc(db, 'profiles', user.uid);
+        const docSnap = await getDoc(docRef);
+        if (docSnap.exists() && docSnap.data().social) {
+          setSocialLinks(docSnap.data().social);
+        }
+      }
+    };
+
+    fetchSocialLinks();
+  }, []);
+
+  const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    const { name, value } = e.target;
+    setSocialLinks(prev => ({ ...prev, [name]: value }));
   };
-	return (
-		<>
-			<main className="flex min-h-screen flex-col items-center bg-gray-200 text-center">
-				<h2 className="mb-4 mr-[10rem] lg:mr-[20rem] pt-8 text-left text-2xl font-semibold text-gray-700">
-					Social Links
-				</h2>
-				<div className="mx-auto w-[90%] lg:w-[30rem] rounded-lg bg-white p-4 shadow-md">
-					<div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-4">
-					{showSuccessMessage && (
-          <div className="success mb-4 rounded bg-green-100 p-1 text-sm font-semibold text-green-500">
-            Social saved successfully!
-          </div>
-        )}
-						<Input
-							type="text"
-							placeholder="Facebook Username"
-							onChange={(e) => setFName(e.target.value)}
-							
-						/>
-						<Input
-							type="text"
-							placeholder="Twitter Username"
-							onChange={(e) => setTName(e.target.value)}
-							
-						/>
-					</div>
-					<div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-4">
-						<Input
-							type="text"
-							placeholder="Vkontakte Username"
-							onChange={(e) => setVName(e.target.value)}
-							
-						/>
-						<Input
-							type="text"
-							placeholder="Linkedin Username"
-							onChange={(e) => setLName(e.target.value)}
-							
-						/>
-					</div>
-					<div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-4">
-						<Input
-							type="text"
-							placeholder="Instagram Username"
-							onChange={(e) => setIName(e.target.value)}
-							
-						/>
-						<Input
-							type="text"
-							placeholder="Youtube Username"
-							onChange={(e) => setYName(e.target.value)}
-							
-						/>
-					</div>
 
-					<Button 
-		className={`mt-4 mx-auto rounded px-4 py-2 text-white ${!Fname || !Vname || !Yname || !Iname || !Tname || !Lname ? 'bg-none' : ''}`}
-		isDisabled={!Fname || !Vname || !Yname || !Iname || !Tname || !Lname}
-		onClick={handleSave}
-        >
-          Save
-        </Button>
-				</div>
-			</main>
-		</>
-	);
+  const handleSave = async () => {
+    setIsLoading(true);
+    const user = auth.currentUser;
+    if (user) {
+      const docRef = doc(db, 'profiles', user.uid);
+      await setDoc(docRef, { social: socialLinks }, { merge: true });
+      setShowSuccessMessage(true);
+      setTimeout(() => {
+        setShowSuccessMessage(false);
+      }, 3000);
+    }
+    setIsLoading(false);
+  };
+
+
+  const isFormValid = Object.values(socialLinks).some(value => value !== '');
+
+  useEffect(() => {
+    loginRedirect(router)
+    const cleanup = ResizeListener(setIsPc)
+    return () => cleanup()
+  }, [router])
+
+  if (!user.currentUser) return <></>
+
+  else return (
+    <div className='flex flex-row bg-gray-200 min-h-screen'>
+      <SettingsSidebar />
+
+      <main className="flex flex-col text-center mx-auto">
+        <div className="text-gray-600 bg-white p-4 rounded-lg shadow-md mx-auto w-[90%] md:w-[40rem] mt-8">
+          <h2 className="mb-4 mr-[10rem] lg:mr-[20rem] pt-8 text-left text-2xl font-semibold text-gray-700">
+            Social Links
+          </h2>
+
+          {showSuccessMessage && (
+            <div className="success mb-4 rounded bg-green-100 p-1 text-sm font-semibold text-green-500">
+              Social links saved successfully!
+            </div>
+          )}
+
+          <div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-4">
+            <Input
+              type="text"
+              name="facebook"
+              placeholder="Facebook Username"
+              value={socialLinks.facebook}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="text"
+              name="twitter"
+              placeholder="Twitter Username"
+              value={socialLinks.twitter}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-4">
+            <Input
+              type="text"
+              name="vkontakte"
+              placeholder="Vkontakte Username"
+              value={socialLinks.vkontakte}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="text"
+              name="linkedin"
+              placeholder="Linkedin Username"
+              value={socialLinks.linkedin}
+              onChange={handleInputChange}
+            />
+          </div>
+          <div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-4">
+            <Input
+              type="text"
+              name="instagram"
+              placeholder="Instagram Username"
+              value={socialLinks.instagram}
+              onChange={handleInputChange}
+            />
+            <Input
+              type="text"
+              name="youtube"
+              placeholder="Youtube Username"
+              value={socialLinks.youtube}
+              onChange={handleInputChange}
+            />
+          </div>
+
+          <Button
+            className={`mt-4 mx-auto rounded px-4 py-2 text-white ${isFormValid ? 'bg-green-500' : 'bg-gray-300'}`}
+            isDisabled={!isFormValid || isLoading}
+            onClick={handleSave}
+          >
+            {isLoading ? 'Loading...' : 'Save'}
+          </Button>
+
+        </div>
+      </main>
+    </div>
+  );
 }

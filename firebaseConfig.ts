@@ -33,9 +33,9 @@ export const storage: FirebaseStorage = getStorage(app)
 onAuthStateChanged(auth, (user: User | null) => {
   if (user) {
     // If the 'user' object is not null, it means a user is signed in
-    console.log("user logged in");
+    // console.log("user logged in");
   } else {
     // If the 'user' object is null, it means no user is signed in
-    console.log("user logged out");
+    // console.log("user logged out");
   }
 });

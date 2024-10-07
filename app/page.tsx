@@ -11,9 +11,9 @@ import PostFilter from '@/components/home/posts/PostFilter';
 import PostForm from '@/components/home/posts/PostForm';
 import Posts from '@/components/home/posts/Posts';
 import { db } from '@/firebaseConfig';
-import { loginRedirect } from '@/helpers/Auth';
+import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { ResizeListener } from '@/helpers/Resize';
-import { SocialPosts, Stories } from '@/types/global';
+import { ProfileData, SocialPosts, Stories, UserData } from '@/types/global';
 import { collection, getDocs } from 'firebase/firestore';
 import { BookImage, UsersRound } from 'lucide-react';
 import { useRouter } from 'next/navigation';
@@ -28,7 +28,9 @@ export default function Home() {
 	const [showDropdown, setShowDropdown] = useState<boolean>(false);
 	const [selected, setSelected] = useState<string>('all');
 	const [selectedFilter, setSelectedFilter] = useState<string>('all');
-
+	const [postCreated, setPostCreated] = useState<boolean>(false); //Checks if a post was created
+	const [profile, setProfile] = useState<ProfileData>(null);
+	const [user, setUser] = useState<UserData>(null);
 	const [stories, setStories] = useState<Stories[]>([
 		{
 			id: '1',
@@ -71,32 +73,42 @@ export default function Home() {
 
 	const [loading, setLoading] = useState(true);
 
-	
   useEffect(() => {
-		loginRedirect(router, true)
-			.then(() => {
-				setLoading(false);
-			})
-			.catch((error) => {
-				console.error('Error during login redirect:', error);
-				setLoading(false);
-			});
-		
-			const fetchPosts = async () => {
-				try{
-					const getPosts = await getDocs(collection(db, 'posts'));
-					const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
-					setSocialPosts(postsData);
-					console.log(postsData)
-				}catch(error){
-					console.error('Error fetching posts:', error);
-				}
-			}
+		const initializeHome = async () => {
+			try {
+				const currentUser = await loginRedirect(router, true);
+				if (currentUser) {
+					const profileSnap = await fetchProfile(currentUser.uid);
+					const userSnap = await fetchUser(currentUser.uid)
+					setProfile(profileSnap.data() as ProfileData);
+					setUser(userSnap.data() as UserData);
 
-		fetchPosts();
-	const cleanup = ResizeListener(setIsPc);
+					const fetchPosts = async () => {
+						const getPosts = await getDocs(collection(db, 'posts'));
+						const postsData = getPosts.docs.map(
+							(doc) => doc.data() as SocialPosts
+						);
+						setSocialPosts(postsData);
+						setLoading(false);
+					};
+					fetchPosts();
+				}
+			} catch (error) {
+				console.error('Error initializing home:', error);
+				setLoading(false);
+			}
+		};
+
+		initializeHome();
+		const cleanup = ResizeListener(setIsPc);
 		return () => cleanup();
 	}, [router]);
+
+
+	  // Use this function to signal that a post was created
+	  const onPostCreated = () => {
+		setPostCreated((prev) => !prev); // Toggle postCreated state
+	  };
 
 	if (loading) {
 		return <div>Loading...</div>;
@@ -113,9 +125,13 @@ export default function Home() {
 			>
 				{/* Layout for larger screens */}
 				{isPc && (
-					<div className="relative mb-2 flex flex-row gap-5 overflow-y-hidden pl-5 pt-5">
-						<LeftSection />
+					<div className="relative mb-2 flex flex-row gap-5 overflow-hidden pl-5 pt-5">
+						<LeftSection user={user} profile={profile} />
 						<MiddleSection
+							profile={profile}
+							user={user}
+							socialPosts={socialPosts}
+							setSocialPosts={setSocialPosts}
 							togglePostForm={togglePostForm}
 							setTogglePostForm={setTogglePostForm}
 						/>
@@ -133,64 +149,47 @@ export default function Home() {
 									onClick={() => setViewCommunities((prev) => !prev)}
 									className="cursor-pointer text-gray-700"
 								>
-									View Communities
+									{!viewCommunities ? 'View Communities' : 'Hide Communities'}
 								</p>
 							</div>
 						</div>
 
 						<StoriesSlider stories={stories} setAddStory={setAddStory} />
+						{viewCommunities && <CommunitiesSlider />}
+
+						{/* Filter Posts */}
+						<div className="relative mt-8 flex flex-col">
+							<PostFilter
+								showDropdown={showDropdown}
+								setShowDropdown={setShowDropdown}
+								selected={selected}
+								setSelected={setSelected}
+							/>
+							{showDropdown && (
+								<div className="left-0 mt-1 w-2/3 rounded-md bg-white px-3 py-1 shadow-sm shadow-greenTheme sm:w-1/3">
+									<ul className="flex flex-col rounded-md text-sm text-black">
+										<li
+											onClick={() => setSelectedFilter('all')}
+											className={`${selectedFilter === 'all' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
+										>
+											<BookImage /> All Posts
+										</li>
+										<li
+											onClick={() => setSelectedFilter('following')}
+											className={`${selectedFilter === 'following' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
+										>
+											<UsersRound />
+											People I Follow
+										</li>
+									</ul>
+								</div>
+							)}
+						</div>
+
+						<CreatePost profilePicture={profile.profilePicture} setTogglePostForm={setTogglePostForm} />
+						<Posts socialPosts={socialPosts} selectedPost={selected} />
 					</div>
 				)}
-
-				<div className="relative flex flex-col">
-					{/* Filter Posts */}
-					<PostFilter
-						showDropdown={showDropdown}
-						setShowDropdown={setShowDropdown}
-						selected={selected}
-						setSelected={setSelected}
-					/>
-
-					{showDropdown && (
-						<div className="left-0 mt-1 w-2/3 rounded-md bg-white px-3 py-1 shadow-sm shadow-greenTheme sm:w-1/3">
-							<ul className="flex flex-col rounded-md text-sm text-black">
-								<li
-									onClick={() => setSelectedFilter('all')}
-									className={`${
-										selectedFilter === 'all'
-											? 'bg-gray-100 active:bg-greenTheme'
-											: ''
-									} flex flex-row gap-2 rounded-sm p-2`}
-								>
-									<BookImage /> All Posts
-								</li>
-								<li
-									onClick={() => setSelectedFilter('following')}
-									className={`${
-										selectedFilter === 'following'
-											? 'bg-gray-100 active:bg-greenTheme'
-											: ''
-									} flex flex-row gap-2 rounded-sm p-2`}
-								>
-									<UsersRound />
-									People I Follow
-								</li>
-							</ul>
-						</div>
-					)}
-				</div>
-
-				{/* Display the form to post content */}
-				<div
-					onClick={() => setTogglePostForm((prev) => !prev)}
-					className="cursor-pointer"
-				>
-					<CreatePost />
-				</div>
-
-				{viewCommunities && <CommunitiesSlider />}
-
-				<Posts socialPosts={socialPosts} selectedPost={selected} />
 			</main>
 
 			{/* Upload Form Form */}
@@ -199,8 +198,11 @@ export default function Home() {
 			)}
 			{togglePostForm && (
 				<PostForm
+					profile={profile}
+					user={user}
 					setSocialPosts={setSocialPosts}
 					setTogglePostForm={setTogglePostForm}
+					onPostCreated={onPostCreated}
 				/>
 			)}
 		</Navbar>

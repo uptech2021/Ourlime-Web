@@ -1,3 +1,4 @@
+import { formatDate } from '@/helpers/Posts';
 import { SocialPosts } from '@/types/global';
 import {
 	Image,
@@ -6,6 +7,7 @@ import {
 	Skeleton,
 	Textarea,
 } from '@nextui-org/react';
+import { Timestamp } from 'firebase/firestore';
 import { Heart, MessageCircle, Share } from 'lucide-react';
 import React from 'react';
 import ReactPlayer from 'react-player';
@@ -22,6 +24,8 @@ export default function VideosPosts({
 	const videosPosts = socialPosts.filter(
 		(post) => post.video !== undefined && post.video !== ''
 	);
+
+	
 
 	return (
 		<div>
@@ -44,7 +48,7 @@ export default function VideosPosts({
 								/>
 							</div>
 							<p className="text-xl font-semibold">{post.username}</p>
-							<p className="ml-auto text-base text-gray-500">{post.time}</p>
+							<p className="ml-auto text-base text-gray-500">{formatDate(post.time)}</p>
 						</div>
 						<div className="mt-3">
 							<p className="text-base">{post.content}</p>

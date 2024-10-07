@@ -1,3 +1,4 @@
+import { formatDate } from '@/helpers/Posts';
 import { SocialPosts } from '@/types/global';
 import {
 	Avatar,
@@ -11,10 +12,13 @@ import React from 'react';
 import ReactPlayer from 'react-player';
 
 export default function AllPosts({ allPosts }: { allPosts: SocialPosts[] }) {
+	
 	return (
 		<div>
-			{allPosts.map((post, index) => (
-				<div
+					{allPosts
+						.sort((a, b) => b.time - a.time)
+						.map((post, index) => (
+						<div
 					key={index}
 					className="mb-5 mt-5 flex flex-col justify-center rounded-xl bg-white p-5 shadow-md"
 				>
@@ -29,7 +33,9 @@ export default function AllPosts({ allPosts }: { allPosts: SocialPosts[] }) {
 							/>
 						</div>
 						<p className="text-lg font-semibold">{post.username}</p>
-						<p className="ml-auto text-sm text-gray-500">{post.time}</p>
+						<p className="ml-auto text-sm text-gray-500">
+							{formatDate(post.time)}
+						</p>
 					</div>
 					<div className="mt-3">
 						<p className="text-base">{post.content}</p>

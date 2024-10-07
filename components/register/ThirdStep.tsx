@@ -1,16 +1,16 @@
 'use client';
-import { useEffect, useState } from 'react';
+import { Dispatch, SetStateAction, useEffect, useState } from 'react';
 import { Button, DatePicker, Select, SelectItem } from '@nextui-org/react';
 import styles from "./register.module.css"
 
 type ThirdStepProps = {
 	verificationMessage: string;
-	setStep: (step: number) => void;
-	setFirstName: (value: string) => void;
-	setLastName: (value: string) => void;
-	setCountry: (value: string) => void;
-	setGender: (value: string) => void;
-	setBirthday: (value: string) => void;
+	setStep: Dispatch<SetStateAction<number>>;
+	setFirstName: Dispatch<SetStateAction<string>>;
+	setLastName: Dispatch<SetStateAction<string>>;
+	setCountry: Dispatch<SetStateAction<string>>;
+	setGender: Dispatch<SetStateAction<string>>;
+	setBirthday: Dispatch<SetStateAction<string>>;
 	isStepValid: boolean;
 	validateStep: () => boolean;
 	handleSubmit: (e: React.FormEvent) => void;

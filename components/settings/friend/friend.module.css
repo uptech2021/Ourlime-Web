@@ -5,7 +5,7 @@
     @apply bg-gray-200 border border-gray-300 rounded px-2 py-1 cursor-pointer text-sm;
   }
   .BtnActive {
-    @apply bg-redTheme text-white;
+    @apply bg-green-500 text-white;
   }
   
   .BtnInactive {

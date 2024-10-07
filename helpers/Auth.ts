@@ -1,4 +1,4 @@
-import { signOut, onAuthStateChanged } from 'firebase/auth';
+import { signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/firebaseConfig';
 import { doc, getDoc } from 'firebase/firestore';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
@@ -9,7 +9,7 @@ export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
 		onAuthStateChanged(auth, (user) => {
 			if (user) {
 				if (user.emailVerified) {
-					console.log('Already Logged In and Verified, Redirecting...');
+					// console.log('Already Logged In and Verified, Redirecting...');
 					router.push('/');
 					resolve(true);
 				} else {
@@ -20,7 +20,7 @@ export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
 					resolve(false);
 				}
 			} else {
-				console.log('No user');
+				// console.log('No user');
 				resolve(false);
 			}
 		});
@@ -30,11 +30,11 @@ export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
 export const loginRedirect = (
 	router: AppRouterInstance,
 	authorized: boolean = true
-): Promise<void> => {
+): Promise<User | null> => {
 	return new Promise((resolve, reject) => {
 		onAuthStateChanged(auth, async (user) => {
 			if (!user) {
-				console.log('Redirecting to login');
+				// console.log('Redirecting to login');
 				router.push('/login');
 			} else if (!authorized) {
 				try {
@@ -42,17 +42,17 @@ export const loginRedirect = (
 					if (!userDoc.exists() || !userDoc.data().isAdmin) {
 						console.warn('Unauthorized user');
 						router.push('/');
-						console.log('Unauthorized user');
-					} 
+						// console.log('Unauthorized user');
+					}
 				} catch (error) {
 					console.error('Error checking user authorization:', error);
 					reject(error);
 				}
 			} else if (!user.emailVerified) {
-				console.log('Email not verified, Redirecting to verification page...');
+				// console.log('Email not verified, Redirecting to verification page...');
 				router.push('/login');
 			} else {
-				resolve();
+				resolve(user);
 			}
 		});
 	});
@@ -63,7 +63,29 @@ export const handleSignOut = async (router: AppRouterInstance) => {
 		await signOut(auth);
 		router.push('/login');
 	} catch (error) {
-		console.error('Sign out error:', error);
+		// console.error('Sign out error:', error);
+	}
+};
+
+export const fetchProfile = async(uid: string) => {
+	try {
+		const profileRef = doc(db, 'profiles', uid);
+		const profileSnap = await getDoc(profileRef);
+		return profileSnap;
+	} catch (error) {
+		console.error('Error fetching profile:', error);
+		return null;
+	}
+};
+
+export const fetchUser = async (uid: string) => {
+	try {
+		const userRef = doc(db, 'users', uid);
+		const userSnap = await getDoc(userRef);
+		return userSnap;
+	} catch (error) {
+		console.error('Error fetching user:', error);
+		return null;
 	}
 };
 

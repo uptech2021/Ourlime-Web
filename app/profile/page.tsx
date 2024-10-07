@@ -4,25 +4,20 @@ import Navbar from '@/comm/Navbar';
 import communityImage3 from '@/public/images/home/car.jpg';
 import communityImage2 from '@/public/images/home/computer.webp';
 import communityImage1 from '@/public/images/home/hands.webp';
-import { Avatar, AvatarGroup, Button } from '@nextui-org/react';
+import { Avatar, AvatarGroup, Button, Image } from '@nextui-org/react';
 import { CircleEllipsis, Smile, UsersRound } from 'lucide-react';
-import Image from 'next/image';
 import Link from 'next/link';
-import { ProfileData, UserData, SocialPosts } from '@/types/global';
+import { ProfileData, UserData, SocialPosts, Communities } from '@/types/global';
 import { useEffect, useState } from 'react';
 import { auth, db } from '@/firebaseConfig';
 import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
-import { loginRedirect } from '@/helpers/Auth';
+import { fetchProfile, loginRedirect } from '@/helpers/Auth';
 import { useRouter } from 'next/navigation';
 import ProfilePosts from '@/components/profile/profilePosts';
 import PostForm from '@/components/home/posts/PostForm'; 
-
-const communitiesData = [
-  { imageUrl: communityImage1, name: 'Community 1' },
-  { imageUrl: communityImage2, name: 'Community 2' },
-  { imageUrl: communityImage3, name: 'Community 3' },
-];
+import React from 'react';
+import EditProfileModal from '@/components/profile/EditProfileModal';
 
 export default function Profile() {
   const router = useRouter();
@@ -32,10 +27,11 @@ export default function Profile() {
   const [posts, setPosts] = useState<SocialPosts[]>([]); // State for posts
   const [loading, setLoading] = useState(true);
   const [togglePostForm, setTogglePostForm] = useState<boolean>(false);
+  const [postCreated, setPostCreated] = useState<boolean>(false); //Checks if a post was created
   const [socialPosts, setSocialPosts] = useState<SocialPosts[]>([]); // For new posts
-   // New state for filtering
-   const [selectedFilter, setSelectedFilter] = useState<string>('all'); // Default is 'all'
-
+  const [communities, setCommunities] = useState<Communities[]>([]); // State for communities
+  const [selectedFilter, setSelectedFilter] = useState<string>('all'); // Default is 'all'
+  const [isEditModalOpen, setEditModalOpen] = useState(false);
 
   useEffect(() => {
     loginRedirect(router, true)
@@ -49,49 +45,83 @@ export default function Profile() {
       if (currentUser) {
         setUser(currentUser);
   
-        const profileRef = doc(db, 'profiles', currentUser.uid);
-        const profileSnap = await getDoc(profileRef);
+        // Fetch profile and user data
+        const profileSnap = await fetchProfile(currentUser.uid);
   
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
-        console.log(userSnap.data())
   
         if (profileSnap.exists() && userSnap.exists()) {
           setProfile(profileSnap.data() as ProfileData);
           setUserData(userSnap.data() as UserData);
-          console.log(profileSnap.data())
-        } else {
-          console.log('No profile or user data found');
         }
-  
+        console.log(profileSnap.data());
         // Fetch posts
-        const fetchPosts = async () => {
+        const getPosts = await getDocs(collection(db, 'posts'));
+        const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
+        const userPosts = postsData
+          .filter((post) => post.email === currentUser.email)
+          .sort((a, b) => b.time - a.time); // Sort by most recent
+        setPosts(userPosts);
+  
+        // Fetch communities
+        const fetchCommunities = async () => {
           try {
-            const getPosts = await getDocs(collection(db, 'posts'));
-            const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
-            
-            // Filter posts by the current user
-            const userPosts = postsData.filter(post => post.email === currentUser.email).reverse();;
-            setPosts(userPosts);
-            console.log(postsData[0])
+            const communitiesCollection = collection(db, 'communities');
+            const communitySnapshot = await getDocs(communitiesCollection);
+            const communitiesData = communitySnapshot.docs.map((doc) => doc.data() as Communities);
+  
+            // Filter communities where the current user is in the members array
+            const userCommunities = communitiesData.filter((community) =>
+              community.members && community.members.includes(currentUser.uid)
+            );
+  
+            setCommunities(userCommunities);
           } catch (error) {
-            console.error('Error fetching posts:', error);
+            console.error('Error fetching communities:', error);
           }
         };
-        fetchPosts();
+  
+        fetchCommunities();
       } else {
         setUser(null);
         setProfile(null);
         setUserData(null);
         setPosts([]);
+        setCommunities([]);
       }
+  
       setLoading(false);
     });
   
     return () => unsubscribe();
-  }, []);
+  }, [router]);
   
+  // Use this function to signal that a post was created
+  const handlePostCreated = () => {
+    setPostCreated((prev) => !prev); // Toggle postCreated state
+  };
 
+  // Use another useEffect to refetch posts when postCreated changes
+  useEffect(() => {
+    if (user) {
+      const fetchPosts = async () => {
+        try {
+          const getPosts = await getDocs(collection(db, 'posts'));
+          const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
+          const userPosts = postsData
+            .filter((post) => post.email === user.email)
+            .sort((a, b) => b.time - a.time); // Sort by most recent
+          setPosts(userPosts);
+        } catch (error) {
+          console.error('Error fetching posts:', error);
+        }
+      };
+  
+      fetchPosts();
+    }
+  }, [postCreated, user]);
+  
   if (loading) {
     return <div>Loading...</div>; // Optional: Add a loading spinner
   }
@@ -100,17 +130,26 @@ export default function Profile() {
     return <div></div>;
   }
 
-    // Logic to filter posts based on selected filter
+  // Logic to filter posts based on selected filter
   const filteredPosts = posts.filter(post => {
     if (selectedFilter === 'all') return true; // Show all posts
     if (selectedFilter === 'photos') return post.postImage !== undefined; // Filter posts with images
     if (selectedFilter === 'videos') return post.video !== undefined; // Filter posts with videos
-    // if (selectedFilter === 'likes') return post.likes && post.likes > 0; // Filter liked posts
-
     return true;
   });
 
+  const toggleEditModal = () => {
+    setEditModalOpen(!isEditModalOpen);
+  };
+
+  const handleSave = (data) => {
+    console.log('Saved data:', data);
+    // Here you can handle the data, such as updating state or sending it to an API
+  };
+
   return (
+    <div className="flex justify-center bg-gray-200 min-h-screen w-full">
+  <div className="w-full max-w-screen-2xl px-4">
     <Navbar>
       {/* Overlay for post form */}
       {togglePostForm && (
@@ -118,9 +157,17 @@ export default function Profile() {
           <div className="fixed top-0 z-40 h-full w-full bg-black opacity-50"></div>
           {/* PostForm Component */}
           <PostForm 
-          setSocialPosts={setSocialPosts}
-					setTogglePostForm={setTogglePostForm} />
+            profile={profile}
+            user={userData}
+            setSocialPosts={setSocialPosts}
+            setTogglePostForm={setTogglePostForm}
+            onPostCreated={handlePostCreated} // Pass the callback function
+          />
         </>
+      )}
+
+      {isEditModalOpen && (
+        <EditProfileModal isOpen={isEditModalOpen} onClose={toggleEditModal} onSave={handleSave} />
       )}
 
       <div className="flex h-full min-h-screen w-full flex-col overflow-y-auto bg-gray-200 pl-1 pt-3 text-gray-800">
@@ -128,7 +175,7 @@ export default function Profile() {
         <section className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col md:flex-row">
           <div className="h-24 w-24 overflow-hidden rounded-full mx-auto md:mx-0">
             <Avatar
-              src={profile.profilePicture as string} // Use profile data for image
+              src={profile.profilePicture} // Use profile data for image
               alt="Profile picture"
               className="h-full w-full object-cover"
             />
@@ -140,18 +187,27 @@ export default function Profile() {
             </p>
             <p className="text-gray-600">@{userData.userName}</p> {/* Display username as @username */}
             <div className="mt-2 flex flex-col gap-4 md:flex-row">
-              <Button className="border-gradient-to-r rounded-lg from-green-400 to-teal-400 px-4 py-2 text-black">
-                <Link href="/settings/general">Edit</Link>
+              <Button onClick={toggleEditModal}
+              className="border-gradient-to-r rounded-lg from-green-400 to-teal-400 px-4 py-2 text-black">
+                Edit
               </Button>
-              <Button className="rounded-lg bg-gradient-to-r from-green-400 to-teal-400 px-4 py-2 text-white">
+              {/* <Button className="rounded-lg bg-gradient-to-r from-green-400 to-teal-400 px-4 py-2 text-white">
                 Activities
-              </Button>
+              </Button> */}
             </div>
             <div className="mt-2 flex justify-center gap-6 md:justify-start text-sm text-gray-600">
-              <p>11 Following</p>
+              <p>{profile.followingCount? profile.followingCount : 0} Following</p>
               <p>{posts.length} Posts</p>
-              <p>6 Followers</p>
+              <p>{profile.followerCount? profile.followerCount : 0} Followers</p>
             </div>
+          </div>
+          {/* Additional User Details Section */}
+          <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
+            <p><strong>Date of Birth:</strong> {profile.birthday || 'Not specified'}</p>
+            <p><strong>Gender:</strong> {userData.gender || 'Not specified'}</p>
+            <p><strong>Job:</strong> {profile.workingAt || 'Not specified'}</p>
+            <p><strong>School:</strong> {profile.school || 'Not specified'}</p>
+            <p><strong>Country:</strong> {profile.country || 'Not specified'}</p>
           </div>
         </section>
 
@@ -174,19 +230,9 @@ export default function Profile() {
               Likes
             </li>
             <li 
-              className={`cursor-pointer ${selectedFilter === 'following' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-              onClick={() => setSelectedFilter('following')}>
-              Following
-            </li>
-            <li 
               className={`cursor-pointer ${selectedFilter === 'photos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('photos')}>
               Photos
-            </li>
-            <li 
-              className={`cursor-pointer ${selectedFilter === 'followers' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-              onClick={() => setSelectedFilter('followers')}>
-              Followers
             </li>
             <li 
               className={`cursor-pointer ${selectedFilter === 'videos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
@@ -232,63 +278,59 @@ export default function Profile() {
               <p>{profile.aboutMe ? profile.aboutMe : 'This user has not updated their bio'}</p>
             </div>
 
-            {/* Communities Section */}
+           {/* Communities Section */}  
             <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
-              <div className="mb-2 flex items-center justify-between border-b pb-2">
-                <h2 className="text-lg font-semibold">Communities</h2>
-                <a className="cursor-pointer text-blue-500">View all</a>
+              <div className="flex items-center justify-between">
+                <h3 className="text-lg font-semibold"> Joined Communities</h3>
+                <Link href="/communities">
+                  <UsersRound className="text-green-600" />
+                </Link>
               </div>
-              <div className="flex gap-2 overflow-x-auto">
-                {communitiesData.map((community, index) => (
-                  <div className="relative h-24 w-24 cursor-pointer" key={index}>
-                    <Image
-                      src={community.imageUrl}
-                      alt={community.name}
-                      layout="fill"
-                      className="rounded-lg object-cover"
-                    />
-                  </div>
-                ))}
-              </div>
+              <ul className="mt-3 flex flex-wrap justify-around">
+                {/* Dynamically render communities fetched from Firestore */}
+                {communities.length > 0 ? (
+                  communities.map((community) => (
+                    <li key={community.id} className="mb-3 text-center">
+                      <Image
+                        src={community.communityImage as string}
+                        alt={community.name}
+                        width={50}
+                        height={50}
+                        className="rounded-full"
+                      />
+                      <p className="mt-2 text-sm">{community.name}</p>
+                    </li>
+                  ))
+                ) : (
+                  <p>No communities found.</p>
+                )}
+              </ul>
             </div>
-
-            {/* Likes Section */}
-            <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
-              <h2 className="mb-2 border-b pb-2 text-lg font-semibold">Likes</h2>
-              <div className="flex items-center gap-2">
-                <UsersRound className="h-6 w-6 text-green-500" />
-                <p className="text-base">12.4k Likes</p>
-              </div>
-            </div>
+            {/* Following Section */}
 
             {/* Photos Section */}
             <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
               <h2 className="mb-2 border-b pb-2 text-lg font-semibold">Photos</h2>
               <div className="grid grid-cols-3 gap-2">
-                {Array(6)
-                  .fill(1)
-                  .map((_, i) => (
-                    <Image
-                      key={i}
-                      src={communityImage1}
-                      alt={`Photo ${i}`}
-                      layout="responsive"
-                      width={50}
-                      height={50}
-                      className="h-full w-full object-cover rounded-lg"
-                    />
-                  ))}
+                {/* Filter posts with images and display them */}
+                {posts.filter(post => post.postImage).length > 0 ? (
+                  posts
+                    .filter(post => post.postImage) // Filter posts that contain images
+                    .slice(0, 6) // Limit to 6 images for display
+                    .map((post, i) => (
+                      <Image
+                        key={i}
+                        src={post.postImage as string} // Render the post image
+                        alt={`Photo ${i}`}
+                        width={50}
+                        height={50}
+                        className="h-full w-full object-cover rounded-lg"
+                      />
+                    ))
+                ) : (
+                  <p>No photos available.</p>
+                )}
               </div>
-            </div>
-
-            {/* Followers Section */}
-            <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
-              <h2 className="mb-2 border-b pb-2 text-lg font-semibold">Followers</h2>
-              <AvatarGroup size="md">
-                <Avatar src={communityImage2.src} />
-                <Avatar src={communityImage1.src} />
-                <Avatar src={communityImage3.src} />
-              </AvatarGroup>
             </div>
 
             {/* Videos Section */}
@@ -300,9 +342,8 @@ export default function Profile() {
                   .map((_, i) => (
                     <Image
                       key={i}
-                      src={communityImage2}
+                      src={communityImage2.toString()}
                       alt={`Video ${i}`}
-                      layout="responsive"
                       width={50}
                       height={50}
                       className="h-full w-full object-cover rounded-lg"
@@ -314,5 +355,7 @@ export default function Profile() {
         </section>
       </div>
     </Navbar>
+    </div>
+    </div>
   );
 }

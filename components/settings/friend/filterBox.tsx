@@ -27,7 +27,7 @@ const FilterBox: React.FC<FilterBoxProps> = ({
 }) => {
   return (
     <div
-      className={`filters-box z-1000 absolute top-[24.5rem] w-60 rounded border border-gray-300 bg-white p-4 shadow-md right-6 lg:right-14 lg:top-[15.2rem] lg:w-72 ${
+      className={`filters-box z-1000 absolute top-[25.5rem] w-60 rounded border border-gray-300 bg-white p-4 shadow-md right-8 md:right-12 md:top-[24.5rem] lg:right-14 lg:top-[13rem] lg:w-72 ${
         showFilters ? 'block' : 'hidden'
       }`}
     >

@@ -5,17 +5,19 @@ import { Button, Checkbox } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
 import PhoneInput from 'react-phone-number-input';
 
+import { Dispatch, SetStateAction } from 'react';
+
 type FirstStepProps = {
-	setUserName: (value: string) => void;
+	setUserName: Dispatch<SetStateAction<string>>;
 	userNameError: string;
-	setEmail: (value: string) => void;
+	setEmail: Dispatch<SetStateAction<string>>;
 	emailError: string;
-	setPhone: (value: string) => void;
+	setPhone: Dispatch<SetStateAction<string>>;
 	phoneError?: string;
-	setPassword: (value: string) => void;
-	setConfirmPassword: (value: string) => void;
+	setPassword: Dispatch<SetStateAction<string>>;
+	setConfirmPassword: Dispatch<SetStateAction<string>>;
 	confirmPasswordError: string;
-	setStep: (value: number) => void;
+	setStep: Dispatch<SetStateAction<number>>;
 	validateStep: () => boolean;
 	passwordError: string;
 	phone?: string;

@@ -19,24 +19,32 @@ import {
 import React, { SetStateAction, useRef, useState } from 'react';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import styles from './postform.module.css';
-import { SocialPosts } from '@/types/global';
+import { ProfileData, SocialPosts, UserData } from '@/types/global';
 import ReactPlayer from 'react-player';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
 import { Button, Image } from '@nextui-org/react';
-import { getAuth } from 'firebase/auth';
+import { getAuth, User } from 'firebase/auth';
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { db } from '@/firebaseConfig';
-import { addDoc, collection, doc, getDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
 
 //TODO aaron Add Gif icon
+type PostFormProps = {
+	setTogglePostForm: React.Dispatch<SetStateAction<boolean>>;
+	setSocialPosts: React.Dispatch<SetStateAction<SocialPosts[]>>;
+	onPostCreated: () => void; 
+	profile: ProfileData;
+	user: UserData;
+};
+
 export default function PostForm({
 	setTogglePostForm,
 	setSocialPosts,
-}: {
-	setTogglePostForm: React.Dispatch<SetStateAction<boolean>>;
-	setSocialPosts: React.Dispatch<SetStateAction<SocialPosts[]>>;
-}) {
+	onPostCreated,
+	profile,
+	user,
+}: PostFormProps) {
 	const [togglePrivacy, setTogglePrivacy] = useState<boolean>(false);
 	const [toggleEmojiPicker, setToggleEmojiPicker] = useState<boolean>(false);
 	const textareaRef = useRef<HTMLTextAreaElement>(null);
@@ -73,56 +81,53 @@ export default function PostForm({
 		const video = formData.get('video') as File;
 
 		if (content) {
-			const auth = getAuth();
-			const user = auth.currentUser;
-
-			if (!user) {
-				toast.error('You must be logged in to create a post.', {
-					position: 'top-right',
-					autoClose: 3000,
-					hideProgressBar: false,
-					closeOnClick: true,
-					pauseOnHover: true,
-					draggable: true,
-					progress: undefined,
-				});
-				return;
-			}
+			
+		
 
 			let postImageUrl = '';
 			let videoUrl = '';
 
 			if (image && image.name) {
-				console.log('uploading image');
+				// console.log('uploading image');
 				postImageUrl = await uploadFile(image, `images/${image.name}`);
 			}
 			if (video && video.name) {
-				console.log('uploading video');
+				// console.log('uploading video');
 				videoUrl = await uploadFile(video, `videos/${video.name}`);
 			}
 
-			// Fetch username from the user collection
-			const userDoc = await getDoc(doc(db, 'users', user.uid));
-			const username = userDoc.exists() ? userDoc.data().userName : 'Anonymous';
-
 			const newSocialPost = {
-				profileImage: user.photoURL || '/images/avatar.jpg',
-				username: username || 'Anonymous',
-				email: user.email || 'anonymous@mail.com',
-				time: new Date().toISOString(),
-				content,
-				postImage: postImageUrl,
-				video: videoUrl,
+				profileImage: profile.profilePicture as string,
+				username: user.userName as string,
+				email: user.email as string,
+				time: serverTimestamp(),
+				content: content as string,
+				postImage: postImageUrl as string,
+				video: videoUrl as string,
 			};
-			console.log(newSocialPost);
+		
+			console.log(newSocialPost, "isSocialPost")
 
 			try {
-				await addDoc(collection(db, 'posts'), newSocialPost);
 
+				// Convert serverTimestamp to Timestamp object
+				const currentTime = Timestamp.now();
+
+				const docRef = await addDoc(collection(db, 'posts'), newSocialPost);
 				setSocialPosts((prevSocialPosts: SocialPosts[]) => [
-					newSocialPost,
+					{
+						...newSocialPost,
+						id: docRef.id,
+						time: {
+							seconds: currentTime.seconds,
+							nanoseconds: currentTime.nanoseconds,
+						},
+					} as SocialPosts,
 					...prevSocialPosts,
 				]);
+				// Let the parent know that a post was created
+				onPostCreated(); // Call this after the post is created
+
 				setTogglePostForm(false);
 			} catch (error) {
 				toast.error('Error creating post. Please try again.', {

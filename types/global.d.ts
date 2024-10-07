@@ -41,10 +41,10 @@ export type SocialPosts = {
   postImage?: StaticImageData | string;
   video?: string;
   content: string;
-  likes?: string; //TODO change to number
+  likes?: number;
   comments?: string;
-  time:string 
-  ; //TODO change to Date.now or something similar
+  time:Firebase.Timestamp; 
+//TODO change to Date.now or something similar
 }
 
 export type Stories = {
@@ -77,14 +77,40 @@ export type Job = {
 export type ProfileData = {
   firstName: string;
   lastName: string;
-  profilePicture: StaticImageData | string;
+  profilePicture: string;
   banner: string;
   email: string;
   country: string;
   phone: string;
   aboutMe: string;
+  likes: number;
+  posts: number;
+  following: number
+  followers: number;
+  birthday: string;
+  country: string;
+  school: string;
+  workingAt: string;
+  followerCount: number;
+  followingCount: number;
 }
 
-export type UserData  = {
-	userName: string;
+export type UserData = {
+	email: string;
+	friends: string[];
+	gender: string;
+  isAdmin: boolean;
+  last_loggedIn: Firebase.Timestamp;
+  userName: string;
+};
+
+export type Communities = {
+  id: string;
+  name: string;
+  communityImage: StaticImageData | string;
+  memberCount: number; // Renamed members to memberCount to hold the number of members
+  members: string[]; // New field for storing the members' IDs or names
+  category: string;
+  isPublic: boolean;
+  posts: SocialPostsData[];
 }

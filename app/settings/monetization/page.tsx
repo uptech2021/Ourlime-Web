@@ -1,8 +1,16 @@
 'use client';
+import SettingsSidebar from '@/components/settings/nav/page';
 import { Button, Input } from '@nextui-org/react';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
+import { auth } from '@/firebaseConfig';
+import { ResizeListener } from '@/helpers/Resize';
+import { useRouter } from 'next/navigation';
+import { loginRedirect } from '@/helpers/Auth';
 
 export default function Monetization() {
+	const router = useRouter();
+	const [, setIsPc] = useState<boolean>(false);
+	const user = auth;
 	const [showMoney, setShowMoney] = useState(false);
 	const [price, setPrice] = useState('');
 	const [duration, setDuration] = useState('');
@@ -57,14 +65,27 @@ export default function Monetization() {
 		}
 	};
 
-	return (
+	useEffect(() => {
+		loginRedirect(router)
+		const cleanup = ResizeListener(setIsPc)
+		return () => cleanup()
+	}, [router])
+
+	if (!user.currentUser) return <></>
+
+	else return (
 		<>
-			<main className="flex min-h-screen flex-col bg-gray-200 text-center">
-				<h1 className="mb-6 pt-2 ml-6 lg:ml-[20%] mt-6 text-left text-2xl font-bold text-gray-800">
+			<div className='flex flex-row bg-gray-200 min-h-screen'>
+        <SettingsSidebar />
+
+        <main className="flex flex-col  text-center  mx-auto">
+
+          <section className="text-gray-600 bg-white p-4 rounded-lg shadow-md mx-auto w-[90%] md:w-[40rem] mt-8">
+				<h1 className="mb-6 pt-2 text-left text-2xl font-bold text-gray-800">
 					Monetization
 				</h1>
 
-				<section className="mx-auto flex w-[95%] lg:w-[60%] flex-col items-center rounded-lg bg-white p-2 shadow-md">
+				
 
 					<section
 						className="mx-auto mt-4 h-[8rem] w-[99%] items-center rounded-lg bg-gray-200 p-4"
@@ -74,7 +95,7 @@ export default function Monetization() {
 					</section>
 					{showMoney && (
 						<div
-							className="filters-box z-1000 absolute top-[14rem] lg:top-[17rem] w-[90%] lg:mr-[24%] lg:w-[38%] rounded border border-gray-300 bg-white p-4 shadow-md"
+							className="filters-box z-1000 absolute top-[14rem] lg:top-[17rem] w-[80%] lg:mr-[24%] lg:w-[38%] rounded border border-gray-300 bg-white p-4 shadow-md"
 						>
 							<h2 className="text-ml mb-2 ml-2 mt-2 text-left font-bold text-gray-800">
 								Add Package
@@ -137,7 +158,7 @@ export default function Monetization() {
 								/>
 							</form>
 							<Button
-								className={`mt-4 mx-auto rounded px-4 py-2 text-white ${!price || !duration || !title || !currancy || !description ? 'bg-none' : ''}`}
+								className={`mt-4 mx-auto rounded px-4 py-2 text-white bg-green-500 ${!price || !duration || !title || !currancy || !description ? 'bg-none' : ''}`}
 								disabled={!price || !duration || !title || !currancy || !description}
 								onClick={() => {
 									if (editIndex !== null) {
@@ -183,14 +204,15 @@ export default function Monetization() {
 					)}
 				</section>
 			</main>
+			</div>
 
 			{showDeleteConfirmation && (
 				<div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center">
 					<div className="bg-white p-4 rounded-lg">
 						<p>Are you sure you want to delete this package?</p>
 						<div className="mt-4 flex justify-end">
-							<Button onClick={() => setShowDeleteConfirmation(false)} className="mr-2">Cancel</Button>
-							<Button onClick={confirmDelete}>Delete</Button>
+							<Button onClick={() => setShowDeleteConfirmation(false)} className="mr-2 ">Cancel</Button>
+							<Button onClick={confirmDelete} className='bg-green-500'>Delete</Button>
 						</div>
 					</div>
 				</div>

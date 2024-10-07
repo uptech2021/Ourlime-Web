@@ -1,39 +1,38 @@
-import Image from 'next/image';
-import { Camera, CircleEllipsis, Smile } from 'lucide-react';
+import ourlimeImage from '@/public/images/logo.png';
+import { Avatar, Button, Skeleton } from '@nextui-org/react';
+import { CircleEllipsis, Smile } from 'lucide-react';
 
-export default function CreatePost() {
+type CreatePostProp = {
+	setTogglePostForm: React.Dispatch<React.SetStateAction<boolean>>;
+	profilePicture: string;
+} 
+export default function CreatePost({ setTogglePostForm, profilePicture }: CreatePostProp) {
 	return (
-		<div className="post-container flex flex-row items-center rounded-lg bg-white p-5 shadow-md">
-			<div className="border-10 h-12 w-12 rounded-full border border-greenTheme">
-				<Image
-					src="/images/Aaron.jpg"
+		<div className="box-border flex flex-col justify-around rounded-xl bg-white p-5 shadow-md">
+			<div className="overflow-huidden h-10 w-10 rounded-full">
+				<Avatar
+					src={profilePicture}
 					alt="profile picture"
-					quality={100}
-					width={150}
-					height={150}
-					className="h-full w-full rounded-full object-cover"
+					className="h-full w-full"
+					showFallback
+					fallback={<Skeleton className="h-full w-full rounded-full" />}
 				/>
 			</div>
 
-			<div className="ml-10 flex w-full flex-col">
-				<form className="mb-5 mt-5 w-full border-b">
-					<input
-						type="text"
-						name="content"
-						placeholder="What's going on?"
-						className="w-full border-b border-none border-gray-400 bg-transparent pb-2 text-base outline-none"
-					/>
-				</form>
-
-				<div className="flex items-center justify-between">
-					<div className="flex flex-row gap-3">
-						<Camera className="text-greenTheme" />
-						<Smile className="text-greenTheme" />
-					</div>
-
-					<CircleEllipsis className="cursor-pointer" color="grey" />
+			<form
+				onClick={() => setTogglePostForm((prev) => !prev)}
+				className="mb-5 mt-5 cursor-pointer"
+			>
+				<div className="w-full border-b border-gray-300 bg-transparent pb-2 text-base outline-none">
+					<p className="opacity-50">What&apos;s going on?</p>
 				</div>
-			</div>
+
+				<div className="mt-5 flex flex-wrap items-center gap-3">
+					<Button>Gallery</Button>
+					<Smile className="text-green-600" />
+					<CircleEllipsis className="ml-auto cursor-pointer" color="grey" />
+				</div>
+			</form>
 		</div>
 	);
 }

@@ -7,21 +7,30 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { User } from 'firebase/auth';
+import { fetchProfile } from '@/helpers/Auth';
+import { ProfileData } from '@/types/global';
 
 export default function Header() {
 	    const pathname = usePathname();
 			const [user, setUser] = useState<User | null>(null);
+			const [profile, setProfile] = useState<ProfileData | null>(null);
 			const [loading, setLoading] = useState(true);
 
 			useEffect(() => {
-				const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+				const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
 					setUser(currentUser);
 					setLoading(false);
+
+					if (currentUser) {
+						const profileData = await fetchProfile(currentUser.uid);
+						setProfile(profileData.data() as ProfileData);
+
+					}
 				});
 				return () => unsubscribe();
 			}, []);
 
-			if (loading) {
+			if (loading || !profile) {
 				return null;
 			}
 
@@ -38,7 +47,7 @@ export default function Header() {
 		<>
 			{!pathname.startsWith('/admin') && (
 				<header className="flex flex-row items-center bg-[#1e2321] px-3 md:px-0">
-					<Link href="/settings/general">
+					<Link href="/settings">
 						<Settings className="cursor-pointer text-white lg:hidden" />
 					</Link>
 
@@ -87,7 +96,7 @@ export default function Header() {
 									className="h-8 w-8 cursor-pointer"
 									isBordered
 									radius="md"
-									src="/images/avatar.jpg"
+									src={profile.profilePicture}
 									disableAnimation={false}
 									showFallback
 									fallback={<Skeleton className="h-8 w-8 rounded-full" />}

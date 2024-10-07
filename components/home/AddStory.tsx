@@ -31,7 +31,7 @@ export default function AddStory({
 			setAddStory(false);
 		
 		} else {
-			console.warn('No file selected');
+			// console.warn('No file selected');
 		}
 	};
 

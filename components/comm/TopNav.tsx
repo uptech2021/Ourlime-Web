@@ -11,7 +11,7 @@ export default function TopNav() {
 		<div className="admin-top-nav-layout rounded-xl bg-[#f4f5fd] pl-8 pr-16">
 			<h1 className="text-[23px] font-semibold">
 				{pathname === '/admin' && ' Welcome back, Uptech Incorporated Ltd'}
-				{pathname === '/admin/settings/general' && 'General Configuration'}
+				{pathname === '/admin/settings' && 'General Configuration'}
 				{pathname === '/admin/settings/website-information' &&
 					'Website Information'}
 				{pathname === '/admin/settings/file' && 'File Upload Configuration'}
@@ -33,12 +33,12 @@ export default function TopNav() {
 					<React.Fragment>
 						<span
 							className="cursor-pointer"
-							onClick={() => router.push('/admin/settings/general')}
+							onClick={() => router.push('/admin/settings')}
 						>
 							Settings &gt;
 						</span>
 						<a className="text-[#c64d53]">
-							{pathname === '/admin/settings/general' &&
+							{pathname === '/admin/settings' &&
 								'General Configuration'}
 							{pathname === '/admin/settings/website-information' &&
 								'Website Information'}

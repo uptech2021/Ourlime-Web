@@ -1,13 +1,29 @@
 'use client';
-import React, { useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import { Button, Input, Select, SelectItem } from "@nextui-org/react";
+import { auth } from '@/firebaseConfig';
+import { ResizeListener } from '@/helpers/Resize';
+import { useRouter } from 'next/navigation';
+import { loginRedirect } from '@/helpers/Auth';
 
 export default function Payments() {
   const [textModel, setTextModel] = useState('Paypal');
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
+  const router = useRouter();
+	const [, setIsPc] = useState<boolean>(false);
+	const user = auth;
+	
 
-  return (
+  useEffect(() => {
+		loginRedirect(router)
+		const cleanup = ResizeListener(setIsPc)
+		return () => cleanup()
+	}, [router])
+
+	if (!user.currentUser) return <></>
+
+	else return (
     <>
       <main className="flex flex-col bg-gray-200 min-h-screen">
         <h1 className="text-xl mb-4 mt-5 text-gray-800 text-left font-bold ml-10" >My Earnings $0.00</h1>

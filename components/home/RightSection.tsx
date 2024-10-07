@@ -46,7 +46,7 @@ export default function RightSection() {
 	]);
 
 	return (
-		<section className="flex w-1/3 flex-col gap-3">
+		<section className=" flex w-1/3 flex-col gap-3">
 			{/* Upload Form Form */}
 			{addStory && (
 				<AddStory setStories={setStories} setAddStory={setAddStory} />

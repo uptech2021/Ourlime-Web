@@ -44,7 +44,7 @@ export default function PcNavbar() {
 					className={`transition-max-height z-10 max-h-0 w-full overflow-hidden pl-3 duration-1000 ease-out ${isSettingsOpen ? 'transition-max-height max-h-[5000px] duration-1000 ease-in' : ''}`}
 				>
 					<li className="g-[5%] relative z-10 flex cursor-pointer list-none flex-row items-center p-[5%] text-[#ffffffb3]">
-						<Link href="/admin/settings/general">General Configuration</Link>
+						<Link href="/admin/settings">General Configuration</Link>
 					</li>
 					<li className="g-[5%] relative z-10 flex cursor-pointer list-none flex-row items-center p-[5%] text-[#ffffffb3]">
 						<Link href="/admin/settings/website-information">
@@ -115,7 +115,7 @@ export default function PcNavbar() {
                     Payments & Ads (Coming Soon) <AddRoundedIcon className="self-end" />
                 </li>
                 <ul className="p-0 max-h-0 overflow-hidden transition-max-height duration-1000 ease-out w-full z-10">
-                    <li className={styles.mobileListItem}><Link href="/admin/settings/general">Website Configuration</Link></li>
+                    <li className={styles.mobileListItem}><Link href="/admin/settings">Website Configuration</Link></li>
                     <li className={styles.mobileListItem}><Link href="/admin/settings/website-information">Website Information</Link></li>
                     <li className={styles.mobileListItem}><Link href="/admin/settings/file">Social Media</Link></li>
                     <li className={styles.mobileListItem}><Link href="/admin/settings/email">Social Media</Link></li>
@@ -134,7 +134,7 @@ export default function PcNavbar() {
                     Pro System (Coming Soon) <AddRoundedIcon className="self-end" />
                 </li>
                 <ul className="p-0 max-h-0 overflow-hidden transition-max-height duration-1000 ease-out w-full z-10">
-                    <li className={styles.mobileListItem}><Link href="/admin/settings/general">Website Configuration</Link></li>
+                    <li className={styles.mobileListItem}><Link href="/admin/settings">Website Configuration</Link></li>
                     <li className={styles.mobileListItem}><Link href="/admin/settings/website-information">Website Information</Link></li>
                     <li className={styles.mobileListItem}><Link href="/admin/settings/file">Social Media</Link></li>
                     <li className={styles.mobileListItem}><Link href="/admin/settings/email">Social Media</Link></li>

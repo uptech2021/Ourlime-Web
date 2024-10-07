@@ -1,36 +1,38 @@
 describe('Registration Multi-Step Form That Deletes User On Cleanup', () => {
-	it('should complete the registration process', () => {
-			cy.visit('/register');
-			// Debugging: Log environment variables
-			// Step 1
-			cy.get('input[placeholder="Username"]').type(Cypress.env('USERNAME'));
-			cy.get('input[placeholder="Email Address"]').type(Cypress.env('EMAIL'));
-			cy.get('.PhoneInputInput').type(Cypress.env('PHONE'));
-			cy.get('input[placeholder="Password"]').type(Cypress.env('PASSWORD'));
-			cy.get('input[placeholder="Confirm Password"]').type(
-				Cypress.env('PASSWORD')
-			);
-			cy.contains('Next Step!').click();
+	it.only('should complete the registration process', () => {
+		cy.visit('/register');
+		// Debugging: Log environment variables
+		// Step 1
+		cy.get('input[placeholder="Username"]').type(Cypress.env('USERNAME'));
+		cy.get('input[placeholder="Email Address"]').type(Cypress.env('EMAIL'));
+		cy.get('.PhoneInputInput').type(Cypress.env('PHONE'));
+		cy.get('input[placeholder="Password"]').type(Cypress.env('PASSWORD'));
+		cy.get('input[placeholder="Confirm Password"]').type(
+			Cypress.env('PASSWORD')
+		);
+		cy.contains('Next Step!').click();
 
-			// Step 2
-			cy.contains('Next Step!').click();
+		cy.get(`img[src="/images/register/realisticAvatarWhiteMan.svg"]`).click();
 
-			// Step 3
-			cy.get('input[placeholder="First Name"]').type(Cypress.env('FIRST_NAME'));
-			cy.get('input[placeholder="Last Name"]').type(Cypress.env('LAST_NAME'));
-			cy.get('input[placeholder="Country"]').type(Cypress.env('COUNTRY'));
+		// Step 2
+		cy.contains('Next Step!').click();
 
-			cy.contains('Gender').click();
-			cy.get('li').contains('Male').click();
+		// Step 3
+		cy.get('input[placeholder="First Name"]').type(Cypress.env('FIRST_NAME'));
+		cy.get('input[placeholder="Last Name"]').type(Cypress.env('LAST_NAME'));
+		cy.get('input[placeholder="Country"]').type(Cypress.env('COUNTRY'));
 
-			cy.get('button').eq(1).click();
-			cy.get('span').contains('2').click();
+		cy.contains('Gender').click();
+		cy.get('li').contains('Male').click();
 
-			cy.contains('Register!').click();
+		cy.get('button').eq(1).click();
+		cy.get('span').contains('5').click();
 
-			// Verify registration success
-			cy.wait(5000);
-			cy.url().should('include', '/login');
+		cy.contains('Register!').click();
+
+		// Verify registration success
+		cy.wait(5000);
+		cy.url().should('include', '/login');
 	});
 
 	it('should login the user', () => {

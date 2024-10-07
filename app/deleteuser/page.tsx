@@ -1,6 +1,6 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { deleteDoc, doc, getDoc } from 'firebase/firestore';
+import { arrayRemove, collection, deleteDoc, doc, getDoc, getDocs, increment, query, updateDoc, where } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
 import { auth, db } from '@/firebaseConfig';
 import {
@@ -62,9 +62,41 @@ const DeleteUserPage = () => {
 			);
 			const user = userCredential.user;
 
-			// Delete user data from Firestore
+			// Remove user from communities
+			const communitiesRef = collection(db, 'communities');
+			const q = query(
+				communitiesRef,
+				where('members', 'array-contains', user.uid)
+			);
+			const querySnapshot = await getDocs(q);
+
+			const updatePromises = querySnapshot.docs.map(async (communityDoc) => {
+				await updateDoc(doc(db, 'communities', communityDoc.id), {
+					members: arrayRemove(user.uid),
+					memberCount: increment(-1),
+				});
+			});
+
+			await Promise.all(updatePromises);
+
 			await deleteDoc(doc(db, 'users', user.uid));
-			await deleteDoc(doc(db, 'profiles', user.uid));
+
+			// Delete profile data
+			const profilesRef = collection(db, 'profiles');
+			const profileQuery = query(profilesRef, where('email', '==', user.email));
+			const profileSnapshot = await getDocs(profileQuery);
+			profileSnapshot.forEach(async (doc) => {
+				await deleteDoc(doc.ref);
+			});
+
+			// Delete posts data
+			const postsRef = collection(db, 'posts');
+			const postsQuery = query(postsRef, where('email', '==', user.email));
+			const postsSnapshot = await getDocs(postsQuery);
+			postsSnapshot.forEach(async (doc) => {
+				await deleteDoc(doc.ref);
+			});
+
 
 			// Delete user from Firebase Authentication
 			await deleteUser(user);
@@ -77,6 +109,7 @@ const DeleteUserPage = () => {
 			);
 		}
 	};
+
 
 	if (loading) {
 		return <div>Loading...</div>;
