@@ -54,7 +54,7 @@ export default function CreateCommunities({
       }
 
       // Upload community image using the helper function
-      const imageUrl = await uploadFile(communityImage, `communityImages/${communityImage.name}`);
+      const imageUrl = await uploadFile(communityImage, `images/communities/thumbnails/${communityImage.name}`);
 
       // Create new community object
       const newCommunity: Omit<Communities, 'id'> = {

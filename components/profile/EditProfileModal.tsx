@@ -96,11 +96,11 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
   
   //   try {
   //     if (profilePicture) {
-  //       profilePictureUrl = await uploadFile(profilePicture, `profilePictures/${profilePicture.name}`);
+  //       profilePictureUrl = await uploadFile(profilePicture, `images/profilePictures/${profilePicture.name}`);
   //     }
   
   //     if (banner) {
-  //       bannerUrl = await uploadFile(banner, `banners/${banner.name}`);
+  //       bannerUrl = await uploadFile(banner, `images/banners/${banner.name}`);
   //     }
   
   //     const updatedData = {

@@ -1,3 +1,9 @@
+import { db } from '@/firebaseConfig';
+import { uploadFile } from '@/helpers/firebaseStorage';
+import { ProfileData, SocialPosts, UserData } from '@/types/global';
+import { Button, Image } from '@nextui-org/react';
+import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
+import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import {
 	AtSign,
 	BarChart4,
@@ -17,17 +23,11 @@ import {
 	X,
 } from 'lucide-react';
 import React, { SetStateAction, useRef, useState } from 'react';
-import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
-import styles from './postform.module.css';
-import { ProfileData, SocialPosts, UserData } from '@/types/global';
 import ReactPlayer from 'react-player';
+import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
 import 'react-toastify/dist/ReactToastify.css';
-import { Button, Image } from '@nextui-org/react';
-import { getAuth, User } from 'firebase/auth';
-import { uploadFile } from '@/helpers/firebaseStorage';
-import { db } from '@/firebaseConfig';
-import { addDoc, collection, doc, getDoc, serverTimestamp, setDoc, Timestamp } from 'firebase/firestore';
+import styles from './postform.module.css';
 
 //TODO aaron Add Gif icon
 type PostFormProps = {
@@ -72,6 +72,23 @@ export default function PostForm({
 			? (textareaRef.current.value += emojiObject.emoji)
 			: null;
 
+		
+
+			const getIpAddressAndLocation = async () => {
+				try {
+					const response = await axios.get('https://ipapi.co/json/');
+					return {
+						ip: response.data.ip,
+						city: response.data.city,
+						region: response.data.region,
+						country: response.data.country_name,
+					};
+				} catch (error) {
+					console.error('Error fetching IP and location:', error);
+					return null;
+				}
+			};
+
 	const createSocialPost = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
 
@@ -89,12 +106,13 @@ export default function PostForm({
 
 			if (image && image.name) {
 				// console.log('uploading image');
-				postImageUrl = await uploadFile(image, `images/${image.name}`);
+				postImageUrl = await uploadFile(image, `images/posts/${image.name}`);
 			}
 			if (video && video.name) {
 				// console.log('uploading video');
-				videoUrl = await uploadFile(video, `videos/${video.name}`);
+				videoUrl = await uploadFile(video, `videos/posts/${video.name}`);
 			}
+  			const locationData = await getIpAddressAndLocation();
 
 			const newSocialPost = {
 				profileImage: profile.profilePicture as string,
@@ -104,6 +122,8 @@ export default function PostForm({
 				content: content as string,
 				postImage: postImageUrl as string,
 				video: videoUrl as string,
+				ipAddress: locationData?.ip,
+				location: `${locationData?.city}, ${locationData?.region}, ${locationData?.country}`,
 			};
 		
 			console.log(newSocialPost, "isSocialPost")

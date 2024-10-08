@@ -268,7 +268,7 @@ export default function Page() {
 			);
 			const _profilePicture = await uploadFile(
 				avatarFile,
-				`images/${profilePicture}`
+				`images/profilePictures/${profilePicture}`
 			);
 			await setDoc(doc(db, 'profiles', user.uid), {
 				profilePicture: _profilePicture,

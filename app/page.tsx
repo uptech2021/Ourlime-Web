@@ -110,7 +110,7 @@ export default function Home() {
 		setPostCreated((prev) => !prev); // Toggle postCreated state
 	  };
 
-	if (loading) {
+	if (loading || !profile || !user) {
 		return <div>Loading...</div>;
 	}
 	return (
