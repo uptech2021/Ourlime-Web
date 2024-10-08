@@ -95,7 +95,7 @@ export default function PostForm({
 		const formData = new FormData(event.currentTarget);
 		const content = formData.get('content') as string;
 		const image = formData.get('image') as File;
-		const video = formData.get('video') as File;
+		const video = formData.get('video') as Fil;
 
 		if (content) {
 			
