@@ -1,6 +1,9 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	reactStrictMode: true,
+	env: {
+		IPINFO_API_TOKEN: process.env.IPINFO_API_TOKEN,
+	},
 	webpack: (config) => {
 		config.module.rules.push(
 			{
