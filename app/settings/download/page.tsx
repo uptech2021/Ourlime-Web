@@ -96,7 +96,7 @@ export default function Download() {
 
                     <Button
                         type="submit"
-                        className="bg-red-500 h-[2rem] w-[8rem] text-white text-sm px-4 py-2 mx-auto rounded-md bg-green-500"
+                        className="h-[2rem] w-[8rem] text-white text-sm px-4 py-2 mx-auto rounded-md bg-green-500"
                     >
                         Generate File
                     </Button>
