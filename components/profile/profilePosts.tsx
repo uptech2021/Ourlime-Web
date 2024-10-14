@@ -1,7 +1,8 @@
 import { SocialPosts } from '@/types/global';
-import TimelinePosts from './filteredPosts/TimelinePosts';
-import PhotosPosts from './filteredPosts/PhotosPosts';
-import VideosPosts from './filteredPosts/VideosPosts';
+import TimelinePosts from './filters/TimelinePosts';
+import PhotosPosts from './filters/PhotosPosts';
+import VideosPosts from './filters/VideosPosts';
+import About from './filters/About';
 
 export default function ProfilePosts({
 	selectedPost,
@@ -18,6 +19,7 @@ export default function ProfilePosts({
 		{selectedPost === 'likes' && (
 		  <p className="text-center">Posts you have liked are not available.</p>
 		)}
+		{selectedPost === 'about' && <About user={undefined} />}
 		{/* Other filters like sounds, files, etc. */}
 	  </div>
 	);

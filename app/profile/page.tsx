@@ -1,9 +1,7 @@
 'use client';
 
 import Navbar from '@/comm/Navbar';
-import communityImage3 from '@/public/images/home/car.jpg';
 import communityImage2 from '@/public/images/home/computer.webp';
-import communityImage1 from '@/public/images/home/hands.webp';
 import { Avatar, AvatarGroup, Button, Image } from '@nextui-org/react';
 import { CircleEllipsis, Smile, UsersRound } from 'lucide-react';
 import Link from 'next/link';
@@ -142,9 +140,25 @@ export default function Profile() {
     setEditModalOpen(!isEditModalOpen);
   };
 
-  const handleSave = (data) => {
+  const handleSave = async (data) => {
     console.log('Saved data:', data);
-    // Here you can handle the data, such as updating state or sending it to an API
+  
+    // Optionally, you could make an API call here to update the profile in your database.
+    // Assuming that after saving, you want to re-fetch the updated profile data:
+    
+    if (user) {
+      try {
+        const updatedProfileSnap = await fetchProfile(user.uid);
+        if (updatedProfileSnap.exists()) {
+          setProfile(updatedProfileSnap.data() as ProfileData);
+        }
+      } catch (error) {
+        console.error('Error fetching updated profile:', error);
+      }
+    }
+  
+    // Close the edit modal
+    setEditModalOpen(false);
   };
 
   return (
@@ -172,42 +186,36 @@ export default function Profile() {
 
       <div className="flex h-full min-h-screen w-full flex-col overflow-y-auto bg-gray-200 pl-1 pt-3 text-gray-800">
         {/* Profile Information Section */}
-        <section className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col md:flex-row">
-          <div className="h-24 w-24 overflow-hidden rounded-full mx-auto md:mx-0">
-            <Avatar
-              src={profile.profilePicture} // Use profile data for image
-              alt="Profile picture"
-              className="h-full w-full object-cover"
-            />
-            
-          </div>
-          <div className="ml-4 text-center md:text-left mt-4 md:mt-0">
-            <p className="text-xl font-semibold">
-              {profile.firstName} {profile.lastName}
-            </p>
-            <p className="text-gray-600">@{userData.userName}</p> {/* Display username as @username */}
-            <div className="mt-2 flex flex-col gap-4 md:flex-row">
-              <Button onClick={toggleEditModal}
-              className="border-gradient-to-r rounded-lg from-green-400 to-teal-400 px-4 py-2 text-black">
-                Edit
-              </Button>
-              {/* <Button className="rounded-lg bg-gradient-to-r from-green-400 to-teal-400 px-4 py-2 text-white">
-                Activities
-              </Button> */}
+        <section w-full>
+          <Image src={profile.banner} alt="Profile Banner" className="h-32 w-full object-cover" />
+          <div className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col ">
+            <div className="h-24 w-24 overflow-hidden rounded-full mx-auto md:mx-0">
+              <Avatar
+                src={profile.profilePicture} // Use profile data for image
+                alt="Profile picture"
+                className="h-full w-full object-cover"
+              />
             </div>
-            <div className="mt-2 flex justify-center gap-6 md:justify-start text-sm text-gray-600">
-              <p>{profile.followingCount? profile.followingCount : 0} Following</p>
-              <p>{posts.length} Posts</p>
-              <p>{profile.followerCount? profile.followerCount : 0} Followers</p>
+            <div className="ml-4 text-center md:text-left mt-4 md:mt-0">
+              <p className="text-xl font-semibold">
+                {profile.firstName} {profile.lastName}
+              </p>
+              <p className="text-gray-600">@{userData.userName}</p> {/* Display username as @username */}
+              <div className="mt-2 flex flex-col gap-4 md:flex-row">
+                <Button onClick={toggleEditModal}
+                className="border-gradient-to-r rounded-lg from-green-400 to-teal-400 px-4 py-2 text-black">
+                  Edit
+                </Button>
+                {/* <Button className="rounded-lg bg-gradient-to-r from-green-400 to-teal-400 px-4 py-2 text-white">
+                  Activities
+                </Button> */}
+              </div>
+              <div className="mt-2 flex justify-center gap-6 md:justify-start text-sm text-gray-600">
+                <p>{profile.followingCount? profile.followingCount : 0} Following</p>
+                <p>{posts.length} Posts</p>
+                <p>{profile.followerCount? profile.followerCount : 0} Followers</p>
+              </div>
             </div>
-          </div>
-          {/* Additional User Details Section */}
-          <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
-            <p><strong>Date of Birth:</strong> {profile.birthday || 'Not specified'}</p>
-            <p><strong>Gender:</strong> {userData.gender || 'Not specified'}</p>
-            <p><strong>Job:</strong> {profile.workingAt || 'Not specified'}</p>
-            <p><strong>School:</strong> {profile.school || 'Not specified'}</p>
-            <p><strong>Country:</strong> {profile.country || 'Not specified'}</p>
           </div>
         </section>
 
@@ -239,6 +247,11 @@ export default function Profile() {
               onClick={() => setSelectedFilter('videos')}>
               Videos
             </li>
+            <li
+              className={`cursor-pointer ${selectedFilter === 'about' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              onClick={() => setSelectedFilter('about')}>
+              About
+            </li>
           </ul>
         </nav>
         {/* Posts Section */}
@@ -247,24 +260,26 @@ export default function Profile() {
           {/* Timeline Posts Section */}
           <div className="w-full overflow-y-auto p-2 md:w-2/3">
             {/* New Post Section */}
-            <div
-              className="mb-4 rounded-xl bg-white p-4 shadow-lg cursor-pointer"
-              onClick={() => setTogglePostForm(true)}
-            >
-              <div className="flex flex-col md:flex-row justify-around rounded-xl p-5">
-                <div className="h-10 w-10 overflow-hidden rounded-full">
-                  <Avatar src={profile.profilePicture as string} alt="Avatar" className="h-full w-full object-cover" />
+            {selectedFilter === 'all' && (
+              <div
+                className="mb-4 rounded-xl bg-white p-4 shadow-lg cursor-pointer"
+                onClick={() => setTogglePostForm(true)}
+              >
+                <div className="flex flex-col md:flex-row justify-around rounded-xl p-5">
+                  <div className="h-10 w-10 overflow-hidden rounded-full">
+                    <Avatar src={profile.profilePicture as string} alt="Avatar" className="h-full w-full object-cover" />
+                  </div>
+                  <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
+                    What&apos;s going on?
+                  </p>
                 </div>
-                <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
-                  What&apos;s going on?
-                </p>
+                <div className="mt-5 flex flex-wrap items-center gap-3">
+                  <Button>Gallery</Button>
+                  <Smile className="text-green-600 cursor-pointer" />
+                  <CircleEllipsis className="ml-auto cursor-pointer" color="grey" />
+                </div>
               </div>
-              <div className="mt-5 flex flex-wrap items-center gap-3">
-                <Button>Gallery</Button>
-                <Smile className="text-green-600 cursor-pointer" />
-                <CircleEllipsis className="ml-auto cursor-pointer" color="grey" />
-              </div>
-            </div>
+            )}
 
             {/* Dynamically Render Posts */}
             <ProfilePosts socialPosts={filteredPosts} selectedPost={selectedFilter} />
@@ -275,7 +290,14 @@ export default function Profile() {
             {/* About Section */}
             <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
               <h2 className="mb-2 border-b pb-2 text-lg font-semibold">About</h2>
-              <p>{profile.aboutMe ? profile.aboutMe : 'This user has not updated their bio'}</p>
+              <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
+                <p><strong>Bio:</strong> {profile.aboutMe ? profile.aboutMe : 'This user has not updated their bio'}</p>
+                <p><strong>Date of Birth:</strong> {profile.birthday || 'Not specified'}</p>
+                <p><strong>Gender:</strong> {userData.gender || 'Not specified'}</p>
+                <p><strong>Job:</strong> {profile.workingAt || 'Not specified'}</p>
+                <p><strong>School:</strong> {profile.school || 'Not specified'}</p>
+                <p><strong>Country:</strong> {profile.country || 'Not specified'}</p>
+              </div>
             </div>
 
            {/* Communities Section */}  
@@ -306,8 +328,6 @@ export default function Profile() {
                 )}
               </ul>
             </div>
-            {/* Following Section */}
-
             {/* Photos Section */}
             <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
               <h2 className="mb-2 border-b pb-2 text-lg font-semibold">Photos</h2>
