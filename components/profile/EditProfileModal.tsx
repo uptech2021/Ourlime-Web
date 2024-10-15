@@ -15,13 +15,13 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
   const [bio, setBio] = useState('');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
+  const [successMessage, setSuccessMessage] = useState(''); // New state for success message
   const [userId, setUserId] = useState<string | null>(null);
   const [originalData, setOriginalData] = useState<ProfileData | null>(null);
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
-
   const router = useRouter();
 
   useEffect(() => {
@@ -84,6 +84,8 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
     }
 
     setIsSaving(true);
+    setSuccessMessage(''); // Clear any previous success message
+    setError(''); // Clear any previous error message
 
     let profilePictureUrl = originalData?.profilePicture || '';
     let bannerUrl = originalData?.banner || '';
@@ -114,14 +116,16 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
         const profileDocRef = doc(db, "profiles", userId);
         await updateDoc(profileDocRef, updatedData);
         onSave(updatedData);
+        setSuccessMessage('Changes made successfully!'); // Set success message
       }
     } catch (error) {
       console.error("Error updating profile:", error);
+      setError('An error occurred while saving changes.'); // Set error message
     } finally {
       setIsSaving(false);
-      onClose();
     }
   };
+
   if (!isOpen) return null;
 
   return (
@@ -136,6 +140,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
         </button>
 
         {error && <p className="text-red-600 mb-4">{error}</p>}
+        {successMessage && <p className="text-green-600 mb-4">{successMessage}</p>} {/* Display success message */}
 
         <div className="mb-4">
           <label className="font-semibold">Change Profile Picture</label>

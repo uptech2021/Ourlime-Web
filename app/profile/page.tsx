@@ -187,7 +187,7 @@ export default function Profile() {
       <div className="flex h-full min-h-screen w-full flex-col overflow-y-auto bg-gray-200 pl-1 pt-3 text-gray-800">
         {/* Profile Information Section */}
         <section w-full>
-          <Image src={profile.banner} alt="Profile Banner" className="h-32 w-full object-cover" />
+          <Image src={profile.banner} alt="Profile Banner" className="h-full w-full object-cover" />
           <div className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col ">
             <div className="h-24 w-24 overflow-hidden rounded-full mx-auto md:mx-0">
               <Avatar
