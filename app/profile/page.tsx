@@ -188,7 +188,7 @@ export default function Profile() {
         {/* Profile Information Section */}
         <section w-full>
           <Image src={profile.banner} alt="Profile Banner" className="h-full w-full object-cover" />
-          <div className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col ">
+          <div className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col md:flex-row">
             <div className="h-24 w-24 overflow-hidden rounded-full mx-auto md:mx-0">
               <Avatar
                 src={profile.profilePicture} // Use profile data for image
