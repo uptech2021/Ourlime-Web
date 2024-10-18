@@ -5,10 +5,10 @@ import communityImage2 from '@/public/images/home/computer.webp';
 import { Avatar, AvatarGroup, Button, Image } from '@nextui-org/react';
 import { CircleEllipsis, Smile, UsersRound } from 'lucide-react';
 import Link from 'next/link';
-import { ProfileData, UserData, SocialPosts, Communities } from '@/types/global';
+import { ProfileData, UserData, SocialPosts, Communities, Follower, Following } from '@/types/global';
 import { useEffect, useState } from 'react';
 import { auth, db } from '@/firebaseConfig';
-import { collection, getDocs, doc, getDoc } from 'firebase/firestore';
+import { collection, getDocs, doc, getDoc, query, where, documentId } from 'firebase/firestore';
 import { onAuthStateChanged, User } from 'firebase/auth';
 import { fetchProfile, loginRedirect } from '@/helpers/Auth';
 import { useRouter } from 'next/navigation';
@@ -30,6 +30,8 @@ export default function Profile() {
   const [communities, setCommunities] = useState<Communities[]>([]); // State for communities
   const [selectedFilter, setSelectedFilter] = useState<string>('all'); // Default is 'all'
   const [isEditModalOpen, setEditModalOpen] = useState(false);
+  const [followers, setFollowers] = useState<Follower[]>([]);
+  const [following, setFollowing] = useState<Following[]>([]);
 
   useEffect(() => {
     loginRedirect(router, true)
@@ -52,6 +54,7 @@ export default function Profile() {
         if (profileSnap.exists() && userSnap.exists()) {
           setProfile(profileSnap.data() as ProfileData);
           setUserData(userSnap.data() as UserData);
+          await fetchFollowersAndFollowing(currentUser);
         }
         console.log(profileSnap.data());
         // Fetch posts
@@ -95,6 +98,44 @@ export default function Profile() {
     return () => unsubscribe();
   }, [router]);
   
+  const fetchFollowersAndFollowing = async (currentUser: User) => {
+    if (currentUser) {
+      // Fetch followers
+      const followersSnapshot = await getDocs(query(collection(db, 'followers'), where('followedId', '==', currentUser.uid)));
+      const followerIds = followersSnapshot.docs.map(doc => doc.data().followerId);
+
+      // Fetch following
+      const followingSnapshot = await getDocs(query(collection(db, 'following'), where('followerId', '==', currentUser.uid)));
+      const followingIds = followingSnapshot.docs.map(doc => doc.data().followedId);
+
+      // Fetch user data for followers and following
+      const userIds = Array.from(new Set([...followerIds, ...followingIds]));
+      const usersSnapshot = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', userIds)));
+      const usersData = usersSnapshot.docs.reduce((acc, doc) => {
+        acc[doc.id] = doc.data();
+        return acc;
+      }, {});
+
+      // Construct followers and following arrays
+      const followers = followerIds.map(id => ({
+        uid: id,
+        username: usersData[id]?.userName,
+        profilePicture: usersData[id]?.profilePicture,
+        email: usersData[id]?.email
+      }));
+
+      const following = followingIds.map(id => ({
+        uid: id,
+        username: usersData[id]?.userName,
+        profilePicture: usersData[id]?.profilePicture,
+        email: usersData[id]?.email
+      }));
+
+      setFollowers(followers);
+      setFollowing(following);
+    }
+  };
+
   // Use this function to signal that a post was created
   const handlePostCreated = () => {
     setPostCreated((prev) => !prev); // Toggle postCreated state
@@ -142,10 +183,7 @@ export default function Profile() {
 
   const handleSave = async (data) => {
     console.log('Saved data:', data);
-  
-    // Optionally, you could make an API call here to update the profile in your database.
-    // Assuming that after saving, you want to re-fetch the updated profile data:
-    
+  // Update the profile data in Firestore
     if (user) {
       try {
         const updatedProfileSnap = await fetchProfile(user.uid);
@@ -186,9 +224,10 @@ export default function Profile() {
 
       <div className="flex h-full min-h-screen w-full flex-col overflow-y-auto bg-gray-200 pl-1 pt-3 text-gray-800">
         {/* Profile Information Section */}
-        <section w-full>
+        <section className="w-full">
           <Image src={profile.banner} alt="Profile Banner" className="h-full w-full object-cover" />
           <div className="mb-4 w-full rounded-xl bg-white p-4 shadow-lg flex flex-col md:flex-row">
+            
             <div className="h-24 w-24 overflow-hidden rounded-full mx-auto md:mx-0">
               <Avatar
                 src={profile.profilePicture} // Use profile data for image
@@ -200,7 +239,7 @@ export default function Profile() {
               <p className="text-xl font-semibold">
                 {profile.firstName} {profile.lastName}
               </p>
-              <p className="text-gray-600">@{userData.userName}</p> {/* Display username as @username */}
+              <p className="text-gray-600">@{userData.userName}</p>
               <div className="mt-2 flex flex-col gap-4 md:flex-row">
                 <Button onClick={toggleEditModal}
                 className="border-gradient-to-r rounded-lg from-green-400 to-teal-400 px-4 py-2 text-black">
@@ -211,9 +250,23 @@ export default function Profile() {
                 </Button> */}
               </div>
               <div className="mt-2 flex justify-center gap-6 md:justify-start text-sm text-gray-600">
-                <p>{profile.followingCount? profile.followingCount : 0} Following</p>
+                <div>
+                  <p>{following.length} Following</p>
+                  <AvatarGroup isBordered max={3}>
+                    {following.map((follow, index) => (
+                      <Avatar key={index} src={follow.profilePicture} alt={follow.username} />
+                    ))}
+                  </AvatarGroup>
+                </div>
                 <p>{posts.length} Posts</p>
-                <p>{profile.followerCount? profile.followerCount : 0} Followers</p>
+                <div>
+                  <p>{followers.length} Followers</p>
+                  <AvatarGroup isBordered max={3}>
+                    {followers.map((follower, index) => (
+                      <Avatar key={index} src={follower.profilePicture} alt={follower.username} />
+                    ))}
+                  </AvatarGroup>
+                </div>
               </div>
             </div>
           </div>

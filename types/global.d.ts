@@ -114,3 +114,17 @@ export type Communities = {
   isPublic: boolean;
   posts: SocialPostsData[];
 }
+
+export type Follower = {
+  uid: string;
+  username: string;
+  profilePicture: string;
+  email: string;
+};
+
+export type Following = {
+  uid: string;
+  username: string;
+  profilePicture: string;
+  email: string;
+};
