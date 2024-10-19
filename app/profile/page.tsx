@@ -334,7 +334,11 @@ export default function Profile() {
             )}
 
             {/* Dynamically Render Posts */}
-            <ProfilePosts socialPosts={filteredPosts} selectedPost={selectedFilter} />
+            <ProfilePosts 
+              socialPosts={filteredPosts} 
+              selectedPost={selectedFilter} 
+              user={userData} // Add this line
+            />
             </div>
 
           {/* Sidebar Section */}
