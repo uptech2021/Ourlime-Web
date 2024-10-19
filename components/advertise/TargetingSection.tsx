@@ -43,6 +43,8 @@ export default function TargetingSection({
 	setIsFormValid,
 }: TargetingSectionProps) {
 	const [gender, setGender] = useState('');
+	const [isPublishing, setIsPublishing] = useState(false);
+
 
 	//TODO aaron review
 	const checkFormValidity = useCallback(() => {
@@ -67,6 +69,33 @@ export default function TargetingSection({
 		endDateRef,
 		websiteUrlRef
 	);
+
+
+	const handlePublish = () => {
+        setIsPublishing(true);
+        setTimeout(() => {
+            console.log('Media Session Data:', {
+                companyName: sessionStorage.getItem('companyName'),
+                fileName: sessionStorage.getItem('fileName')
+            });
+            console.log('Details Session Data:', {
+                campaignTitle: sessionStorage.getItem('campaignTitle'),
+                campaignDescription: sessionStorage.getItem('campaignDescription'),
+                startDate: sessionStorage.getItem('startDate'),
+                endDate: sessionStorage.getItem('endDate'),
+                websiteUrl: sessionStorage.getItem('websiteUrl')
+            });
+            console.log('Targeting Session Data:', {
+                placement: placementRef.current?.value,
+                bidding: biddingRef.current?.value,
+                location: locationRef.current?.value,
+                gender: gender
+            });
+            setIsPublishing(false);
+            changeForm();
+        }, 2000);
+    };
+
 	return (
 		<section className="my-1 flex flex-col gap-3">
 			<Input
@@ -100,7 +129,7 @@ export default function TargetingSection({
 				ref={locationRef}
 				onChange={checkFormValidity}
 			/>
-		
+	
 			<Select
 				ref={genderRef}
 				label="Gender"
@@ -108,8 +137,9 @@ export default function TargetingSection({
 				size="lg"
 				radius="sm"
 				className="selectTag bg-none text-white"
-				onSelectionChange={(value) => {
-					setGender(value as string);
+				onSelectionChange={(keys) => {
+					const selectedValue = Array.from(keys)[0] as string;
+					setGender(selectedValue);
 					checkFormValidity();
 				}}
 			>
@@ -124,6 +154,7 @@ export default function TargetingSection({
 				</SelectItem>
 			</Select>
 
+
 			<div className="flex flex-row gap-3 px-4">
 				<Button
 					onClick={() => setFormState('Details')}
@@ -133,11 +164,14 @@ export default function TargetingSection({
 				</Button>
 
 				<Button
-					onClick={() => changeForm()}
+					onClick={() => {
+						handlePublish();
+						changeForm()
+					}}
 					className="mx-auto w-1/2 cursor-pointer"
-					isDisabled={!isFormValid}
+					isDisabled={!isFormValid || isPublishing}
 				>
-					Publish
+					{isPublishing ? 'Publishing...' : 'Publish'}
 				</Button>
 			</div>
 		</section>

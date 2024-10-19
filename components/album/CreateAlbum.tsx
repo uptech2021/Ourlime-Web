@@ -1,15 +1,78 @@
 'use client';
 
-import React from 'react';
+import React, { useState } from 'react';
 import Image from 'next/image';
 import pic from '@/public/images/album/Image.png';
 import top from '@/public/images/album/topimg.png';
+import { FaTrash } from 'react-icons/fa';
+
+import { uploadFile } from '@/helpers/firebaseStorage';
+import { Timestamp } from 'firebase/firestore';
+import { db, auth } from '@/firebaseConfig';
+import { collection, addDoc, updateDoc } from 'firebase/firestore';
 
 interface CreateAlbumProps {
 	onGoBack: () => void;
 }
 
 export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
+	const [images, setImages] = useState<File[]>([]);
+	const [albumName, setAlbumName] = useState('');
+
+
+	const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
+		if (event.target.files && event.target.files[0]) {
+			setImages(prevImages => [...prevImages, event.target.files![0]]);
+		}
+	};
+
+	const handleDeleteImage = (index: number) => {
+		setImages(prevImages => prevImages.filter((_, i) => i !== index));
+	};
+
+	const handleSubmit = async (e: React.FormEvent) => {
+		e.preventDefault();
+		
+		if (!auth.currentUser) {
+		  console.log('User not logged in');
+		  return;
+		}
+	
+		try {
+		  // 1. Insert album name and user email into Firestore
+		  const albumRef = await addDoc(collection(db, 'albums'), {
+			name: albumName,
+			userEmail: auth.currentUser.email,
+			createdAt: Timestamp.now(),
+			updatedAt: Timestamp.now(),
+		  });
+	
+		  console.log('Album created with ID:', albumRef.id);
+	
+		  // 2. Upload images to Firebase Storage
+		  const imageUrls = await Promise.all(
+			images.map(async (image, index) => {
+			  const path = `images/${albumRef.id}/${image.name}`;
+			  const url = await uploadFile(image, path);
+			  console.log(`Image ${index + 1} uploaded successfully:`, url);
+			  return url;
+			})
+		  );
+	
+		  // 3. Update the album document with image URLs
+		  await updateDoc(albumRef, { imageUrls });
+	
+		  console.log('Album updated with image URLs');
+	
+		  // Clear form after successful submission
+		  setAlbumName('');
+		  setImages([]);
+	
+		} catch (error) {
+		  console.error('Error creating album:', error);
+		}
+	  };
+
 	return (
 		<div className="flex flex-col items-center justify-center bg-gray-200">
 			<div className="w-[60vw] rounded-lg bg-white p-6 shadow-md">
@@ -17,32 +80,81 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 					<Image src={top} alt="topimage" className="h-14 w-14" />
 					<p className="ml-2 text-lg font-semibold text-black">Create album</p>
 				</div>
-				<form>
+				<form onSubmit={handleSubmit}>
 					<div className="mb-4">
+						<label htmlFor="albumName" className="sr-only">Album Name</label>
 						<input
-							type="text"
-							className="w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
-							id="albumName"
-							placeholder="Album name"
+						type="text"
+						className="w-full rounded-md border border-gray-300 px-4 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+						id="albumName"
+						placeholder="Album name"
+						value={albumName}
+						onChange={(e) => setAlbumName(e.target.value)}
 						/>
+
 						<p className="mt-1 text-sm text-gray-500">Choose your album name</p>
 					</div>
 					<div className="mb-6">
-						<div className="flex flex-col items-start">
-							<p className="mb-2 font-semibold text-gray-700">Photos</p>
-							<Image src={pic} alt="upload" className="h-24 w-32" />
+						<p className="mb-2 font-semibold text-gray-700">Photos</p>
+						<div className="flex flex-row flex-wrap items-center gap-4">
+							{images.map((image, index) => (
+								<div key={index} className="relative">
+									<Image
+										src={URL.createObjectURL(image)}
+										alt={image.name}
+										width={100}
+										height={100}
+										className="h-24 w-32 object-cover"
+									/>
+									<button
+										onClick={() => handleDeleteImage(index)}
+										className="absolute left-1/2 top-1/2 -translate-x-1/2 -translate-y-1/2 rounded-full bg-red-500 p-2 text-white"
+										aria-label="Delete image"
+									>
+										<FaTrash size={16} />
+									</button>
+								</div>
+							))}
+							<label htmlFor="imageUpload" className="cursor-pointer">
+								<Image src={pic} alt="upload" className="h-24 w-32" />
+							</label>
+							<input
+								type="file"
+								accept="image/*"
+								onChange={handleImageUpload}
+								className="hidden"
+								id="imageUpload"
+								aria-label="Upload image"
+							/>
 						</div>
+						{images.length > 0 && (
+						<div className="mt-4 flex flex-row flex-wrap gap-4 text-sm text-gray-600">
+							{images.map((image, index) => (
+							<p key={index} className="whitespace-nowrap">
+								{index + 1}. {image.name}
+							</p>
+							))}
+						</div>
+						)}
+
 					</div>
 					<div className="flex items-center justify-between">
-						<p className="cursor-pointer text-blue-500" onClick={onGoBack}>
+						<button type="button" className="cursor-pointer text-blue-500" onClick={onGoBack}>
 							Go back
-						</p>
+						</button>
 						<button
 							type="submit"
-							className="rounded-md bg-red-500 px-4 py-2 text-white transition-colors duration-300 hover:bg-red-600"
-						>
+							className={`rounded-md px-4 py-2 text-white transition-colors duration-300 ${
+								albumName.trim() !== '' && images.length > 0
+								? 'bg-red-500 hover:bg-red-600'
+								: 'bg-gray-400 cursor-not-allowed'
+							}`}
+							disabled={albumName.trim() === '' || images.length === 0}
+							>
 							Publish
 						</button>
+						
+
 					</div>
 				</form>
 			</div>

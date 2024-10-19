@@ -7,6 +7,8 @@ import {
 	MutableRefObject,
 	RefObject,
 	SetStateAction,
+	useEffect,
+	useState,
 } from 'react';
 
 type MediaSectionProps = {
@@ -18,8 +20,6 @@ type MediaSectionProps = {
 	selectedFile: File | null;
 	setSelectedFile: Dispatch<SetStateAction<File | null>>;
 	changeForm: () => void;
-	/* eslint-disable-next-line no-unused-vars */
-	handleFileChange: (event: ChangeEvent<HTMLInputElement>) => void;
 };
 
 export default function MediaSection({
@@ -31,9 +31,49 @@ export default function MediaSection({
 	selectedFile,
 	setSelectedFile,
 	changeForm,
-	handleFileChange,
 }: MediaSectionProps) {
-	console.log(setSelectedFile);
+	const [isFormValid, setIsFormValid] = useState(false);
+
+	const checkFormValidity = () => {
+	  setIsFormValid(!!companyNameValue && !!selectedFile);
+	};
+  
+	useEffect(() => {
+	  checkFormValidity();
+	}, [companyNameValue, selectedFile]);
+
+	useEffect(() => {
+		// Load data from sessionStorage on component mount
+		const storedCompanyName = sessionStorage.getItem('companyName');
+		if (storedCompanyName) {
+		  setCompanyNameValue(storedCompanyName);
+		}
+	
+		// We can't store File objects directly in sessionStorage,
+		// so we'll just store the file name
+		const storedFileName = sessionStorage.getItem('fileName');
+		if (storedFileName) {
+		  console.log('Stored file name:', storedFileName);
+		}
+	  }, []);
+	
+	  useEffect(() => {
+		// Save company name to sessionStorage whenever it changes
+		sessionStorage.setItem('companyName', companyNameValue);
+		console.log('Stored company name:', companyNameValue);
+	  }, [companyNameValue]);
+	
+	  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+		const file = event.target.files?.[0] || null;
+		setSelectedFile(file);
+		if (file) {
+		  sessionStorage.setItem('fileName', file.name);
+		  console.log('Stored file name:', file.name);
+		} else {
+		  sessionStorage.removeItem('fileName');
+		  console.log('Removed stored file name');
+		}
+	  };
 
 	return (
 		<section className="my-1 flex flex-col gap-3">
@@ -56,18 +96,27 @@ export default function MediaSection({
 			/>
 
 			<p className="text-sm">Select an image for your campaign</p>
-
-			<div className="border-b-2 border-b-gray-700 bg-[#f5f5f5] py-20">
-				<Button
-					className="mx-auto flex w-auto cursor-pointer flex-row items-center justify-center rounded-lg bg-none p-3"
-					startContent={<ImageIcon />}
-					onClick={() => fileInputRef.current?.click()}
+			<div className="relative h-96 border-b-2 border-b-gray-700 bg-[#f5f5f5]">
+				<div 
+					className="flex h-full w-full items-center justify-center bg-contain bg-center bg-no-repeat"
+					style={{ backgroundImage: selectedFile ? `url(${URL.createObjectURL(selectedFile)})` : 'none' }}
 				>
-					<p className="text-sm">
-						{selectedFile ? selectedFile.name : 'Select Photos / Videos'}
-					</p>
-				</Button>
-				<input
+					<Button
+						className="mx-auto flex w-auto cursor-pointer flex-row items-center justify-center rounded-lg bg-white bg-opacity-75 p-3 transition-opacity hover:bg-opacity-100"
+						startContent={<ImageIcon />}
+						onClick={() => fileInputRef.current?.click()}
+					>
+						<p className="text-sm">
+							{selectedFile ? 'Change Photo / Video' : 'Select Photos / Videos'}
+						</p>
+					</Button>
+				</div>
+				{selectedFile && (
+					<div className="absolute bottom-2 left-2 bg-black bg-opacity-50 p-1 text-xs text-white">
+						{selectedFile.name}
+					</div>
+				)}
+				<Input
 					ref={fileInputRef}
 					type="file"
 					name="file"
@@ -82,7 +131,12 @@ export default function MediaSection({
 			)}
 			<Button
 				onClick={() => changeForm()}
-				className="mx-auto w-1/2 cursor-pointer"
+				className={`mx-auto w-1/2 transition-all duration-300 ${
+					isFormValid
+					  ? 'cursor-pointer bg-gray-300 hover:bg-gray-400'
+					  : 'cursor-not-allowed bg-gray-200'
+				  }`}
+				disabled={!isFormValid}
 			>
 				Next
 			</Button>
