@@ -119,7 +119,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
         setSuccessMessage('Changes made successfully!'); // Set success message
       }
     } catch (error) {
-      console.error("Error updating profile:", error);
+      // console.error("Error updating profile:", error);
       setError('An error occurred while saving changes.'); // Set error message
     } finally {
       setIsSaving(false);

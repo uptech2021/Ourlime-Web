@@ -39,10 +39,10 @@ export default function About() {
               setOriginalProfile(profileData); // Set original profile data
               setOriginalUserData(userData);   // Set original user data
             } else {
-              console.log("No profile or user data found.");
+              // console.log("No profile or user data found.");
             }
           } catch (error) {
-            console.error("Error loading profile data:", error);
+            // console.error("Error loading profile data:", error);
           } finally {
             setLoading(false);
           }
@@ -98,7 +98,7 @@ export default function About() {
         }
         handleEditToggle(field);
       } catch (error) {
-        console.error("Error saving data:", error);
+        // console.error("Error saving data:", error);
       }
     }
   };

@@ -37,7 +37,7 @@ export default function Profile() {
     loginRedirect(router, true)
       .then(() => setLoading(false))
       .catch((error) => {
-        console.error('Error during login redirect:', error);
+        // console.error('Error during login redirect:', error);
         setLoading(false);
       });
   
@@ -56,7 +56,6 @@ export default function Profile() {
           setUserData(userSnap.data() as UserData);
           await fetchFollowersAndFollowing(currentUser);
         }
-        console.log(profileSnap.data());
         // Fetch posts
         const getPosts = await getDocs(collection(db, 'posts'));
         const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
@@ -79,7 +78,7 @@ export default function Profile() {
   
             setCommunities(userCommunities);
           } catch (error) {
-            console.error('Error fetching communities:', error);
+            // console.error('Error fetching communities:', error);
           }
         };
   
@@ -153,7 +152,7 @@ export default function Profile() {
             .sort((a, b) => b.time - a.time); // Sort by most recent
           setPosts(userPosts);
         } catch (error) {
-          console.error('Error fetching posts:', error);
+          // console.error('Error fetching posts:', error);
         }
       };
   
@@ -182,8 +181,8 @@ export default function Profile() {
   };
 
   const handleSave = async (data) => {
-    console.log('Saved data:', data);
-  // Update the profile data in Firestore
+    // console.log('Saved data:', data);
+    // Update the profile data in Firestore
     if (user) {
       try {
         const updatedProfileSnap = await fetchProfile(user.uid);
@@ -191,7 +190,7 @@ export default function Profile() {
           setProfile(updatedProfileSnap.data() as ProfileData);
         }
       } catch (error) {
-        console.error('Error fetching updated profile:', error);
+        // console.error('Error fetching updated profile:', error);
       }
     }
   
