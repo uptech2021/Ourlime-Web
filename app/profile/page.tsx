@@ -420,6 +420,8 @@ export default function Profile() {
                       socialPosts={filteredPosts} 
                       selectedPost={selectedFilter} 
                       user={userData}
+                      onProfileUpdate={handleProfileUpdate}
+                      onUserDataUpdate={handleUserDataUpdate}
                     />
                   </>
                 )}
