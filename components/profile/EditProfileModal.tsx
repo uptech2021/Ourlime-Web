@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation';
 import { Button, Input } from '@nextui-org/react';
 import ImageCropper from '@/helpers/ImageCropper';
 import { ProfileData } from '@/types/global';
+import { toast } from 'react-toastify'; // Make sure you have this import if you're using react-toastify for notifications
 
 const EditProfileModal = ({ isOpen, onClose, onSave }) => {
   const [profilePicture, setProfilePicture] = useState<Blob | null>(null);
@@ -61,8 +62,21 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      setBanner(file);
-      setBannerPreview(URL.createObjectURL(file));
+      const img = new Image();
+      img.onload = () => {
+        if (img.width > img.height) {
+          setBanner(file);
+          setBannerPreview(URL.createObjectURL(file));
+        } else {
+          toast.error('Please upload a landscape orientation image for the banner.');
+          e.target.value = ''; // Reset the file input
+        }
+      };
+      img.onerror = () => {
+        toast.error('Error loading image. Please try another file.');
+        e.target.value = ''; // Reset the file input
+      };
+      img.src = URL.createObjectURL(file);
     }
   };
 
@@ -163,7 +177,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
         </div>
 
         <div className="mb-4">
-          <label className="font-semibold">Change Banner</label>
+          <label className="font-semibold">Change Banner (Landscape orientation only)</label>
           {bannerPreview && (
             <img src={bannerPreview} alt="Banner Preview" className="mt-2 w-full h-32 object-cover rounded" />
           )}

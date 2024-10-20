@@ -272,35 +272,35 @@ export default function Profile() {
         </section>
 
         {/* Navigation Section */}
-        <nav className="mb-4 border-b border-gray-300">
-          <ul className="flex justify-between md:justify-start gap-4 p-2 text-sm md:text-base">
+        <nav className="mb-4 border-b border-gray-300 sticky top-0 bg-gray-200 z-10 overflow-x-auto">
+          <ul className="flex whitespace-nowrap p-2 text-sm md:text-base">
             <li 
-              className={`cursor-pointer ${selectedFilter === 'all' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              className={`cursor-pointer px-4 ${selectedFilter === 'all' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('all')}>
               Timeline
             </li>
             <li 
-              className={`cursor-pointer ${selectedFilter === 'communities' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              className={`cursor-pointer px-4 ${selectedFilter === 'communities' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('communities')}>
               Communities
             </li>
             <li 
-              className={`cursor-pointer ${selectedFilter === 'likes' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              className={`cursor-pointer px-4 ${selectedFilter === 'likes' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('likes')}>
               Likes
             </li>
             <li 
-              className={`cursor-pointer ${selectedFilter === 'photos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              className={`cursor-pointer px-4 ${selectedFilter === 'photos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('photos')}>
               Photos
             </li>
             <li 
-              className={`cursor-pointer ${selectedFilter === 'videos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              className={`cursor-pointer px-4 ${selectedFilter === 'videos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('videos')}>
               Videos
             </li>
             <li
-              className={`cursor-pointer ${selectedFilter === 'about' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
+              className={`cursor-pointer px-4 ${selectedFilter === 'about' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
               onClick={() => setSelectedFilter('about')}>
               About
             </li>
