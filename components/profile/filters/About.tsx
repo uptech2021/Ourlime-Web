@@ -5,7 +5,12 @@ import { fetchProfile, fetchUser } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
 import { onAuthStateChanged } from 'firebase/auth';
 
-export default function About() {
+interface AboutProps {
+  onProfileUpdate: (updatedData: Partial<ProfileData>) => void;
+  onUserDataUpdate: (updatedData: Partial<UserData>) => void;
+}
+
+export default function About({ onProfileUpdate, onUserDataUpdate }: AboutProps) {
   const [profile, setProfile] = useState<ProfileData | null>(null);
   const [userData, setUserData] = useState<UserData | null>(null);
   const [originalProfile, setOriginalProfile] = useState<ProfileData | null>(null); // Original profile data for cancel
@@ -93,8 +98,10 @@ export default function About() {
         const docRef = doc(db, type === 'profile' ? 'profiles' : 'users', user.uid);
         if (type === 'profile' && profile) {
           await updateDoc(docRef, { [field]: profile[field as keyof ProfileData] });
+          onProfileUpdate({ [field]: profile[field as keyof ProfileData] });
         } else if (type === 'user' && userData) {
           await updateDoc(docRef, { [field]: userData[field as keyof UserData] });
+          onUserDataUpdate({ [field]: userData[field as keyof UserData] });
         }
         handleEditToggle(field);
       } catch (error) {

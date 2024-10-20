@@ -184,25 +184,18 @@ export default function Profile() {
     }
   }, [postCreated, user]);
   
-  const handleProfileUpdate = (updatedData) => {
-    console.log("Received updated data in Profile:", updatedData);
-    if (user) {
-      try {
-        // Update Firestore profile
-        const profileRef = firestoreDoc(db, 'profiles', user.uid);
-        updateDoc(profileRef, updatedData);
+  const handleProfileUpdate = (updatedData: Partial<ProfileData>) => {
+    setProfile(prevProfile => ({
+      ...prevProfile,
+      ...updatedData
+    }));
+  };
 
-        // Update local state
-        setProfile(prevProfile => {
-          const newProfile = { ...prevProfile, ...updatedData };
-          console.log("Updated profile state:", newProfile);
-          return newProfile;
-        });
-
-      } catch (error) {
-        console.error('Error updating profile:', error);
-      }
-    }
+  const handleUserDataUpdate = (updatedData: Partial<UserData>) => {
+    setUserData(prevUserData => ({
+      ...prevUserData,
+      ...updatedData
+    }));
   };
 
   if (loading) {
@@ -393,52 +386,61 @@ export default function Profile() {
             <section className="flex flex-col md:flex-row flex-grow gap-4 overflow-y-auto">
               {/* Timeline Posts Section */}
               <div className="w-full overflow-y-auto p-2 md:w-2/3">
-                {/* New Post Section */}
-                {selectedFilter === 'all' && (
-                  <div
-                    className="mb-4 rounded-xl bg-white p-4 shadow-lg cursor-pointer"
-                    onClick={() => setTogglePostForm(true)}
-                  >
-                    <div className="flex flex-col md:flex-row justify-around rounded-xl p-5">
-                      <div className="h-10 w-10 overflow-hidden rounded-full">
-                        <Avatar src={user.photoURL as string} alt="Avatar" className="h-full w-full object-cover" />
+                {selectedFilter === 'about' ? (
+                  <About 
+                    onProfileUpdate={handleProfileUpdate}
+                    onUserDataUpdate={handleUserDataUpdate}
+                  />
+                ) : (
+                  <>
+                    {/* New Post Section */}
+                    {selectedFilter === 'all' && (
+                      <div
+                        className="mb-4 rounded-xl bg-white p-4 shadow-lg cursor-pointer"
+                        onClick={() => setTogglePostForm(true)}
+                      >
+                        <div className="flex flex-col md:flex-row justify-around rounded-xl p-5">
+                          <div className="h-10 w-10 overflow-hidden rounded-full">
+                            <Avatar src={user.photoURL as string} alt="Avatar" className="h-full w-full object-cover" />
+                          </div>
+                          <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
+                            What&apos;s going on?
+                          </p>
+                        </div>
+                        <div className="mt-5 flex flex-wrap items-center gap-3">
+                          <Button>Gallery</Button>
+                          <Smile className="text-green-600 cursor-pointer" />
+                          <CircleEllipsis className="ml-auto cursor-pointer" color="grey" />
+                        </div>
                       </div>
-                      <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
-                        What&apos;s going on?
-                      </p>
-                    </div>
-                    <div className="mt-5 flex flex-wrap items-center gap-3">
-                      <Button>Gallery</Button>
-                      <Smile className="text-green-600 cursor-pointer" />
-                      <CircleEllipsis className="ml-auto cursor-pointer" color="grey" />
-                    </div>
-                  </div>
-                )}
+                    )}
 
-                {/* Dynamically Render Posts */}
-                <ProfilePosts 
-                  socialPosts={filteredPosts} 
-                  selectedPost={selectedFilter} 
-                  user={userData} // Add this line
-                />
-                </div>
+                    {/* Dynamically Render Posts */}
+                    <ProfilePosts 
+                      socialPosts={filteredPosts} 
+                      selectedPost={selectedFilter} 
+                      user={userData}
+                    />
+                  </>
+                )}
+              </div>
 
               {/* Sidebar Section */}
               <div className="w-full overflow-y-auto p-2 md:w-1/3">
-                {/* About Section */}
-                <div className="mb-4 rounded-xl bg-white p-4 shadow-lg" key={profile?.aboutMe}>
-                  <h2 className="mb-2 border-b pb-2 text-lg font-semibold">About</h2>
-                  <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
-                    <p><strong>Bio:</strong> {profile?.aboutMe || 'This user has not updated their bio'}</p>
-                    <p><strong>Date of Birth:</strong> {profile?.birthday || 'Not specified'}</p>
-                    <p><strong>Gender:</strong> {userData?.gender || 'Not specified'}</p>
-                    <p><strong>Job:</strong> {profile?.workingAt || 'Not specified'}</p>
-                    <p><strong>School:</strong> {profile?.school || 'Not specified'}</p>
-                    <p><strong>Country:</strong> {profile?.country || 'Not specified'}</p>
+                  <div className="mb-4 rounded-xl bg-white p-4 shadow-lg" key={profile?.aboutMe}>
+                    <h2 className="mb-2 border-b pb-2 text-lg font-semibold">About</h2>
+                    <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
+                      <p><strong>Bio:</strong> {profile?.aboutMe || 'This user has not updated their bio'}</p>
+                      <p><strong>Date of Birth:</strong> {profile?.birthday || 'Not specified'}</p>
+                      <p><strong>Gender:</strong> {userData?.gender || 'Not specified'}</p>
+                      <p><strong>Job:</strong> {profile?.workingAt || 'Not specified'}</p>
+                      <p><strong>School:</strong> {profile?.school || 'Not specified'}</p>
+                      <p><strong>Country:</strong> {profile?.country || 'Not specified'}</p>
+                    </div>
                   </div>
-                </div>
+                
 
-               {/* Communities Section */}  
+                {/* Communities Section */}  
                 <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
                   <div className="flex items-center justify-between">
                     <h3 className="text-lg font-semibold"> Joined Communities</h3>
