@@ -64,15 +64,8 @@ export default function DetailsSection({
 		const descriptionValid = validateCampaignDescription(campaignDescriptionRef.current?.value || '');
 		const dateValid = validateDate(new Date(startDateRef.current?.value || ''), new Date(endDateRef.current?.value || ''));
 		const urlValid = validateWebsiteUrl(websiteUrlRef.current?.value || '');
-	
-		// console.log('Title valid:', titleValid);
-		// console.log('Description valid:', descriptionValid);
-		// console.log('Date valid:', dateValid);
-		// console.log('URL valid:', urlValid);
-	
-		const isValid = titleValid && descriptionValid && dateValid && urlValid;
-		// console.log('Form valid:', isValid);
-	
+		
+		const isValid = titleValid && descriptionValid && dateValid && urlValid;	
 		setIsFormValid(isValid);
 	};
 	
@@ -82,14 +75,6 @@ export default function DetailsSection({
 		sessionStorage.setItem('startDate', startDateRef.current?.value || '');
 		sessionStorage.setItem('endDate', endDateRef.current?.value || '');
 		sessionStorage.setItem('websiteUrl', websiteUrlRef.current?.value || '');
-	
-		console.log('Data saved to session storage:', {
-			campaignTitle: sessionStorage.getItem('campaignTitle'),
-			campaignDescription: sessionStorage.getItem('campaignDescription'),
-			startDate: sessionStorage.getItem('startDate'),
-			endDate: sessionStorage.getItem('endDate'),
-			websiteUrl: sessionStorage.getItem('websiteUrl')
-		});
 	};
 	
 	useEffect(() => {
@@ -101,20 +86,8 @@ export default function DetailsSection({
 			endDate: sessionStorage.getItem('endDate'),
 			websiteUrl: sessionStorage.getItem('websiteUrl')
 		};
-	
-		console.log('Data loaded from session storage:', storedData);
-	
-		// Set the values to the input fields if they exist
-		if (campaignTitleRef.current) campaignTitleRef.current.value = storedData.campaignTitle || '';
-		if (campaignDescriptionRef.current) campaignDescriptionRef.current.value = storedData.campaignDescription || '';
-		if (startDateRef.current) startDateRef.current.value = storedData.startDate || '';
-		if (endDateRef.current) endDateRef.current.value = storedData.endDate || '';
-		if (websiteUrlRef.current) websiteUrlRef.current.value = storedData.websiteUrl || '';
-	
-		checkFormValidity();
 	}, []);
 	
-	  
 
 	return (
 		<section className="my-1 flex flex-col gap-3">
@@ -153,8 +126,6 @@ export default function DetailsSection({
 				onChange={checkFormValidity}
 			/>
 
-
-
 			<Input
 				type="date"
 				size="lg"
@@ -179,8 +150,6 @@ export default function DetailsSection({
 				onChange={checkFormValidity}
 			/>
 
-			{/* <p className="text-sm">Select an image for your campaign</p> */}
-
 			<div className="flex flex-row gap-3 px-4">
 				<Button
 					onClick={() => setFormState('Media')}
@@ -188,7 +157,6 @@ export default function DetailsSection({
 				>
 					Back
 				</Button>
-
 
 				<Button
 				  onClick={() => {

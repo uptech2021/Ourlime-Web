@@ -9,17 +9,18 @@ import {
 	SetStateAction,
 	useEffect,
 	useState,
+	useCallback,
 } from 'react';
 
 type MediaSectionProps = {
 	error: AdvertiseFormError;
-	companyNameRef: RefObject<HTMLInputElement>;
-	companyNameValue: string;
-	setCompanyNameValue: Dispatch<SetStateAction<string>>;
-	fileInputRef: RefObject<HTMLInputElement>;
-	selectedFile: File | null;
-	setSelectedFile: Dispatch<SetStateAction<File | null>>;
-	changeForm: () => void;
+    companyNameRef: RefObject<HTMLInputElement>;
+    companyNameValue: string;
+    setCompanyNameValue: Dispatch<SetStateAction<string>>;
+    fileInputRef: RefObject<HTMLInputElement>;
+    selectedFile: File | null;
+    setSelectedFile: Dispatch<SetStateAction<File | null>>;
+    changeForm: () => void;
 };
 
 export default function MediaSection({
@@ -32,48 +33,39 @@ export default function MediaSection({
 	setSelectedFile,
 	changeForm,
 }: MediaSectionProps) {
-	const [isFormValid, setIsFormValid] = useState(false);
+    const [isFormValid, setIsFormValid] = useState(false);
 
-	const checkFormValidity = () => {
-	  setIsFormValid(!!companyNameValue && !!selectedFile);
-	};
-  
-	useEffect(() => {
-	  checkFormValidity();
-	}, [companyNameValue, selectedFile]);
+    const checkFormValidity = useCallback(() => {
+        setIsFormValid(!!companyNameValue && !!selectedFile);
+    }, [companyNameValue, selectedFile]);
 
-	useEffect(() => {
-		// Load data from sessionStorage on component mount
-		const storedCompanyName = sessionStorage.getItem('companyName');
-		if (storedCompanyName) {
-		  setCompanyNameValue(storedCompanyName);
-		}
-	
-		// We can't store File objects directly in sessionStorage,
-		// so we'll just store the file name
-		const storedFileName = sessionStorage.getItem('fileName');
-		if (storedFileName) {
-		  console.log('Stored file name:', storedFileName);
-		}
-	  }, []);
-	
-	  useEffect(() => {
-		// Save company name to sessionStorage whenever it changes
-		sessionStorage.setItem('companyName', companyNameValue);
-		console.log('Stored company name:', companyNameValue);
-	  }, [companyNameValue]);
-	
-	  const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
-		const file = event.target.files?.[0] || null;
-		setSelectedFile(file);
-		if (file) {
-		  sessionStorage.setItem('fileName', file.name);
-		  console.log('Stored file name:', file.name);
-		} else {
-		  sessionStorage.removeItem('fileName');
-		  console.log('Removed stored file name');
-		}
-	  };
+    useEffect(() => {
+        checkFormValidity();
+    }, [checkFormValidity]);
+
+    useEffect(() => {
+        // Load data from sessionStorage on component mount
+        sessionStorage.getItem('companyName');
+        sessionStorage.getItem('fileName');
+    }, []);
+
+    useEffect(() => {
+        // Save company name to sessionStorage whenever it changes
+        sessionStorage.setItem('companyName', companyNameValue);
+        console.log('Stored company name:', companyNameValue);
+    }, [companyNameValue]);
+
+    const handleFileChange = (event: ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0] || null;
+        setSelectedFile(file);
+        if (file) {
+            sessionStorage.setItem('fileName', file.name);
+            console.log('Stored file name:', file.name);
+        } else {
+            sessionStorage.removeItem('fileName');
+            console.log('Removed stored file name');
+        }
+    };
 
 	return (
 		<section className="my-1 flex flex-col gap-3">
