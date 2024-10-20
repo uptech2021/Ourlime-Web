@@ -43,6 +43,7 @@ export default function Profile() {
         setLoading(false);
       });
   
+    const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
@@ -56,15 +57,23 @@ export default function Profile() {
         });
   
         // Fetch profile and user data
-        const profileSnap = await fetchProfile(currentUser.uid);
+        const profileRef = doc(db, 'profiles', currentUser.uid);
+        const profileSnap = await getDoc(profileRef);
   
         const userRef = doc(db, 'users', currentUser.uid);
         const userSnap = await getDoc(userRef);
   
         if (profileSnap.exists() && userSnap.exists()) {
-          setProfile(profileSnap.data() as ProfileData);
-          setUserData(userSnap.data() as UserData);
-          await fetchFollowersAndFollowing(currentUser);
+          const profileData = profileSnap.data() as ProfileData;
+          const userData = userSnap.data() as UserData;
+
+          setProfile(profileData);
+          setUserData(userData);
+
+          // Update user's photoURL if it exists in userData
+          if (userData.photoURL && userData.photoURL !== currentUser.photoURL) {
+            await updateProfile(currentUser, { photoURL: userData.photoURL });
+          }
         }
         // Fetch posts
         const getPosts = await getDocs(collection(db, 'posts'));
@@ -224,31 +233,31 @@ export default function Profile() {
     if (currentUser) {
       try {
         // Update Firestore profile
-        const profileRef = firestoreDoc(db, 'profiles', currentUser.uid);
+        const profileRef = doc(db, 'profiles', currentUser.uid);
         await updateDoc(profileRef, updatedData);
 
         // Update user collection
-        const userRef = firestoreDoc(db, 'users', currentUser.uid);
+        const userRef = doc(db, 'users', currentUser.uid);
         if (updatedData.photoURL) {
           await updateDoc(userRef, {
             photoURL: updatedData.photoURL,
           });
+          // Update auth profile
+          await updateProfile(currentUser, { photoURL: updatedData.photoURL });
         }
 
         // Update local state
-        setProfile(prevProfile => {
-          const newProfile = { ...prevProfile, ...updatedData };
-          console.log("Updated profile state:", newProfile);
-          return newProfile;
-        });
+        setProfile(prevProfile => ({
+          ...prevProfile,
+          ...updatedData,
+        }));
 
-        if (updatedData.photoURL) {
-          setUser(prevUser => ({ ...prevUser, photoURL: updatedData.photoURL }));
-          setUserData(prevUserData => ({
-            ...prevUserData,
-            photoURL: updatedData.photoURL,
-          }));
-        }
+        setUserData(prevUserData => ({
+          ...prevUserData,
+          ...(updatedData.photoURL && { photoURL: updatedData.photoURL }),
+        }));
+
+        setUser(currentUser); // This will trigger a re-render with the updated user object
 
         console.log("Profile updated successfully");
       } catch (error) {

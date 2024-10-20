@@ -93,6 +93,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
         banner: bannerUrl,
         aboutMe: bio,
         photoURL: photoURL,
+        // Add any other fields that you're updating
       };
 
       console.log("Saving updated data:", updatedData);
