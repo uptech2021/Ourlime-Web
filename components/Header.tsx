@@ -96,7 +96,7 @@ export default function Header() {
 									className="h-8 w-8 cursor-pointer"
 									isBordered
 									radius="md"
-									src={profile.profilePicture}
+									src={user.photoURL}
 									disableAnimation={false}
 									showFallback
 									fallback={<Skeleton className="h-8 w-8 rounded-full" />}

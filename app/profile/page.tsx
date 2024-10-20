@@ -8,8 +8,8 @@ import Link from 'next/link';
 import { ProfileData, UserData, SocialPosts, Communities, Follower, Following } from '@/types/global';
 import { useEffect, useState } from 'react';
 import { auth, db } from '@/firebaseConfig';
-import { collection, getDocs, doc, getDoc, query, where, documentId } from 'firebase/firestore';
-import { onAuthStateChanged, User } from 'firebase/auth';
+import { collection, getDocs, doc, getDoc, query, where, documentId, updateDoc, doc as firestoreDoc } from 'firebase/firestore';
+import { onAuthStateChanged, User, updateProfile, getAuth } from 'firebase/auth';
 import { fetchProfile, loginRedirect } from '@/helpers/Auth';
 import { useRouter } from 'next/navigation';
 import ProfilePosts from '@/components/profile/profilePosts';
@@ -17,6 +17,7 @@ import PostForm from '@/components/home/posts/PostForm';
 import React from 'react';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 import styles from './profile.module.css';
+import About from '@/components/profile/filters/About';
 
 export default function Profile() {
   const router = useRouter();
@@ -45,6 +46,14 @@ export default function Profile() {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
+  
+        // Add console log for the authenticated user
+        console.log('Authenticated user:', {
+          uid: currentUser.uid,
+          email: currentUser.email,
+          displayName: currentUser.displayName,
+          photoURL: currentUser.photoURL
+        });
   
         // Fetch profile and user data
         const profileSnap = await fetchProfile(currentUser.uid);
@@ -90,6 +99,7 @@ export default function Profile() {
         setUserData(null);
         setPosts([]);
         setCommunities([]);
+        console.log('No authenticated user');
       }
   
       setLoading(false);
@@ -110,11 +120,15 @@ export default function Profile() {
 
       // Fetch user data for followers and following
       const userIds = Array.from(new Set([...followerIds, ...followingIds]));
-      const usersSnapshot = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', userIds)));
-      const usersData = usersSnapshot.docs.reduce((acc, doc) => {
-        acc[doc.id] = doc.data();
-        return acc;
-      }, {});
+      
+      let usersData = {};
+      if (userIds.length > 0) {
+        const usersSnapshot = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', userIds)));
+        usersData = usersSnapshot.docs.reduce((acc, doc) => {
+          acc[doc.id] = doc.data();
+          return acc;
+        }, {});
+      }
 
       // Construct followers and following arrays
       const followers = followerIds.map(id => ({
@@ -161,6 +175,27 @@ export default function Profile() {
     }
   }, [postCreated, user]);
   
+  const handleProfileUpdate = (updatedData) => {
+    console.log("Received updated data in Profile:", updatedData);
+    if (user) {
+      try {
+        // Update Firestore profile
+        const profileRef = firestoreDoc(db, 'profiles', user.uid);
+        updateDoc(profileRef, updatedData);
+
+        // Update local state
+        setProfile(prevProfile => {
+          const newProfile = { ...prevProfile, ...updatedData };
+          console.log("Updated profile state:", newProfile);
+          return newProfile;
+        });
+
+      } catch (error) {
+        console.error('Error updating profile:', error);
+      }
+    }
+  };
+
   if (loading) {
     return <div>Loading...</div>; // Optional: Add a loading spinner
   }
@@ -181,21 +216,48 @@ export default function Profile() {
     setEditModalOpen(!isEditModalOpen);
   };
 
-  const handleSave = async (data) => {
-    // console.log('Saved data:', data);
-    // Update the profile data in Firestore
-    if (user) {
+  const handleSave = async (updatedData) => {
+    console.log("Received updated data in Profile:", updatedData);
+    const auth = getAuth();
+    const currentUser = auth.currentUser;
+
+    if (currentUser) {
       try {
-        const updatedProfileSnap = await fetchProfile(user.uid);
-        if (updatedProfileSnap.exists()) {
-          setProfile(updatedProfileSnap.data() as ProfileData);
+        // Update Firestore profile
+        const profileRef = firestoreDoc(db, 'profiles', currentUser.uid);
+        await updateDoc(profileRef, updatedData);
+
+        // Update user collection
+        const userRef = firestoreDoc(db, 'users', currentUser.uid);
+        if (updatedData.photoURL) {
+          await updateDoc(userRef, {
+            photoURL: updatedData.photoURL,
+          });
         }
+
+        // Update local state
+        setProfile(prevProfile => {
+          const newProfile = { ...prevProfile, ...updatedData };
+          console.log("Updated profile state:", newProfile);
+          return newProfile;
+        });
+
+        if (updatedData.photoURL) {
+          setUser(prevUser => ({ ...prevUser, photoURL: updatedData.photoURL }));
+          setUserData(prevUserData => ({
+            ...prevUserData,
+            photoURL: updatedData.photoURL,
+          }));
+        }
+
+        console.log("Profile updated successfully");
       } catch (error) {
-        // console.error('Error fetching updated profile:', error);
+        console.error('Error updating profile:', error);
       }
+    } else {
+      console.error('No authenticated user found');
     }
-  
-    // Close the edit modal
+
     setEditModalOpen(false);
   };
 
@@ -219,7 +281,12 @@ export default function Profile() {
           )}
 
           {isEditModalOpen && (
-            <EditProfileModal isOpen={isEditModalOpen} onClose={toggleEditModal} onSave={handleSave} />
+            <EditProfileModal 
+              isOpen={isEditModalOpen} 
+              onClose={toggleEditModal} 
+              onSave={handleSave}
+              initialData={profile} // Pass the current profile data
+            />
           )}
 
           <div className="flex h-full min-h-screen w-full flex-col overflow-y-auto bg-gray-100 text-gray-800">
@@ -234,7 +301,7 @@ export default function Profile() {
               />
               <div className={styles.avatarContainer}>
                 <Image
-                  src={profile.profilePicture}
+                  src={user.photoURL}
                   alt="Profile picture"
                   className={styles.avatar}
                   width={120}
@@ -325,7 +392,7 @@ export default function Profile() {
                   >
                     <div className="flex flex-col md:flex-row justify-around rounded-xl p-5">
                       <div className="h-10 w-10 overflow-hidden rounded-full">
-                        <Avatar src={profile.profilePicture as string} alt="Avatar" className="h-full w-full object-cover" />
+                        <Avatar src={user.photoURL as string} alt="Avatar" className="h-full w-full object-cover" />
                       </div>
                       <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
                         What&apos;s going on?
@@ -350,15 +417,15 @@ export default function Profile() {
               {/* Sidebar Section */}
               <div className="w-full overflow-y-auto p-2 md:w-1/3">
                 {/* About Section */}
-                <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
+                <div className="mb-4 rounded-xl bg-white p-4 shadow-lg" key={profile?.aboutMe}>
                   <h2 className="mb-2 border-b pb-2 text-lg font-semibold">About</h2>
                   <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
-                    <p><strong>Bio:</strong> {profile.aboutMe ? profile.aboutMe : 'This user has not updated their bio'}</p>
-                    <p><strong>Date of Birth:</strong> {profile.birthday || 'Not specified'}</p>
-                    <p><strong>Gender:</strong> {userData.gender || 'Not specified'}</p>
-                    <p><strong>Job:</strong> {profile.workingAt || 'Not specified'}</p>
-                    <p><strong>School:</strong> {profile.school || 'Not specified'}</p>
-                    <p><strong>Country:</strong> {profile.country || 'Not specified'}</p>
+                    <p><strong>Bio:</strong> {profile?.aboutMe || 'This user has not updated their bio'}</p>
+                    <p><strong>Date of Birth:</strong> {profile?.birthday || 'Not specified'}</p>
+                    <p><strong>Gender:</strong> {userData?.gender || 'Not specified'}</p>
+                    <p><strong>Job:</strong> {profile?.workingAt || 'Not specified'}</p>
+                    <p><strong>School:</strong> {profile?.school || 'Not specified'}</p>
+                    <p><strong>Country:</strong> {profile?.country || 'Not specified'}</p>
                   </div>
                 </div>
 

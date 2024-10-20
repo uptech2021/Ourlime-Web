@@ -186,7 +186,7 @@ export default function Home() {
 							)}
 						</div>
 
-						<CreatePost profilePicture={profile.profilePicture} setTogglePostForm={setTogglePostForm} />
+						<CreatePost profilePicture={user.photoURL} setTogglePostForm={setTogglePostForm} />
 						<Posts socialPosts={socialPosts} selectedPost={selected} />
 					</div>
 				)}

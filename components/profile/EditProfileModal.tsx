@@ -1,54 +1,29 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import 'react-image-crop/dist/ReactCrop.css';
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { db, auth } from '@/firebaseConfig';
-import { updateDoc, doc, getDoc } from 'firebase/firestore';
-import { getAuth, onAuthStateChanged } from 'firebase/auth';
-import { useRouter } from 'next/navigation';
+import { updateDoc, doc } from 'firebase/firestore';
+import { updateProfile } from 'firebase/auth';
 import { Button, Input } from '@nextui-org/react';
 import ImageCropper from '@/helpers/ImageCropper';
-import { ProfileData } from '@/types/global';
-import { toast } from 'react-toastify'; // Make sure you have this import if you're using react-toastify for notifications
+import { ProfileData, UserData } from '@/types/global';
+import { toast } from 'react-toastify';
 
-const EditProfileModal = ({ isOpen, onClose, onSave }) => {
+const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
   const [profilePicture, setProfilePicture] = useState<Blob | null>(null);
   const [banner, setBanner] = useState<File | null>(null);
-  const [bio, setBio] = useState('');
+  const [bio, setBio] = useState(initialData?.aboutMe || '');
   const [isSaving, setIsSaving] = useState(false);
   const [error, setError] = useState('');
-  const [successMessage, setSuccessMessage] = useState(''); // New state for success message
-  const [userId, setUserId] = useState<string | null>(null);
-  const [originalData, setOriginalData] = useState<ProfileData | null>(null);
+  const [successMessage, setSuccessMessage] = useState('');
   const [profilePicturePreview, setProfilePicturePreview] = useState<string | null>(null);
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
-  const router = useRouter();
 
   useEffect(() => {
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        setUserId(user.uid);
-        setError('');
-
-        const profileDocRef = doc(db, "profiles", user.uid);
-        const profileDoc = await getDoc(profileDocRef);
-
-        if (profileDoc.exists()) {
-          const data = profileDoc.data();
-          setOriginalData(data as ProfileData);
-          setBio(data.aboutMe || '');
-        } else {
-          setError('Profile data not found.');
-        }
-      } else {
-        setError('No user is currently logged in.');
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
+    setBio(initialData?.aboutMe || '');
+  }, [initialData]);
 
   const handleProfilePictureChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
@@ -92,49 +67,44 @@ const EditProfileModal = ({ isOpen, onClose, onSave }) => {
   };
 
   const handleSave = async () => {
-    if (!userId) {
+    if (!auth.currentUser) {
       setError('You must be logged in to save changes.');
       return;
     }
 
     setIsSaving(true);
-    setSuccessMessage(''); // Clear any previous success message
-    setError(''); // Clear any previous error message
+    setSuccessMessage('');
+    setError('');
 
-    let profilePictureUrl = originalData?.profilePicture || '';
-    let bannerUrl = originalData?.banner || '';
+    let photoURL = initialData?.photoURL || auth.currentUser?.photoURL || '';
+    let bannerUrl = initialData?.banner || '';
 
     try {
       if (profilePicture) {
         const profilePictureFile = new File([profilePicture], 'profile_picture', { type: profilePicture.type });
-        profilePictureUrl = await uploadFile(profilePictureFile, `images/profilePictures/${userId}`);
+        photoURL = await uploadFile(profilePictureFile, `images/profilePictures/${auth.currentUser.uid}`);
       }
 
       if (banner) {
         bannerUrl = await uploadFile(banner, `images/banners/${banner.name}`);
       }
 
-      const updatedData = {
-        profilePicture: profilePictureUrl,
+      const updatedData: Partial<ProfileData & UserData> = {
         banner: bannerUrl,
         aboutMe: bio,
+        photoURL: photoURL,
       };
 
-      const hasChanges = originalData 
-        ? Object.keys(updatedData).some(
-            key => updatedData[key as keyof ProfileData] !== originalData[key as keyof ProfileData]
-          )
-        : true;
+      console.log("Saving updated data:", updatedData);
 
-      if (hasChanges) {
-        const profileDocRef = doc(db, "profiles", userId);
-        await updateDoc(profileDocRef, updatedData);
-        onSave(updatedData);
-        setSuccessMessage('Changes made successfully!'); // Set success message
-      }
+      // Call onSave with the updated data
+      await onSave(updatedData);
+
+      setSuccessMessage('Changes made successfully!');
+      onClose(); // Close the modal after successful save
     } catch (error) {
-      // console.error("Error updating profile:", error);
-      setError('An error occurred while saving changes.'); // Set error message
+      console.error("Error updating profile:", error);
+      setError('An error occurred while saving changes.');
     } finally {
       setIsSaving(false);
     }
