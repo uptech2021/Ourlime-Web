@@ -1,5 +1,5 @@
 import { AdvertiseFormError } from '@/types/advertise';
-import { Button, Input, Textarea } from '@nextui-org/react';
+import { Button, Input, Textarea, DatePicker } from '@nextui-org/react';
 import { Dispatch, RefObject, SetStateAction, useEffect, useState } from 'react';
 
 type DetailsSectionProps = {
@@ -27,28 +27,50 @@ export default function DetailsSection({
     const [isTitleTouched, setIsTitleTouched] = useState(false);
     const [isDescriptionTouched, setIsDescriptionTouched] = useState(false);
     const [isUrlTouched, setIsUrlTouched] = useState(false);
-	const [isStartDateTouched, setIsStartDateTouched] = useState(false);
-	const [isEndDateTouched, setIsEndDateTouched] = useState(false);
+    const [isStartDateTouched, setIsStartDateTouched] = useState(false);
+    const [isEndDateTouched, setIsEndDateTouched] = useState(false);
+    const [startDate, setStartDate] = useState<any | null>(null);
+    const [endDate, setEndDate] = useState<any | null>(null);
+    const [dateErrorMessage, setDateErrorMessage] = useState<string | null>(null);
 
-	
-	const validateDates = () => {
-		const startDate = new Date(startDateRef.current?.value || '');
-		const endDate = new Date(endDateRef.current?.value || '');
-		const currentDate = new Date();
-		currentDate.setHours(0, 0, 0, 0);
-	
-		if (isNaN(startDate.getTime()) || isNaN(endDate.getTime())) {
-			return false;
-		}
-	
-		return startDate > currentDate && endDate > startDate;
-	};
+    const validateDates = (): string | null => {
+        if (!isStartDateTouched && !isEndDateTouched) {
+            return null;
+        }
+
+        const start = startDateRef.current?.value;
+        const end = endDateRef.current?.value;
+
+        if (!start || !end) {
+            return "Please select both start and end dates";
+        }
+
+        const today = new Date();
+        today.setHours(0, 0, 0, 0);
+
+        const startDate = new Date(start);
+        const endDate = new Date(end);
+
+        if (startDate.getTime() === today.getTime() || endDate.getTime() === today.getTime()) {
+            return "Date invalid. Please choose a date that is not today";
+        }
+
+        if (startDate < today || endDate < today) {
+            return "Only future dates are allowed";
+        }
+
+        if (endDate <= startDate) {
+            return "End date must be after start date";
+        }
+
+        return null;
+    };
 
     const validateWebsiteUrl = (url: string) => {
         const urlPattern = /^(https?:\/\/)?([\da-z\.-]+)\.([a-z\.]{2,6})([\/\w \.-]*)*\/?$/;
         return urlPattern.test(url);
     };
-    
+
     const validateCampaignTitle = (title: string) => {
         return title.length > 5;
     };
@@ -57,17 +79,18 @@ export default function DetailsSection({
         return description.length > 10;
     };
 
-	const checkFormValidity = () => {
-		const titleValid = validateCampaignTitle(campaignTitleRef.current?.value || '');
-		const descriptionValid = validateCampaignDescription(campaignDescriptionRef.current?.value || '');
-		const datesValid = validateDates();
-		const urlValid = validateWebsiteUrl(websiteUrlRef.current?.value || '');
-		
-		const isValid = titleValid && descriptionValid && datesValid && urlValid;    
-		setIsFormValid(isValid);
-	};
-	
-    
+    const checkFormValidity = () => {
+        const titleValid = validateCampaignTitle(campaignTitleRef.current?.value || '');
+        const descriptionValid = validateCampaignDescription(campaignDescriptionRef.current?.value || '');
+        const urlValid = validateWebsiteUrl(websiteUrlRef.current?.value || '');
+        const dateError = validateDates();
+
+        setDateErrorMessage(dateError);
+
+        const isValid = titleValid && descriptionValid && urlValid && !dateError;
+        setIsFormValid(isValid);
+    };
+
     const saveToSessionStorage = () => {
         sessionStorage.setItem('campaignTitle', campaignTitleRef.current?.value || '');
         sessionStorage.setItem('campaignDescription', campaignDescriptionRef.current?.value || '');
@@ -75,17 +98,6 @@ export default function DetailsSection({
         sessionStorage.setItem('endDate', endDateRef.current?.value || '');
         sessionStorage.setItem('websiteUrl', websiteUrlRef.current?.value || '');
     };
-    
-    useEffect(() => {
-        const storedData = {
-            campaignTitle: sessionStorage.getItem('campaignTitle'),
-            campaignDescription: sessionStorage.getItem('campaignDescription'),
-            startDate: sessionStorage.getItem('startDate'),
-            endDate: sessionStorage.getItem('endDate'),
-            websiteUrl: sessionStorage.getItem('websiteUrl')
-        };
-        // You can set the initial values here if needed
-    }, []);
 
     return (
         <section className="my-1 flex flex-col gap-3">
@@ -95,8 +107,8 @@ export default function DetailsSection({
                 radius="sm"
                 name="campaignTitle"
                 placeholder="Campaign Title"
-                errorMessage={isTitleTouched && !validateCampaignTitle(campaignTitleRef.current?.value || '') 
-                    ? "Campaign Title must be more than 5 characters." 
+                errorMessage={isTitleTouched && !validateCampaignTitle(campaignTitleRef.current?.value || '')
+                    ? "Campaign Title must be more than 5 characters."
                     : ""}
                 ref={campaignTitleRef}
                 isInvalid={isTitleTouched && !validateCampaignTitle(campaignTitleRef.current?.value || '')}
@@ -114,8 +126,8 @@ export default function DetailsSection({
                 radius="sm"
                 name="campaignDescription"
                 placeholder="Campaign description"
-                errorMessage={isDescriptionTouched && !validateCampaignDescription(campaignDescriptionRef.current?.value || '') 
-                    ? "Please enter a description for your Campaign (more than 10 characters)." 
+                errorMessage={isDescriptionTouched && !validateCampaignDescription(campaignDescriptionRef.current?.value || '')
+                    ? "Please enter a description for your Campaign (more than 10 characters)."
                     : ""}
                 ref={campaignDescriptionRef}
                 isInvalid={isDescriptionTouched && !validateCampaignDescription(campaignDescriptionRef.current?.value || '')}
@@ -128,46 +140,46 @@ export default function DetailsSection({
                 onBlur={() => setIsDescriptionTouched(true)}
             />
 
-			<Input
-				type="date"
-				size="lg"
-				radius="sm"
-				name="startDate"
-				placeholder="Start date"
-				errorMessage={isStartDateTouched && !validateDates() 
-					? "Please enter a valid start date (after today)." 
-					: ""}
-				ref={startDateRef}
-				isInvalid={isStartDateTouched && !validateDates()}
-				onChange={(e) => {
-					checkFormValidity();
-					if (isStartDateTouched) {
-						setIsStartDateTouched(!validateDates());
-					}
-				}}
-				onBlur={() => setIsStartDateTouched(true)}
-			/>
+            <div className="flex gap-3 flex-col">
+                <div className="flex gap-3">
+                    <DatePicker
+                        label="Start Date"
+                        variant="bordered"
+                        showMonthAndYearPickers
+                        value={startDate}
+                        onChange={(date) => {
+                            setStartDate(date);
+                            setIsStartDateTouched(true);
+                            if (startDateRef.current) {
+                                startDateRef.current.value = date ? `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}` : '';
+                            }
+                            checkFormValidity();
+                        }}
+                        onBlur={() => setIsStartDateTouched(true)}
+                        ref={startDateRef}
+                    />
 
-			<Input
-				type="date"
-				size="lg"
-				radius="sm"
-				name="endDate"
-				placeholder="End date"
-				errorMessage={isEndDateTouched && !validateDates() 
-					? "Please enter a valid end date (after start date)." 
-					: ""}
-				ref={endDateRef}
-				isInvalid={isEndDateTouched && !validateDates()}
-				onChange={(e) => {
-					checkFormValidity();
-					if (isEndDateTouched) {
-						setIsEndDateTouched(!validateDates());
-					}
-				}}
-				onBlur={() => setIsEndDateTouched(true)}
-			/>
-
+                    <DatePicker
+                        label="End Date"
+                        variant="bordered"
+                        showMonthAndYearPickers
+                        value={endDate}
+                        onChange={(date) => {
+                            setEndDate(date);
+                            setIsEndDateTouched(true);
+                            if (endDateRef.current) {
+                                endDateRef.current.value = date ? `${date.year}-${String(date.month).padStart(2, '0')}-${String(date.day).padStart(2, '0')}` : '';
+                            }
+                            checkFormValidity();
+                        }}
+                        onBlur={() => setIsEndDateTouched(true)}
+                        ref={endDateRef}
+                    />
+                </div>
+                {dateErrorMessage && (
+                    <p className="text-red-500 text-sm">{dateErrorMessage}</p>
+                )}
+            </div>
 
             <Input
                 type="text"
@@ -175,8 +187,8 @@ export default function DetailsSection({
                 radius="sm"
                 name="websiteUrl"
                 placeholder="Website URL"
-                errorMessage={isUrlTouched && !validateWebsiteUrl(websiteUrlRef.current?.value || '') 
-                    ? "Please enter a valid Website URL." 
+                errorMessage={isUrlTouched && !validateWebsiteUrl(websiteUrlRef.current?.value || '')
+                    ? "Please enter a valid Website URL."
                     : ""}
                 ref={websiteUrlRef}
                 isInvalid={isUrlTouched && !validateWebsiteUrl(websiteUrlRef.current?.value || '')}
@@ -198,18 +210,18 @@ export default function DetailsSection({
                 </Button>
 
                 <Button
-                  onClick={() => {
-                    saveToSessionStorage();
-                    changeForm();
-                  }}
-                className={`mx-auto w-1/2 transition-all duration-300 ${
-                    isFormValid
-                    ? 'cursor-pointer bg-gray-300 hover:bg-gray-400'
-                    : 'cursor-not-allowed bg-gray-200'
-                }`}
-                disabled={!isFormValid}
+                    onClick={() => {
+                        saveToSessionStorage();
+                        changeForm();
+                    }}
+                    className={`mx-auto w-1/2 transition-all duration-300 ${
+                        isFormValid
+                            ? 'cursor-pointer bg-gray-300 hover:bg-gray-400'
+                            : 'cursor-not-allowed bg-gray-200'
+                    }`}
+                    disabled={!isFormValid}
                 >
-                Next
+                    Next
                 </Button>
             </div>
         </section>
