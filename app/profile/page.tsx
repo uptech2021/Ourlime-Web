@@ -270,15 +270,16 @@ export default function Profile() {
           {/* Overlay for post form */}
           {togglePostForm && (
             <>
-              <div className="fixed top-0 z-40 h-full w-full bg-black opacity-50"></div>
-              {/* PostForm Component */}
-              <PostForm 
-                profile={profile}
-                user={userData}
-                setSocialPosts={setSocialPosts}
-                setTogglePostForm={setTogglePostForm}
-                onPostCreated={handlePostCreated} // Pass the callback function
-              />
+              <div className="fixed inset-0 z-40 bg-black bg-opacity-50"></div>
+              <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
+                <PostForm 
+                  profile={profile}
+                  user={userData}
+                  setSocialPosts={setSocialPosts}
+                  setTogglePostForm={setTogglePostForm}
+                  onPostCreated={handlePostCreated}
+                />
+              </div>
             </>
           )}
 
