@@ -5,7 +5,7 @@ import dotenv from 'dotenv';
 import { FirebaseStorage, getStorage } from 'firebase/storage';
 
 dotenv.config();
-
+ 
 const firebaseConfig = {
   apiKey: (process.env.NEXT_PUBLIC_FIREBASE_API_KEY || '').trim(),
   authDomain: (process.env.NEXT_PUBLIC_FIREBASE_AUTH_DOMAIN || '').trim(),

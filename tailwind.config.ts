@@ -10,6 +10,7 @@ const config = {
 		'./app/**/*.{ts,tsx}',
 		'./src/**/*.{ts,tsx}',
 		'./node_modules/@nextui-org/theme/dist/**/*.{js,ts,jsx,tsx}',
+		"./node_modules/flowbite/**/*.js"
 	],
 
 	prefix: '',
@@ -97,6 +98,7 @@ const config = {
 		require('tailwindcss-animate'),
 		require('tailwind-scrollbar-hide'),
 		nextui(),
+		require('flowbite/plugin'),
 	],
 } satisfies Config;
 

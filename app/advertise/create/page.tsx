@@ -110,7 +110,6 @@ export default function Page() {
 						selectedFile={selectedFile}
 						setSelectedFile={setSelectedFile}
 						changeForm={changeForm}
-						handleFileChange={handleFileChange}
 					/>
 				);
 			case 'Details':
