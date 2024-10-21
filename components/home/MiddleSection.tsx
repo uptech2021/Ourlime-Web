@@ -74,7 +74,7 @@ export default function MiddleSection({
 			</div>
 
 			<CreatePost
-				profilePicture={profile.profilePicture}
+				profilePicture={user.photoURL}
 				setTogglePostForm={setTogglePostForm}
 			/>
 

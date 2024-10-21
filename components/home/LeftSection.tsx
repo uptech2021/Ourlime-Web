@@ -26,7 +26,7 @@ export default function LeftSection({user, profile}: LeftSectionProps) {
 			<div className="flex flex-col items-center rounded-xl bg-white p-5 shadow-md">
 				<div className="w-1/2 rounded-full p-1">
 					<Avatar
-						src={profile.profilePicture}
+						src={user.photoURL || ''}
 						alt="profile picture"
 						className="h-full w-full"
 						isBordered

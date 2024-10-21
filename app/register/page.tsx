@@ -255,24 +255,21 @@ export default function Page() {
 				isAdmin: true,
 				last_loggedIn: new Date(Date.now()),
 				friends: [],
+				photoURL: await uploadFile(
+					new File(
+						[
+							await fetch(`/images/register/${profilePicture}`).then(
+								(res) => res.blob()
+							),
+						],
+						profilePicture,
+						{ type: 'image/svg+xml' }
+					),
+					`images/profilePictures/${profilePicture}`
+				),
 			});
 			
-			const avatarFile = new File(
-				[
-					await fetch(`/images/register/${profilePicture}`).then(
-						(res) => res.blob()
-					),
-				],
-				profilePicture,
-				{ type: 'image/svg+xml' }
-			);
-			const _profilePicture = await uploadFile(
-				avatarFile,
-				`images/profilePictures/${profilePicture}`
-			);
 			await setDoc(doc(db, 'profiles', user.uid), {
-				profilePicture: _profilePicture,
-				banner: 'uptech.png',
 				firstName,
 				lastName,
 				email: user.email,
