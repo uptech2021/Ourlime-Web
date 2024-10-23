@@ -82,21 +82,16 @@ export default function MediaSection({
 				radius="sm"
 				name="companyName"
 				label="Company Name"
+				placeholder="Enter your company name"
 				value={companyNameValue}
 				onChange={(e) => setCompanyNameValue(e.target.value)}
 				isInvalid={error.companyName}
 				variant="flat"
-				labelPlacement="inside"
+				labelPlacement="outside"
 				classNames={{
 					input: "border-0",
 					inputWrapper: "border-0",
-					label: [
-						"group-data-[focus=true]:-translate-y-5",
-						"group-data-[filled=true]:-translate-y-5",
-						"group-data-[focus=true]:text-xs",
-						"group-data-[filled=true]:text-xs",
-						"!duration-200 !ease-in-out"
-					]
+					label: "text-sm font-medium"
 				}}
 				data-focus="true"
 			/>

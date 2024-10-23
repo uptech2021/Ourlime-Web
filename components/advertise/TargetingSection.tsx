@@ -98,8 +98,10 @@ export default function TargetingSection({
 
 	return (
 		<section className="my-1 flex flex-col gap-3">
+
 			<Input
 				label="Placement Entire Site (File Format Image)"
+				placeholder="Enter placement details"
 				type="text"
 				size="lg"
 				radius="sm"
@@ -107,23 +109,18 @@ export default function TargetingSection({
 				ref={placementRef}
 				onChange={checkFormValidity}
 				variant="flat"
-				labelPlacement="inside"
+				labelPlacement="outside"
 				classNames={{
 					input: "border-0",
 					inputWrapper: "border-0",
-					label: [
-						"group-data-[focus=true]:-translate-y-5",
-						"group-data-[filled=true]:-translate-y-5",
-						"group-data-[focus=true]:text-xs",
-						"group-data-[filled=true]:text-xs",
-						"!duration-200 !ease-in-out"
-					]
+					label: "text-sm font-medium"
 				}}
 				data-focus="true"
 			/>
 
 			<Input
 				label="Bidding  Pay Per click ($0.075)"
+				placeholder="Enter bidding details"
 				type="text"
 				size="lg"
 				radius="sm"
@@ -131,17 +128,11 @@ export default function TargetingSection({
 				ref={biddingRef}
 				onChange={checkFormValidity}
 				variant="flat"
-				labelPlacement="inside"
+				labelPlacement="outside"
 				classNames={{
 					input: "border-0",
 					inputWrapper: "border-0",
-					label: [
-						"group-data-[focus=true]:-translate-y-5",
-						"group-data-[filled=true]:-translate-y-5",
-						"group-data-[focus=true]:text-xs",
-						"group-data-[filled=true]:text-xs",
-						"!duration-200 !ease-in-out"
-					]
+					label: "text-sm font-medium"
 				}}
 				data-focus="true"
 			/>
@@ -149,23 +140,18 @@ export default function TargetingSection({
 			<Input
 				type="text"
 				label="Location"
+				placeholder='Enter location'
 				size="lg"
 				radius="sm"
 				name="location"
 				ref={locationRef}
 				onChange={checkFormValidity}
 				variant="flat"
-				labelPlacement="inside"
+				labelPlacement="outside"
 				classNames={{
 					input: "border-0",
 					inputWrapper: "border-0",
-					label: [
-						"group-data-[focus=true]:-translate-y-5",
-						"group-data-[filled=true]:-translate-y-5",
-						"group-data-[focus=true]:text-xs",
-						"group-data-[filled=true]:text-xs",
-						"!duration-200 !ease-in-out"
-					]
+					label: "text-sm font-medium"
 				}}
 				data-focus="true"
 			/>
@@ -186,6 +172,9 @@ export default function TargetingSection({
 					popoverContent: "bg-gray-200",
 					trigger: "text-white",
 				}}
+				variant="flat"
+				labelPlacement="outside"
+				data-focus="true"
 				>
 				<SelectItem key="male" value="male" className="text-black hover:bg-gray-200">
 					Male
