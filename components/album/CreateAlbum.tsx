@@ -2,14 +2,18 @@
 
 import React, { useState } from 'react';
 import Image from 'next/image';
-import pic from '@/public/images/album/Image.png';
 import top from '@/public/images/album/topimg.png';
-import { FaTrash } from 'react-icons/fa';
+import { FaTrash, FaImage } from 'react-icons/fa';
 
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { Timestamp } from 'firebase/firestore';
 import { db, auth } from '@/firebaseConfig';
 import { collection, addDoc, updateDoc } from 'firebase/firestore';
+
+import { ToastContainer, toast } from 'react-toastify';
+import 'react-toastify/dist/ReactToastify.css';
+
+import { getDoc, doc } from 'firebase/firestore';
 
 interface CreateAlbumProps {
 	onGoBack: () => void;
@@ -18,6 +22,8 @@ interface CreateAlbumProps {
 export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 	const [images, setImages] = useState<File[]>([]);
 	const [albumName, setAlbumName] = useState('');
+	const [isSubmitting, setIsSubmitting] = useState(false);
+	const [isPublished, setIsPublished] = useState(false);
 
 
 	const handleImageUpload = (event: React.ChangeEvent<HTMLInputElement>) => {
@@ -34,11 +40,18 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 		e.preventDefault();
 		
 		if (!auth.currentUser) {
-		  console.log('User not logged in');
 		  return;
 		}
 	
+		// Disable button immediately
+		setIsPublished(true);
+		setIsSubmitting(true);
+
 		try {
+
+		  const userDoc = await getDoc(doc(db, 'users', auth.currentUser.uid));
+		  const userName = userDoc.data()?.userName;
+
 		  // 1. Insert album name and user email into Firestore
 		  const albumRef = await addDoc(collection(db, 'albums'), {
 			name: albumName,
@@ -46,15 +59,12 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 			createdAt: Timestamp.now(),
 			updatedAt: Timestamp.now(),
 		  });
-	
-		  console.log('Album created with ID:', albumRef.id);
-	
+
 		  // 2. Upload images to Firebase Storage
 		  const imageUrls = await Promise.all(
 			images.map(async (image, index) => {
 			  const path = `images/${albumRef.id}/${image.name}`;
 			  const url = await uploadFile(image, path);
-			  console.log(`Image ${index + 1} uploaded successfully:`, url);
 			  return url;
 			})
 		  );
@@ -62,18 +72,40 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 		  // 3. Update the album document with image URLs
 		  await updateDoc(albumRef, { imageUrls });
 	
-		  console.log('Album updated with image URLs');
-	
 		  // Clear form after successful submission
 		  setAlbumName('');
 		  setImages([]);
+
+		  toast.success(`Congratualtions ${userName}, \n your album has been created successsfully!`, {
+			position: "top-center",
+			autoClose: 3000,
+			hideProgressBar: false,
+			closeOnClick: true,
+			pauseOnHover: true,
+			draggable: true,
+		  });
 	
 		} catch (error) {
-		  console.error('Error creating album:', error);
+
+		  setIsPublished(false);
+		  toast.error('Failed to create album. Please try again.', {
+			position: "top-center",
+			autoClose: 3000,
+			hideProgressBar: false,
+			closeOnClick: true,
+			pauseOnHover: true,
+			draggable: true,
+		  });
+
+		  setTimeout(() => {
+			setIsSubmitting(false);
+		  }, 3000);
 		}
 	  };
 
 	return (
+		<>
+		<ToastContainer />
 		<div className="flex flex-col items-center justify-center bg-gray-200">
 			<div className="w-[60vw] rounded-lg bg-white p-6 shadow-md">
 				<div className="mb-2 flex flex-col items-center justify-start">
@@ -96,6 +128,7 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 					</div>
 					<div className="mb-6">
 						<p className="mb-2 font-semibold text-gray-700">Photos</p>
+
 						<div className="flex flex-row flex-wrap items-center gap-4">
 							{images.map((image, index) => (
 								<div key={index} className="relative">
@@ -104,7 +137,7 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 										alt={image.name}
 										width={100}
 										height={100}
-										className="h-24 w-32 object-cover"
+										className="h-28 w-32 object-cover"
 									/>
 									<button
 										onClick={() => handleDeleteImage(index)}
@@ -116,8 +149,12 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 								</div>
 							))}
 							<label htmlFor="imageUpload" className="cursor-pointer">
-								<Image src={pic} alt="upload" className="h-24 w-32" />
+								<div className="flex h-28 w-32 flex-col items-center justify-center border-2 border-dashed border-gray-300 hover:border-gray-400">
+									<FaImage size={24} className="text-gray-400" />
+									<span className="mt-2 text-sm text-gray-400">Add image</span>
+								</div>
 							</label>
+
 							<input
 								type="file"
 								accept="image/*"
@@ -127,6 +164,8 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 								aria-label="Upload image"
 							/>
 						</div>
+
+
 						{images.length > 0 && (
 						<div className="mt-4 flex flex-row flex-wrap gap-4 text-sm text-gray-600">
 							{images.map((image, index) => (
@@ -142,22 +181,23 @@ export default function CreateAlbum({ onGoBack }: CreateAlbumProps) {
 						<button type="button" className="cursor-pointer text-blue-500" onClick={onGoBack}>
 							Go back
 						</button>
+						
 						<button
 							type="submit"
 							className={`rounded-md px-4 py-2 text-white transition-colors duration-300 ${
-								albumName.trim() !== '' && images.length > 0
+								albumName.trim() !== '' && images.length > 0 && !isSubmitting
 								? 'bg-red-500 hover:bg-red-600'
 								: 'bg-gray-400 cursor-not-allowed'
 							}`}
-							disabled={albumName.trim() === '' || images.length === 0}
-							>
-							Publish
+							disabled={albumName.trim() === '' || images.length === 0 || isSubmitting}
+						>
+							{isPublished ? 'Published' : isSubmitting ? 'Publishing...' : 'Publish'}
 						</button>
-						
 
 					</div>
 				</form>
 			</div>
 		</div>
+		</>
 	);
 }
