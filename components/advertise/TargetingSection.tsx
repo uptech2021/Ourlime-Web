@@ -72,64 +72,104 @@ export default function TargetingSection({
 
 
 	const handlePublish = () => {
-        setIsPublishing(true);
-        setTimeout(() => {
-            console.log('Media Session Data:', {
-                companyName: sessionStorage.getItem('companyName'),
-                fileName: sessionStorage.getItem('fileName')
-            });
-            console.log('Details Session Data:', {
-                campaignTitle: sessionStorage.getItem('campaignTitle'),
-                campaignDescription: sessionStorage.getItem('campaignDescription'),
-                startDate: sessionStorage.getItem('startDate'),
-                endDate: sessionStorage.getItem('endDate'),
-                websiteUrl: sessionStorage.getItem('websiteUrl')
-            });
-            console.log('Targeting Session Data:', {
-                placement: placementRef.current?.value,
-                bidding: biddingRef.current?.value,
-                location: locationRef.current?.value,
-                gender: gender
-            });
-            setIsPublishing(false);
-            changeForm();
-        }, 2000);
-    };
+		setIsPublishing(true);
+		setTimeout(() => {
+			console.log('Media Session Data:', {
+				companyName: sessionStorage.getItem('companyName'),
+				fileName: sessionStorage.getItem('fileName')
+			});
+			console.log('Details Session Data:', {
+				campaignTitle: sessionStorage.getItem('campaignTitle'),
+				campaignDescription: sessionStorage.getItem('campaignDescription'),
+				startDate: sessionStorage.getItem('startDate'),
+				endDate: sessionStorage.getItem('endDate'),
+				websiteUrl: sessionStorage.getItem('websiteUrl')
+			});
+			console.log('Targeting Session Data:', {
+				placement: placementRef.current?.value,
+				bidding: biddingRef.current?.value,
+				location: locationRef.current?.value,
+				gender: gender
+			});
+			setIsPublishing(false);
+			changeForm();
+		}, 2000);
+	};
 
 	return (
 		<section className="my-1 flex flex-col gap-3">
 			<Input
-				label="Placement"
+				label="Placement Entire Site (File Format Image)"
 				type="text"
 				size="lg"
 				radius="sm"
 				name="placement"
-				placeholder="Entire Site (File Format Image)"
 				ref={placementRef}
 				onChange={checkFormValidity}
+				variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-5",
+						"group-data-[filled=true]:-translate-y-5",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
 			/>
 
 			<Input
-				label="Bidding"
+				label="Bidding  Pay Per click ($0.075)"
 				type="text"
 				size="lg"
 				radius="sm"
 				name="bidding"
-				placeholder="Pay Per click ($0.075)"
 				ref={biddingRef}
 				onChange={checkFormValidity}
+				variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-5",
+						"group-data-[filled=true]:-translate-y-5",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
 			/>
 
 			<Input
 				type="text"
+				label="Location"
 				size="lg"
 				radius="sm"
 				name="location"
-				placeholder="Location"
 				ref={locationRef}
 				onChange={checkFormValidity}
+				variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-5",
+						"group-data-[filled=true]:-translate-y-5",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
 			/>
-	
+
 			<Select
 				ref={genderRef}
 				label="Gender"
@@ -142,14 +182,18 @@ export default function TargetingSection({
 					setGender(selectedValue);
 					checkFormValidity();
 				}}
-			>
-				<SelectItem className="text-white" key="male" value="male">
+				classNames={{
+					popoverContent: "bg-gray-200",
+					trigger: "text-white",
+				}}
+				>
+				<SelectItem key="male" value="male" className="text-black hover:bg-gray-200">
 					Male
 				</SelectItem>
-				<SelectItem className="text-white" key="female" value="female">
+				<SelectItem key="female" value="female" className="text-black hover:bg-gray-200">
 					Female
 				</SelectItem>
-				<SelectItem className="text-white" key="other" value="other">
+				<SelectItem key="other" value="other" className="text-black hover:bg-gray-200">
 					Other
 				</SelectItem>
 			</Select>

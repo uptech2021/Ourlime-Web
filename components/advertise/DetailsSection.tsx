@@ -106,7 +106,7 @@ export default function DetailsSection({
                 size="lg"
                 radius="sm"
                 name="campaignTitle"
-                placeholder="Campaign Title"
+				label="Campaign Title"
                 errorMessage={isTitleTouched && !validateCampaignTitle(campaignTitleRef.current?.value || '')
                     ? "Campaign Title must be more than 5 characters."
                     : ""}
@@ -119,13 +119,27 @@ export default function DetailsSection({
                     }
                 }}
                 onBlur={() => setIsTitleTouched(true)}
+                variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-5",
+						"group-data-[filled=true]:-translate-y-5",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
             />
 
             <Textarea
                 size="lg"
                 radius="sm"
                 name="campaignDescription"
-                placeholder="Campaign description"
+                label="Campaign description"
                 errorMessage={isDescriptionTouched && !validateCampaignDescription(campaignDescriptionRef.current?.value || '')
                     ? "Please enter a description for your Campaign (more than 10 characters)."
                     : ""}
@@ -138,13 +152,28 @@ export default function DetailsSection({
                     }
                 }}
                 onBlur={() => setIsDescriptionTouched(true)}
+                variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-2",
+						"group-data-[filled=true]:-translate-y-2",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
             />
 
             <div className="flex gap-3 flex-col">
                 <div className="flex gap-3">
+
                     <DatePicker
                         label="Start Date"
-                        variant="bordered"
+                        variant="flat"
                         showMonthAndYearPickers
                         value={startDate}
                         onChange={(date) => {
@@ -157,11 +186,19 @@ export default function DetailsSection({
                         }}
                         onBlur={() => setIsStartDateTouched(true)}
                         ref={startDateRef}
+                        classNames={{
+                            input: "border-0",
+                            inputWrapper: [
+                                "border-0 shadow-none bg-gray-100",
+                                "hover:bg-gray-200",
+                                "transition-colors duration-200"
+                            ]
+                        }}
                     />
 
                     <DatePicker
                         label="End Date"
-                        variant="bordered"
+                        variant="flat"
                         showMonthAndYearPickers
                         value={endDate}
                         onChange={(date) => {
@@ -174,6 +211,14 @@ export default function DetailsSection({
                         }}
                         onBlur={() => setIsEndDateTouched(true)}
                         ref={endDateRef}
+                        classNames={{
+                            input: "border-0",
+                            inputWrapper: [
+                                "border-0 shadow-none bg-gray-100",
+                                "hover:bg-gray-200",
+                                "transition-colors duration-200"
+                            ]
+                        }}
                     />
                 </div>
                 {dateErrorMessage && (
@@ -186,7 +231,7 @@ export default function DetailsSection({
                 size="lg"
                 radius="sm"
                 name="websiteUrl"
-                placeholder="Website URL"
+                label="Website URL"
                 errorMessage={isUrlTouched && !validateWebsiteUrl(websiteUrlRef.current?.value || '')
                     ? "Please enter a valid Website URL."
                     : ""}
@@ -199,6 +244,20 @@ export default function DetailsSection({
                     }
                 }}
                 onBlur={() => setIsUrlTouched(true)}
+                variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-5",
+						"group-data-[filled=true]:-translate-y-5",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
             />
 
             <div className="flex flex-row gap-3 px-4">

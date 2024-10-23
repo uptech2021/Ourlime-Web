@@ -74,17 +74,31 @@ export default function MediaSection({
 				continue.
 			</p>
 
+
 			<Input
 				ref={companyNameRef as unknown as MutableRefObject<HTMLInputElement>}
 				type="text"
 				size="lg"
 				radius="sm"
 				name="companyName"
-				placeholder="Company Name"
-				errorMessage="Please enter your Company Name."
+				label="Company Name"
 				value={companyNameValue}
 				onChange={(e) => setCompanyNameValue(e.target.value)}
 				isInvalid={error.companyName}
+				variant="flat"
+				labelPlacement="inside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: [
+						"group-data-[focus=true]:-translate-y-5",
+						"group-data-[filled=true]:-translate-y-5",
+						"group-data-[focus=true]:text-xs",
+						"group-data-[filled=true]:text-xs",
+						"!duration-200 !ease-in-out"
+					]
+				}}
+				data-focus="true"
 			/>
 
 			<p className="text-sm">Select an image for your campaign</p>

@@ -59,6 +59,7 @@
   }
 }
 
+
 @layer base {
   * {
     @apply border-border;
@@ -92,6 +93,12 @@
   }
 }
 /* Ensure the text stays white when the select has a value (NEXTUI COMPONENTS) */
-[data-slot="trigger"] [data-slot="value"].group-data-\[has-value\=true\]\:text-default-foreground {
-  color: white !important;
+
+
+[data-focus=true] {
+  --nextui-focus-border: transparent !important;
+  --nextui-focus-ring: transparent !important;
+  box-shadow: none !important;
 }
+
+
