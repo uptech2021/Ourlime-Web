@@ -5,9 +5,9 @@ import { db, auth } from '@/firebaseConfig';
 import { updateDoc, doc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { Button, Input } from '@nextui-org/react';
-import ImageCropper from '@/helpers/ImageCropper';
 import { ProfileData, UserData } from '@/types/global';
 import { toast } from 'react-toastify';
+import CropModal from './CropModal';
 
 const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
   const [profilePicture, setProfilePicture] = useState<Blob | null>(null);
@@ -20,6 +20,8 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
   const [bannerPreview, setBannerPreview] = useState<string | null>(null);
   const [isCropping, setIsCropping] = useState(false);
   const [imageToCrop, setImageToCrop] = useState<string | null>(null);
+  const [showCropModal, setShowCropModal] = useState(false);
+  const [bannerError, setBannerError] = useState<string | null>(null);
 
   useEffect(() => {
     setBio(initialData?.aboutMe || '');
@@ -30,7 +32,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
     if (file) {
       const imageURL = URL.createObjectURL(file);
       setImageToCrop(imageURL);
-      setIsCropping(true); // Show cropping modal
+      setShowCropModal(true);
     }
   };
 
@@ -42,28 +44,26 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
         if (img.width > img.height) {
           setBanner(file);
           setBannerPreview(URL.createObjectURL(file));
+          setBannerError(null); // Clear any previous error
         } else {
-          toast.error('Please upload a landscape orientation image for the banner.');
+          setBannerError('Please upload a landscape orientation image for the banner.');
           e.target.value = ''; // Reset the file input
         }
       };
       img.onerror = () => {
-        toast.error('Error loading image. Please try another file.');
+        setBannerError('Error loading image. Please try another file.');
         e.target.value = ''; // Reset the file input
       };
       img.src = URL.createObjectURL(file);
     }
   };
 
-  const handleCroppedImage = (dataUrl: string) => {
-    fetch(dataUrl)
+  const handleCroppedImage = (croppedImageUrl: string) => {
+    setProfilePicturePreview(croppedImageUrl);
+    fetch(croppedImageUrl)
       .then(res => res.blob())
-      .then(blob => {
-        setProfilePicture(blob);
-        setProfilePicturePreview(dataUrl);
-      });
-    setIsCropping(false);
-    setImageToCrop(null);
+      .then(blob => setProfilePicture(blob));
+    setShowCropModal(false);
   };
 
   const handleSave = async () => {
@@ -129,22 +129,15 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
 
         <div className="mb-4">
           <label className="font-semibold">Change Profile Picture</label>
-          {profilePicturePreview && !isCropping && (
+          {profilePicturePreview && (
             <img src={profilePicturePreview} alt="Profile Preview" className="mt-2 w-full h-32 object-cover rounded-full" />
           )}
-          {isCropping ? (
-            <ImageCropper
-              closeModal={() => setIsCropping(false)}
-              updateAvatar={handleCroppedImage}
-            />
-          ) : (
-            <Input 
-              type="file" 
-              accept="image/*" 
-              className="mt-2 w-full border p-2 rounded"
-              onChange={handleProfilePictureChange}
-            />
-          )}
+          <Input 
+            type="file" 
+            accept="image/*" 
+            className="mt-2 w-full border p-2 rounded"
+            onChange={handleProfilePictureChange}
+          />
         </div>
 
         <div className="mb-4">
@@ -158,6 +151,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
             className="mt-2 w-full border p-2 rounded"
             onChange={handleBannerChange}
           />
+          {bannerError && <p className="text-red-500 mt-1">{bannerError}</p>}
         </div>
 
         <div className="mb-4">
@@ -177,6 +171,14 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
         >
           {isSaving ? 'Saving...' : 'Save Changes'}
         </button>
+
+        {showCropModal && (
+          <CropModal
+            imageUrl={imageToCrop}
+            onCrop={handleCroppedImage}
+            onClose={() => setShowCropModal(false)}
+          />
+        )}
       </div>
     </div>
   );
