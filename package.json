@@ -11,6 +11,7 @@
     "deploy": "firebase deploy",
     "emulator": "firebase emulators:start",
     "lint": "next lint",
+    "check": "tsc --noEmit && eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write 'app/**/*.{js,jsx,ts,tsx}' 'components/**/*.{js,jsx,ts,tsx}'",
     "test": "cypress run",
     "test:open": "cypress open",
