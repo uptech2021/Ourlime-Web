@@ -18,6 +18,7 @@ import React from 'react';
 import EditProfileModal from '@/components/profile/EditProfileModal';
 import styles from './profile.module.css';
 import About from '@/components/profile/filters/About';
+import { fetchUserData, fetchUserPosts, fetchUserCommunities, fetchFollowersAndFollowing, updateUserProfile } from '@/utils/profileUtils';
 
 export default function Profile() {
   const router = useRouter();
@@ -36,19 +37,23 @@ export default function Profile() {
   const [following, setFollowing] = useState<Following[]>([]);
 
   useEffect(() => {
-    loginRedirect(router, true)
-      .then(() => setLoading(false))
-      .catch((error) => {
-        // console.error('Error during login redirect:', error);
+    const fetchData = async () => {
+      try {
+        await loginRedirect(router, true);
         setLoading(false);
-      });
-  
+      } catch (error) {
+        console.error('Error in loginRedirect:', error);
+        setLoading(false);
+      }
+    };
+
+    fetchData();
+
     const auth = getAuth();
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
       if (currentUser) {
         setUser(currentUser);
   
-        // Add console log for the authenticated user
         console.log('Authenticated user:', {
           uid: currentUser.uid,
           email: currentUser.email,
@@ -56,52 +61,21 @@ export default function Profile() {
           photoURL: currentUser.photoURL
         });
   
-        // Fetch profile and user data
-        const profileRef = doc(db, 'profiles', currentUser.uid);
-        const profileSnap = await getDoc(profileRef);
-  
-        const userRef = doc(db, 'users', currentUser.uid);
-        const userSnap = await getDoc(userRef);
-  
-        if (profileSnap.exists() && userSnap.exists()) {
-          const profileData = profileSnap.data() as ProfileData;
-          const userData = userSnap.data() as UserData;
-
-          setProfile(profileData);
-          setUserData(userData);
-
-          // Update user's photoURL if it exists in userData
-          if (userData.photoURL && userData.photoURL !== currentUser.photoURL) {
-            await updateProfile(currentUser, { photoURL: userData.photoURL });
-          }
+        const userData = await fetchUserData(currentUser);
+        if (userData) {
+          setProfile(userData.profileData);
+          setUserData(userData.userData);
         }
-        // Fetch posts
-        const getPosts = await getDocs(collection(db, 'posts'));
-        const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
-        const userPosts = postsData
-          .filter((post) => post.email === currentUser.email)
-          .sort((a, b) => b.time - a.time); // Sort by most recent
+
+        const userPosts = await fetchUserPosts(currentUser.email || '');
         setPosts(userPosts);
   
-        // Fetch communities
-        const fetchCommunities = async () => {
-          try {
-            const communitiesCollection = collection(db, 'communities');
-            const communitySnapshot = await getDocs(communitiesCollection);
-            const communitiesData = communitySnapshot.docs.map((doc) => doc.data() as Communities);
-  
-            // Filter communities where the current user is in the members array
-            const userCommunities = communitiesData.filter((community) =>
-              community.members && community.members.includes(currentUser.uid)
-            );
-  
-            setCommunities(userCommunities);
-          } catch (error) {
-            // console.error('Error fetching communities:', error);
-          }
-        };
-  
-        fetchCommunities();
+        const userCommunities = await fetchUserCommunities(currentUser.uid);
+        setCommunities(userCommunities);
+
+        const { followers, following } = await fetchFollowersAndFollowing(currentUser);
+        setFollowers(followers);
+        setFollowing(following);
       } else {
         setUser(null);
         setProfile(null);
@@ -117,48 +91,6 @@ export default function Profile() {
     return () => unsubscribe();
   }, [router]);
   
-  const fetchFollowersAndFollowing = async (currentUser: User) => {
-    if (currentUser) {
-      // Fetch followers
-      const followersSnapshot = await getDocs(query(collection(db, 'followers'), where('followedId', '==', currentUser.uid)));
-      const followerIds = followersSnapshot.docs.map(doc => doc.data().followerId);
-
-      // Fetch following
-      const followingSnapshot = await getDocs(query(collection(db, 'following'), where('followerId', '==', currentUser.uid)));
-      const followingIds = followingSnapshot.docs.map(doc => doc.data().followedId);
-
-      // Fetch user data for followers and following
-      const userIds = Array.from(new Set([...followerIds, ...followingIds]));
-      
-      let usersData = {};
-      if (userIds.length > 0) {
-        const usersSnapshot = await getDocs(query(collection(db, 'users'), where(documentId(), 'in', userIds)));
-        usersData = usersSnapshot.docs.reduce((acc, doc) => {
-          acc[doc.id] = doc.data();
-          return acc;
-        }, {});
-      }
-
-      // Construct followers and following arrays
-      const followers = followerIds.map(id => ({
-        uid: id,
-        username: usersData[id]?.userName,
-        profilePicture: usersData[id]?.profilePicture,
-        email: usersData[id]?.email
-      }));
-
-      const following = followingIds.map(id => ({
-        uid: id,
-        username: usersData[id]?.userName,
-        profilePicture: usersData[id]?.profilePicture,
-        email: usersData[id]?.email
-      }));
-
-      setFollowers(followers);
-      setFollowing(following);
-    }
-  };
-
   // Use this function to signal that a post was created
   const handlePostCreated = () => {
     setPostCreated((prev) => !prev); // Toggle postCreated state
@@ -218,39 +150,26 @@ export default function Profile() {
     setEditModalOpen(!isEditModalOpen);
   };
 
-  const handleSave = async (updatedData) => {
+  const handleSave = async (updatedData: Partial<ProfileData & { photoURL?: string }>) => {
     console.log("Received updated data in Profile:", updatedData);
     const auth = getAuth();
     const currentUser = auth.currentUser;
 
     if (currentUser) {
       try {
-        // Update Firestore profile
-        const profileRef = doc(db, 'profiles', currentUser.uid);
-        await updateDoc(profileRef, updatedData);
+        await updateUserProfile(currentUser, updatedData);
 
-        // Update user collection
-        const userRef = doc(db, 'users', currentUser.uid);
-        if (updatedData.photoURL) {
-          await updateDoc(userRef, {
-            photoURL: updatedData.photoURL,
-          });
-          // Update auth profile
-          await updateProfile(currentUser, { photoURL: updatedData.photoURL });
-        }
-
-        // Update local state
         setProfile(prevProfile => ({
           ...prevProfile,
           ...updatedData,
-        }));
+        } as ProfileData));
 
         setUserData(prevUserData => ({
           ...prevUserData,
           ...(updatedData.photoURL && { photoURL: updatedData.photoURL }),
-        }));
+        } as UserData));
 
-        setUser(currentUser); // This will trigger a re-render with the updated user object
+        setUser(currentUser);
 
         console.log("Profile updated successfully");
       } catch (error) {
