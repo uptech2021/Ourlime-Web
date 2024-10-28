@@ -12,6 +12,7 @@ import PopularPosts from '@/components/blog/PopularPosts';
 import RecentArticles from '@/components/blog/RecentArticles';
 import { StaticImageData } from 'next/image';
 import { useEffect, useState } from 'react';
+import { useSearchParams } from 'next/navigation';
 import { fetchArticles } from '@/helpers/fetchArticles';
 
 type Blog = {
@@ -22,8 +23,18 @@ type Blog = {
     author: string;
 };
 
+type CategoriesProps = {
+    categories: Array<string>;
+    filteredBlogs: Blog[];
+};
+
 export default function Blogs() {
+    const searchParams = useSearchParams();
+
     const [categories, setCategories] = useState<Array<string>>([
+        "All",
+		"Shawn",
+		"Kyle",
         'Cars and Vehicles',
         'Comedy',
         'Economics and Trade',
@@ -44,8 +55,6 @@ export default function Blogs() {
         'Other',
     ]);
 
-    const [blogs, setBlogs] = useState<Blog[]>([]);
-
     const [popularPosts, setPosts] = useState<Array<StaticImageData>>([
         post9,
         post6,
@@ -54,15 +63,16 @@ export default function Blogs() {
         post2,
     ]);
 
+    const [filteredBlogs, setFilteredBlogs] = useState<Blog[]>([]);
+
     useEffect(() => {
-        const fetchBlogs = async () => {
-            const fetchedBlogs = await fetchArticles();
-            console.log('Fetched Blogs:', fetchedBlogs);
-            setBlogs(fetchedBlogs as Blog[]);
+        const category = searchParams.get('categories');
+        const updateFilteredBlogs = async () => {
+            const fetchedBlogs = await fetchArticles(category);
+            setFilteredBlogs(fetchedBlogs as Blog[]);
         };
-       
-        fetchBlogs();
-    }, []);
+        updateFilteredBlogs();
+    }, [searchParams]);
 
     return (
         <Navbar>
@@ -72,8 +82,10 @@ export default function Blogs() {
                         <h1 className="text-3xl font-bold">Blogs</h1>
                     </header>
 
-                    <Categories categories={categories} />
-                    <RecentArticles articles={blogs} />
+					<Categories categories={categories} filteredBlogs={filteredBlogs} />
+
+                    <RecentArticles articles={filteredBlogs} />
+					
                     <PopularPosts posts={popularPosts} />
                 </main>
             </div>

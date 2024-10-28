@@ -15,15 +15,31 @@ type BlogsProps = {
 
 export default function RecentArticles({ articles }: BlogsProps) {
     const [searchTerm, setSearchTerm] = useState('');
+    const [displayCount, setDisplayCount] = useState(3);
+    const LOAD_INCREMENT = 3;
+    const MINIMUM_DISPLAY = 3;
 
     const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
         event.preventDefault();
         setSearchTerm(event.target.value);
+        setDisplayCount(MINIMUM_DISPLAY);
     };
 
-    const filteredArticles = articles.filter((article) =>
+    const handleLoadMore = () => {
+        setDisplayCount(prev => prev + LOAD_INCREMENT);
+    };
+
+    const handleLoadLess = () => {
+        setDisplayCount(prev => Math.max(MINIMUM_DISPLAY, prev - LOAD_INCREMENT));
+    };
+
+    const filteredArticles = articles
+        .filter((article) => article.title.toLowerCase().includes(searchTerm.toLowerCase()))
+        .slice(0, displayCount);
+
+    const totalFilteredArticles = articles.filter(article =>
         article.title.toLowerCase().includes(searchTerm.toLowerCase())
-    );
+    ).length;
 
     return (
         <section className="mb-8 rounded-lg bg-white p-4 shadow-md">
@@ -50,23 +66,25 @@ export default function RecentArticles({ articles }: BlogsProps) {
             <div className="max-w-7xl mx-auto p-4 sm:p-6 md:p-8">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
                     {filteredArticles.map((article, index) => (
-                        <div key={index} className="rounded overflow-hidden shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1">
+                        <div key={index} className="rounded overflow-hidden shadow-lg flex flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 opacity-100 animate-fadeIn group">
                             <div className="relative h-48 overflow-hidden">
-                                <a href="#">
-                                    <Image
-                                        src={article.image}
-                                        alt="post thumbnail"
-                                        fill
-                                        className="object-cover transition-transform duration-300 hover:scale-110"
-                                        quality={100}
-                                    />
-                                    <div className="hover:bg-transparent transition duration-300 absolute bottom-0 top-0 right-0 left-0 bg-gray-900 opacity-25">
-                                    </div>
-                                </a>
+                                <Image
+                                    src={article.image}
+                                    alt={`Thumbnail for ${article.title}`}
+                                    fill
+                                    className="object-cover transition-transform duration-300 group-hover:scale-110"
+                                    quality={100}
+                                />
+                                <div className="transition duration-300 absolute bottom-0 top-0 right-0 left-0 bg-gray-900 opacity-25 group-hover:bg-transparent">
+                                </div>
+
+                                <div className="text-xs absolute top-0 right-0 bg-indigo-600 px-4 py-2 text-white mt-3 mr-3 hover:bg-white hover:text-indigo-600 transition duration-500 ease-in-out">
+                                    Cooking
+                                </div>
                             </div>
 
                             <div className="px-6 py-4 mb-auto">
-                                <a href="#" className="font-medium text-lg inline-block hover:text-indigo-600 transition duration-500 ease-in-out mb-2">
+                                <a href="#" aria-label={`Read more about ${article.title}`} className="font-medium text-lg inline-block hover:text-indigo-600 transition duration-500 ease-in-out mb-2">
                                     {article.author}
                                 </a>
                                 <p className="text-gray-500 text-sm">
@@ -79,6 +97,51 @@ export default function RecentArticles({ articles }: BlogsProps) {
                             </div>
                         </div>
                     ))}
+                </div>
+
+
+                <div className="mt-12 flex items-center justify-center space-x-4">
+                    {displayCount > MINIMUM_DISPLAY && (
+                        <div
+                            className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={handleLoadLess}
+                        >
+                            <svg
+                                className="mr-2 h-8 w-8 text-red-500 rotate-180"
+                                viewBox="0 0 88 75"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M83.9264 2.84634L44.0005 72L4.07461 2.84634L43.4806 17.407L44.0005 17.5991L44.5204 17.407L83.9264 2.84634Z"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                />
+                            </svg>
+                            <span className="font-medium text-red-500">Load less</span>
+                        </div>
+                    )}
+
+                    {filteredArticles.length < totalFilteredArticles && (
+                        <div
+                            className="flex items-center justify-center cursor-pointer hover:opacity-80 transition-opacity"
+                            onClick={handleLoadMore}
+                        >
+                            <svg
+                                className="mr-2 h-8 w-8 text-red-500"
+                                viewBox="0 0 88 75"
+                                fill="none"
+                                xmlns="http://www.w3.org/2000/svg"
+                            >
+                                <path
+                                    d="M83.9264 2.84634L44.0005 72L4.07461 2.84634L43.4806 17.407L44.0005 17.5991L44.5204 17.407L83.9264 2.84634Z"
+                                    stroke="currentColor"
+                                    strokeWidth="3"
+                                />
+                            </svg>
+                            <span className="font-medium text-red-500">Load more articles</span>
+                        </div>
+                    )}
                 </div>
             </div>
         </section>
