@@ -10,6 +10,7 @@ import { toast } from 'react-toastify';
 import CropModal from './CropModal';
 import { useRouter } from 'next/navigation';
 
+
 interface EditProfileModalProps {
   isOpen: boolean;
   onClose: () => void;
@@ -123,6 +124,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
 
   const handleNavigateToAbout = () => {
     onClose();
+    router.push('?filter=about');
     onNavigateToAbout();
   };
 
@@ -144,13 +146,29 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
 
         <div className="mb-4">
           <label className="font-semibold">Change Profile Picture</label>
-          {profilePicturePreview && (
-            <img src={profilePicturePreview} alt="Profile Preview" className="mt-2 w-full h-32 object-cover rounded-full" />
-          )}
+          <div className="flex justify-center mt-2">
+            {profilePicturePreview ? (
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                <img 
+                  src={profilePicturePreview} 
+                  alt="Profile Preview" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            ) : (
+              <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
+                <img 
+                  src={initialData.photoURL} 
+                  alt="Current Profile" 
+                  className="w-full h-full object-cover"
+                />
+              </div>
+            )}
+          </div>
           <Input 
             type="file" 
             accept="image/*" 
-            className="mt-2 w-full border p-2 rounded"
+            className="mt-4 w-full border p-2 rounded"
             onChange={handleProfilePictureChange}
           />
         </div>
@@ -199,6 +217,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
             imageUrl={imageToCrop}
             onCrop={handleCroppedImage}
             onClose={() => setShowCropModal(false)}
+            aspect={1} // Force 1:1 aspect ratio for circular crop
           />
         )}
       </div>

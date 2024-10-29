@@ -1,14 +1,16 @@
 import React, { useState } from 'react';
 import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from 'react-image-crop';
 import 'react-image-crop/dist/ReactCrop.css';
+import Image from 'next/image';
 
 interface CropModalProps {
   imageUrl: string | null;
   onCrop: (croppedImageUrl: string) => void;
   onClose: () => void;
+  aspect?: number;
 }
 
-const CropModal: React.FC<CropModalProps> = ({ imageUrl, onCrop, onClose }) => {
+const CropModal: React.FC<CropModalProps> = ({ imageUrl, onCrop, onClose, aspect }) => {
   const [crop, setCrop] = useState<Crop>();
   const [imgRef, setImgRef] = useState<HTMLImageElement | null>(null);
 
@@ -73,12 +75,14 @@ const CropModal: React.FC<CropModalProps> = ({ imageUrl, onCrop, onClose }) => {
             circularCrop
             aspect={1}
           >
-            <img
+            <Image
               ref={setImgRef}
               src={imageUrl}
               alt="Crop me"
               onLoad={onImageLoad}
               style={{ maxHeight: '70vh', maxWidth: '100%' }}
+              width={500}
+              height={500}
             />
           </ReactCrop>
         )}
