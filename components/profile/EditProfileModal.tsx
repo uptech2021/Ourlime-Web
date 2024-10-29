@@ -8,8 +8,18 @@ import { Button, Input } from '@nextui-org/react';
 import { ProfileData, UserData } from '@/types/global';
 import { toast } from 'react-toastify';
 import CropModal from './CropModal';
+import { useRouter } from 'next/navigation';
 
-const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
+interface EditProfileModalProps {
+  isOpen: boolean;
+  onClose: () => void;
+  onSave: (data: Partial<ProfileData & { photoURL?: string }>) => void;
+  initialData: ProfileData & { photoURL?: string };
+  onNavigateToAbout: () => void;
+}
+
+const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAbout }: EditProfileModalProps) => {
+  const router = useRouter();
   const [profilePicture, setProfilePicture] = useState<Blob | null>(null);
   const [banner, setBanner] = useState<File | null>(null);
   const [bio, setBio] = useState(initialData?.aboutMe || '');
@@ -111,6 +121,11 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
     }
   };
 
+  const handleNavigateToAbout = () => {
+    onClose();
+    onNavigateToAbout();
+  };
+
   if (!isOpen) return null;
 
   return (
@@ -163,6 +178,13 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData }) => {
             onChange={(e) => setBio(e.target.value)}
           />
         </div>
+
+        <Button
+          className="w-full bg-gray-100 hover:bg-gray-200 mb-4"
+          onClick={handleNavigateToAbout}
+        >
+          Edit Additional Information →
+        </Button>
 
         <button
           onClick={handleSave}

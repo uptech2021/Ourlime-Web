@@ -11,7 +11,7 @@ import { auth, db } from '@/firebaseConfig';
 import { collection, getDocs, doc, getDoc, query, where, documentId, updateDoc, doc as firestoreDoc } from 'firebase/firestore';
 import { onAuthStateChanged, User, updateProfile, getAuth } from 'firebase/auth';
 import { fetchProfile, loginRedirect } from '@/helpers/Auth';
-import { useRouter } from 'next/navigation';
+import { useRouter, usePathname, useSearchParams } from 'next/navigation';
 import ProfilePosts from '@/components/profile/profilePosts';
 import PostForm from '@/components/home/posts/PostForm'; 
 import React from 'react';
@@ -35,6 +35,19 @@ export default function Profile() {
   const [isEditModalOpen, setEditModalOpen] = useState(false);
   const [followers, setFollowers] = useState<Follower[]>([]);
   const [following, setFollowing] = useState<Following[]>([]);
+
+  const searchParams = useSearchParams();
+
+  useEffect(() => {
+    const filterParam = searchParams.get('filter');
+    if (filterParam === 'about') {
+      setSelectedFilter('about');
+      const aboutSection = document.querySelector('[data-filter="about"]');
+      if (aboutSection) {
+        aboutSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }
+  }, [searchParams]);
 
   useEffect(() => {
     const fetchData = async () => {
@@ -130,6 +143,17 @@ export default function Profile() {
     }));
   };
 
+  const handleNavigateToAbout = () => {
+    setSelectedFilter('about');
+    // Add a small delay to ensure the DOM is ready
+    setTimeout(() => {
+      const aboutSection = document.querySelector('[data-filter="about"]');
+      if (aboutSection) {
+        aboutSection.scrollIntoView({ behavior: 'smooth' });
+      }
+    }, 100);
+  };
+
   if (loading) {
     return <div>Loading...</div>; // Optional: Add a loading spinner
   }
@@ -207,7 +231,8 @@ export default function Profile() {
               isOpen={isEditModalOpen} 
               onClose={toggleEditModal} 
               onSave={handleSave}
-              initialData={profile} // Pass the current profile data
+              initialData={profile}
+              onNavigateToAbout={handleNavigateToAbout}
             />
           )}
 
@@ -295,6 +320,7 @@ export default function Profile() {
                   Videos
                 </li>
                 <li
+                  data-filter="about"
                   className={`cursor-pointer px-4 py-2 ${selectedFilter === 'about' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
                   onClick={() => setSelectedFilter('about')}>
                   About
