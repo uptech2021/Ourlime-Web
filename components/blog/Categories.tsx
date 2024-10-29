@@ -32,32 +32,47 @@ export default function Categories({ categories, filteredBlogs }: CategoriesProp
     });
 
 
-	const handleCategoryClick = (category: string) => {
-		let newCategories: string[];
-		
-		if (category === "All") {
-			newCategories = ["All"];
-			router.push('/blogs'); // Clean URL when "All" is selected
-		} else if (selectedCategories.includes("All")) {
-			newCategories = [category];
-			router.push(`?categories=${category}`);
-		} else {
-			newCategories = selectedCategories.includes(category)
-				? selectedCategories.filter(cat => cat !== category)
-				: [...selectedCategories, category];
-				
-			if (newCategories.length === 0) {
-				newCategories = ["All"];
-				router.push('/blogs');
-			} else {
-				router.push(`?categories=${newCategories.join(',')}`);
-			}
-		}
-	    console.log('Selected Categories:', newCategories);
-		setSelectedCategories(newCategories);
-	};
-	
-
+    const handleCategoryClick = (category: string) => {
+        const currentParams = new URLSearchParams(searchParams.toString());
+        const currentSearch = currentParams.get('search');
+        
+        let newCategories: string[];
+        
+        if (category === "All") {
+            newCategories = ["All"];
+        } else {
+            // Remove "All" when selecting other categories
+            newCategories = selectedCategories
+                .filter(cat => cat !== "All")
+                .filter(cat => cat !== category);
+                
+            if (!selectedCategories.includes(category)) {
+                newCategories.push(category);
+            }
+            
+            // If no categories selected, default back to "All"
+            if (newCategories.length === 0) {
+                newCategories = ["All"];
+            }
+        }
+        
+        // Update URL with current search and new categories
+        if (newCategories.includes("All")) {
+            if (currentSearch) {
+                router.push(`?search=${currentSearch}`);
+            } else {
+                router.push('/blogs');
+            }
+        } else {
+            const categoryParam = `categories=${newCategories.join(',')}`;
+            const searchParam = currentSearch ? `&search=${currentSearch}` : '';
+            router.push(`?${categoryParam}${searchParam}`);
+        }
+        
+        setSelectedCategories(newCategories);
+    };
+    
+    
     return (
         <div className="mb-8 rounded-lg bg-white p-4 shadow-md">
             <div className="flex items-center border-b pb-2">

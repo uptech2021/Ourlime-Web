@@ -1,5 +1,6 @@
 'use client';
 
+import { Suspense } from 'react';
 import post6 from '@/public/images/blogs/post6.jpg';
 import post7 from '@/public/images/blogs/post7.jpg';
 import post8 from '@/public/images/blogs/post8.jpeg';
@@ -28,13 +29,15 @@ type CategoriesProps = {
     filteredBlogs: Blog[];
 };
 
-export default function Blogs() {
+export const dynamic = 'force-dynamic'
+
+function BlogsContent() {
     const searchParams = useSearchParams();
 
     const [categories, setCategories] = useState<Array<string>>([
         "All",
-		"Shawn",
-		"Kyle",
+        "Shawn",
+        "Kyle",
         'Cars and Vehicles',
         'Comedy',
         'Economics and Trade',
@@ -82,13 +85,19 @@ export default function Blogs() {
                         <h1 className="text-3xl font-bold">Blogs</h1>
                     </header>
 
-					<Categories categories={categories} filteredBlogs={filteredBlogs} />
-
+                    <Categories categories={categories} filteredBlogs={filteredBlogs} />
                     <RecentArticles articles={filteredBlogs} />
-					
                     <PopularPosts posts={popularPosts} />
                 </main>
             </div>
         </Navbar>
+    );
+}
+
+export default function Blogs() {
+    return (
+        <Suspense fallback={<div>Loading...</div>}>
+            <BlogsContent />
+        </Suspense>
     );
 }

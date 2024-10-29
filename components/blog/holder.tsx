@@ -1,7 +1,5 @@
 import Image, { StaticImageData } from 'next/image';
-import React, { useEffect, useState } from 'react';
-import { useRouter, useSearchParams } from 'next/navigation';
-
+import React, { useState } from 'react';
 
 type Blog = {
     id: string;
@@ -16,66 +14,18 @@ type BlogsProps = {
 };
 
 export default function RecentArticles({ articles }: BlogsProps) {
-    const router = useRouter();
-    const searchParams = useSearchParams();
-    const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
+    const [searchTerm, setSearchTerm] = useState('');
+    const [activeSearch, setActiveSearch] = useState('');
     const [displayCount, setDisplayCount] = useState(3);
     const LOAD_INCREMENT = 3;
     const MINIMUM_DISPLAY = 3;
 
-    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
-        setSearchTerm(event.target.value);
-    };
-
-    const handleSearch = (event: React.FormEvent) => {
-        event.preventDefault();
-        const currentParams = new URLSearchParams(searchParams.toString());
-        const currentCategories = currentParams.get('categories');
-        
     
-        if (currentCategories) {
-            currentParams.set('categories', currentCategories);
-        }
-        
-        // Add search parameter
-        if (searchTerm.trim()) {
-            currentParams.set('search', searchTerm.trim());
-        } else {
-            currentParams.delete('search');
-        }
-        
-        router.replace(`${window.location.pathname}?${currentParams.toString()}`, {
-            scroll: false
-        });
+    const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
+        event.preventDefault();
+        setSearchTerm(event.target.value);
+        setDisplayCount(MINIMUM_DISPLAY);
     };
-
-    // Update fetchArticles function call
-    useEffect(() => {
-        const currentSearch = searchParams.get('search');
-        const currentCategories = searchParams.get('categories');
-        
-        let queryParams = [];
-        if (currentCategories) queryParams.push(currentCategories);
-        if (currentSearch) queryParams.push(currentSearch);
-    }, [searchParams]);
-
-    const filteredArticles = articles
-        .filter((article) => {
-            const searchQuery = searchParams.get('search')?.toLowerCase();
-            const categoryQuery = searchParams.get('categories')?.split(',');
-            
-            const matchesSearch = !searchQuery || 
-                article.title.toLowerCase().includes(searchQuery) ||
-                article.author.toLowerCase().includes(searchQuery);
-                
-            const matchesCategory = !categoryQuery || 
-                categoryQuery.includes('All') ||
-                categoryQuery.includes(article.author);
-                
-            return matchesSearch && matchesCategory;
-        })
-        .slice(0, displayCount);
-
 
     const handleLoadMore = () => {
         setDisplayCount(prev => prev + LOAD_INCREMENT);
@@ -84,6 +34,13 @@ export default function RecentArticles({ articles }: BlogsProps) {
     const handleLoadLess = () => {
         setDisplayCount(prev => Math.max(MINIMUM_DISPLAY, prev - LOAD_INCREMENT));
     };
+
+    const filteredArticles = articles
+    .filter((article) => 
+        article.title.toLowerCase().includes(searchTerm.toLowerCase()) ||
+        article.author.toLowerCase().includes(searchTerm.toLowerCase())
+    )
+    .slice(0, displayCount);
 
 
     const totalFilteredArticles = articles.filter(article =>
@@ -102,32 +59,28 @@ export default function RecentArticles({ articles }: BlogsProps) {
             </div>
 
             <div className="relative">
-
-                <form onSubmit={handleSearch} className="relative">
-                    <input
-                        type="text"
-                        name="search"
-                        placeholder="Search for articles"
-                        className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 pl-10"
-                        value={searchTerm}
-                        onChange={handleSearchChange}
+                <input
+                    type="text"
+                    name="search"
+                    placeholder="Search for articles"
+                    className="w-full rounded-md border border-gray-300 bg-gray-50 px-3 py-2 pl-10"
+                    value={searchTerm}
+                    onChange={handleSearchChange}
+                />
+                <svg
+                    className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
+                    xmlns="http://www.w3.org/2000/svg"
+                    fill="none"
+                    viewBox="0 0 24 24"
+                    stroke="currentColor"
+                >
+                    <path
+                        strokeLinecap="round"
+                        strokeLinejoin="round"
+                        strokeWidth={2}
+                        d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
                     />
-                    <svg
-                        className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-gray-400"
-                        xmlns="http://www.w3.org/2000/svg"
-                        fill="none"
-                        viewBox="0 0 24 24"
-                        stroke="currentColor"
-                    >
-                        <path
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                            strokeWidth={2}
-                            d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"
-                        />
-                    </svg>
-                </form>
-
+                </svg>
             </div>
 
 
