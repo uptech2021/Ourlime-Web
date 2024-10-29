@@ -3,13 +3,12 @@ import PartTimeJobs from './filteredJobs/PartTimeJobs';
 import FullTimeJobs from './filteredJobs/FullTimeJobs';
 import AllJobs from './filteredJobs/AllJobs';
 
-export default function JobsComponent({
-	selectedJob,
-	jobs,
-}: {
+interface JobsComponentProp{
 	selectedJob: string;
 	jobs: Job[];
-}) {
+}
+
+export default function JobsComponent({ selectedJob, jobs }: JobsComponentProp) {
 	return (
 		<div className="jobs">
 			{selectedJob === 'Full time' && <FullTimeJobs job={jobs} />}

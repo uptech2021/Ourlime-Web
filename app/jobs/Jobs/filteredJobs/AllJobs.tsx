@@ -12,10 +12,10 @@ export default function AllJobs({ allJobs }: { allJobs: Job[] }) {
 				>
 					<Link href={`/jobs/${job.id}`}>
 						<div className="image-container relative mb-4 h-80 w-full">
-							<Image
-								src={job.imageUrl}
+							<img
+								src={job.imageUrl.toString()}
 								alt={job.title}
-								className="h-full w-full rounded-md"
+								className="h-full w-full rounded-md object-cover"
 							/>
 						</div>
 						<h2 className="mb-2 text-xl font-semibold">{job.title}</h2>

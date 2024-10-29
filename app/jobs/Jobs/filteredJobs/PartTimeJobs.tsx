@@ -18,8 +18,8 @@ export default function PartTimeJobs({ job }: { job: Job[] }) {
 						>
 							<Link href={`/jobs/${job.id}`}>
 								<div className="image-container relative mb-4 h-80 w-full">
-									<Image
-										src={job.imageUrl}
+									<img
+										src={job.imageUrl.toString()}
 										alt={job.title}
 										className="h-full w-full rounded-md"
 									/>
