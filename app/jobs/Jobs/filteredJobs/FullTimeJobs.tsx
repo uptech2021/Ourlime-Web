@@ -3,10 +3,6 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function FullTimeJobs({ job }: { job: Job[] }) {
-	if (!job) {
-		return <div className="text-center py-4">Loading jobs...</div>;
-	}
-
 	const fullTimeJob = job.filter((job) => job.type === 'Full time');
 
 	return (
@@ -22,8 +18,8 @@ export default function FullTimeJobs({ job }: { job: Job[] }) {
 						>
 							<Link href={`/jobs/${job.id}`}>
 								<div className="image-container relative mb-4 h-80 w-full">
-									<img
-										src={job.imageUrl.toString()}
+									<Image
+										src={job.imageUrl}
 										alt={job.title}
 										className="h-full w-full rounded-md"
 									/>
