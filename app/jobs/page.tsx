@@ -5,41 +5,42 @@ import trees from '@/public/images/home/trees.jpg';
 import { Job } from '@/types/global';
 import { Button, Input } from '@nextui-org/react';
 import { EllipsisVertical, MapPin, Search } from 'lucide-react';
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import JobsComponent from './Jobs/JobsComponent';
 import styles from './jobform.module.css';
+import { collection, getDocs } from 'firebase/firestore';
+import { auth, db } from '@/firebaseConfig';
 
 export default function Jobs() {
 	const [selected, setSelected] = useState<string>('All');
 	const [searchQuery, setSearchQuery] = useState<string>('');
+	const [jobs, setJobs] = useState<Job[]>([]);
+	const [isLoading, setIsLoading] = useState(true);
+
+	useEffect(() => {
+		const fetchJobs = async () => {
+			setIsLoading(true);
+			try {
+				const querySnapshot = await getDocs(collection(db, 'jobs'));
+				const jobsData = querySnapshot.docs.map(doc => ({
+					id: doc.id,
+					...doc.data()
+				})) as Job[];
+				setJobs(jobsData);
+				console.log(jobsData);
+			} catch (error) {
+				console.error('Error fetching jobs:', error);
+			} finally {
+				setIsLoading(false);
+			}
+		};
+
+		fetchJobs();
+	}, []);
 
 	const handleClick = (value: string) => {
 		setSelected(value);
 	};
-
-	const [jobs] = useState<Job[]>([
-		{
-			id: '1',
-			title: 'Software Engineer',
-			description: 'Test are looking for a software engineer to join our team.',
-			type: 'Full time',
-			imageUrl: trees,
-		},
-		{
-			id: '2',
-			title: 'Frontend Developer',
-			description: 'We are looking for a frontend developer to join our team.',
-			type: 'Part time',
-			imageUrl: car,
-		},
-		{
-			id: '3',
-			title: 'Frontend Developer',
-			description: 'We are looking for a frontend developer to join our team.',
-			type: 'Part time',
-			imageUrl: car,
-		},
-	]);
 
 	const handleSearchChange = (event: React.ChangeEvent<HTMLInputElement>) => {
 		setSearchQuery(event.target.value);
@@ -150,8 +151,16 @@ export default function Jobs() {
 					</Button>
 				</div>
 				<main className="main-content flex flex-col items-center overflow-auto rounded-lg p-5">
-					{jobs.length > 0 ? (
-						<JobsComponent selectedJob={selected} jobs={filteredJobs} />
+					{isLoading ? (
+						<div className="flex justify-center items-center min-h-[200px]">
+							<div className="animate-spin rounded-full h-8 w-8 border-b-2 border-gray-900"></div>
+						</div>
+					) : jobs.length > 0 ? (
+						<JobsComponent 
+							selectedJob={selected} 
+							jobs={filteredJobs} 
+							isLoading={isLoading}
+						/>
 					) : (
 						<p className="text-gray-500">No available jobs to show.</p>
 					)}

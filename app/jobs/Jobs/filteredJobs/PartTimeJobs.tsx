@@ -3,12 +3,16 @@ import Link from 'next/link';
 import Image from 'next/image';
 
 export default function PartTimeJobs({ job }: { job: Job[] }) {
+	if (!job) {
+		return <div className="text-center py-4">Loading jobs...</div>;
+	}
+
 	const partTimeJob = job.filter((job) => job.type === 'Part time');
 
 	return (
 		<div>
 			{partTimeJob.length === 0 ? (
-				<p className="text-center">No full time jobs found</p>
+				<p className="text-center">No part time jobs found</p>
 			) : (
 				<div className="grid w-full grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
 					{partTimeJob.map((job) => (
@@ -18,10 +22,12 @@ export default function PartTimeJobs({ job }: { job: Job[] }) {
 						>
 							<Link href={`/jobs/${job.id}`}>
 								<div className="image-container relative mb-4 h-80 w-full">
-									<Image
-										src={job.imageUrl}
+									<img
+										src={job.imageUrl.toString()}
 										alt={job.title}
 										className="h-full w-full rounded-md"
+										width={50}
+										height={50}
 									/>
 								</div>
 								<h2 className="mb-2 text-xl font-semibold">{job.title}</h2>
