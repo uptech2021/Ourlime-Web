@@ -139,6 +139,7 @@ export default function About({ onProfileUpdate, onUserDataUpdate }: AboutProps)
             <>
               <DatePicker 
                 className="mt-2 w-full"
+                showMonthAndYearPickers
                 onChange={(date: DateValue) => {
                   if (profile && date) {
                     setProfile({
