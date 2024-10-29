@@ -4,6 +4,10 @@ import { auth, db } from '@/firebaseConfig';
 import { fetchProfile, fetchUser } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
 import { onAuthStateChanged } from 'firebase/auth';
+import { DatePicker, DateValue } from "@nextui-org/react";
+import { Timestamp } from 'firebase/firestore';
+import { parse } from 'date-fns';
+import { countries } from 'countries-list';
 
 interface AboutProps {
   onProfileUpdate: (updatedData: Partial<ProfileData>) => void;
@@ -25,6 +29,11 @@ export default function About({ onProfileUpdate, onUserDataUpdate }: AboutProps)
     workingAt: false,
     gender: false,
   });
+
+  const countryList = Object.entries(countries).map(([code, country]) => ({
+    code,
+    name: country.name
+  })).sort((a, b) => a.name.localeCompare(b.name));
 
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
@@ -126,26 +135,72 @@ export default function About({ onProfileUpdate, onUserDataUpdate }: AboutProps)
       <label className="font-semibold">{label}:</label>
       {isEditing[field] ? (
         <div>
-          <input
-            name={field}
-            type="text"
-            value={value || ''}
-            onChange={(e) => handleChange(e, field, type)}
-            className="mt-2 w-full rounded border px-2 py-1"
-            placeholder={`Enter your ${label}`}
-          />
-          <button
-            onClick={() => handleSave(field, type)}
-            className="mt-2 rounded bg-green-400 px-4 py-2 text-white"
-          >
-            Save
-          </button>
-          <button
-            onClick={() => handleCancel(field)}
-            className="mt-2 rounded bg-gray-400 px-4 py-2 text-white ml-2"
-          >
-            Cancel
-          </button>
+          {field === 'birthday' ? (
+            <>
+              <DatePicker 
+                className="mt-2 w-full"
+                onChange={(date: DateValue) => {
+                  if (profile && date) {
+                    setProfile({
+                      ...profile,
+                      birthday: date.toString()
+                    });
+                  }
+                }}
+              />
+              <button
+                onClick={() => handleSave(field, type)}
+                className="mt-2 rounded bg-green-400 px-4 py-2 text-white"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => handleCancel(field)}
+                className="mt-2 rounded bg-gray-400 px-4 py-2 text-white ml-2"
+              >
+                Cancel
+              </button>
+            </>
+          ) : field === 'country' ? (
+            <select
+              value={value || ''}
+              onChange={(e) => handleChange(e as any, field, type)}
+              className="mt-2 w-full rounded border px-2 py-1"
+              title='Select a country'
+            >
+              <option value="">Select a country</option>
+              {countryList.map(country => (
+                <option key={country.code} value={country.name}>
+                  {country.name}
+                </option>
+              ))}
+            </select>
+          ) : (
+            <input
+              name={field}
+              type="text"
+              value={value || ''}
+              onChange={(e) => handleChange(e, field, type)}
+              className="mt-2 w-full rounded border px-2 py-1"
+              placeholder={`Enter your ${label}`}
+            />
+          )}
+          {field !== 'birthday' && (
+            <>
+              <button
+                onClick={() => handleSave(field, type)}
+                className="mt-2 rounded bg-green-400 px-4 py-2 text-white"
+              >
+                Save
+              </button>
+              <button
+                onClick={() => handleCancel(field)}
+                className="mt-2 rounded bg-gray-400 px-4 py-2 text-white ml-2"
+              >
+                Cancel
+              </button>
+            </>
+          )}
         </div>
       ) : (
         <div className="flex justify-between items-center">

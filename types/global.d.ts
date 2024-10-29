@@ -86,8 +86,7 @@ export type ProfileData = {
   posts: number;
   following: number
   followers: number;
-  birthday: string;
-  country: string;
+  birthday: Date | Firebase.Timestamp;
   school: string;
   workingAt: string;
   followerCount: number;
