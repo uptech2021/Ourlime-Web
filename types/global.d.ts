@@ -77,7 +77,6 @@ export type Job = {
 export type ProfileData = {
   firstName: string;
   lastName: string;
-  profilePicture: string;
   banner: string;
   email: string;
   country: string;
@@ -87,8 +86,7 @@ export type ProfileData = {
   posts: number;
   following: number
   followers: number;
-  birthday: string;
-  country: string;
+  birthday: Date | Firebase.Timestamp;
   school: string;
   workingAt: string;
   followerCount: number;
@@ -102,6 +100,7 @@ export type UserData = {
   isAdmin: boolean;
   last_loggedIn: Firebase.Timestamp;
   userName: string;
+  photoURL: string;
 };
 
 export type Communities = {
@@ -114,3 +113,17 @@ export type Communities = {
   isPublic: boolean;
   posts: SocialPostsData[];
 }
+
+export type Follower = {
+  uid: string;
+  username: string;
+  profilePicture: string;
+  email: string;
+};
+
+export type Following = {
+  uid: string;
+  username: string;
+  profilePicture: string;
+  email: string;
+};
