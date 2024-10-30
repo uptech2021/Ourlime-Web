@@ -22,6 +22,7 @@ type Blog = {
     image: string;
     date: { seconds: number; nanoseconds: number };
     author: string;
+    category: string;
 };
 
 type CategoriesProps = {
@@ -36,8 +37,9 @@ function BlogsContent() {
 
     const [categories, setCategories] = useState<Array<string>>([
         "All",
-        "Shawn",
-        "Kyle",
+        "Tech",
+        "Lifestyle",
+        "Cooking",
         'Cars and Vehicles',
         'Comedy',
         'Economics and Trade',

@@ -7,6 +7,7 @@ type Blog = {
     image: string;
     date: { seconds: number; nanoseconds: number };
     author: string;
+    category: string;
 };
 
 type CategoriesProps = {
@@ -22,7 +23,7 @@ export default function Categories({ categories, filteredBlogs }: CategoriesProp
     const [categoriesWithData, setCategoriesWithData] = useState<Set<string>>(new Set());
 
     useEffect(() => {
-        const availableCategories = new Set(filteredBlogs?.map(blog => blog.author) || []);
+        const availableCategories = new Set(filteredBlogs?.map(blog => blog.category) || []);
         setCategoriesWithData(availableCategories);
     }, [filteredBlogs]);
 

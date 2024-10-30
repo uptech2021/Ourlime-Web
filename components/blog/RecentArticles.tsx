@@ -1,6 +1,7 @@
 import Image, { StaticImageData } from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
+import BlogCard from '../comm/BlogCard';
 
 
 type Blog = {
@@ -9,6 +10,7 @@ type Blog = {
     image: string;
     date: { seconds: number; nanoseconds: number };
     author: string;
+    category?: string;
 };
 
 type BlogsProps = {
@@ -70,7 +72,7 @@ export default function RecentArticles({ articles }: BlogsProps) {
                 
             const matchesCategory = !categoryQuery || 
                 categoryQuery.includes('All') ||
-                categoryQuery.includes(article.author);
+                categoryQuery.includes(article.category);
                 
             return matchesSearch && matchesCategory;
         })
@@ -133,7 +135,7 @@ export default function RecentArticles({ articles }: BlogsProps) {
 
             <div className="max-w-7xl mx-auto p-2 sm:p-6 md:p-2">
                 <div className="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-6">
-                    {filteredArticles.map((article, index) => (
+                    {/* {filteredArticles.map((article, index) => (
                         <div key={index} className="rounded overflow-hidden shadow-lg flex 
                             flex-col transition-all duration-300 hover:shadow-2xl hover:-translate-y-1 opacity-100 
                             animate-fadeIn group">
@@ -148,12 +150,11 @@ export default function RecentArticles({ articles }: BlogsProps) {
                                 <div className="transition duration-300 absolute bottom-0 top-0 right-0 left-0 bg-gray-900 opacity-25 group-hover:bg-transparent">
                                 </div>
 
-                                {/* <div className="text-xs absolute top-0 right-0 bg-indigo-600 px-4 py-2 text-white mt-3 mr-3 hover:bg-white hover:text-indigo-600 transition duration-500 ease-in-out">
-                                    Cooking
-                                </div> */}
-                                <div className="text-xs absolute top-0 right-0 bg-indigo-600 px-4 py-2 text-white mt-3 mr-3">
-                                    {article.author}
-                                </div>
+                                {article.category && (
+                                    <div className="text-xs absolute top-0 right-0 bg-indigo-600 px-4 py-2 text-white mt-3 mr-3">
+                                        {article.category}
+                                    </div>
+                                )}
                             </div>
 
                             <div className="px-6 py-4 mb-auto">
@@ -169,6 +170,12 @@ export default function RecentArticles({ articles }: BlogsProps) {
                                 {new Date(article.date.seconds * 1000).toLocaleDateString()}
                             </div>
                         </div>
+                    ))} */}
+                    {filteredArticles.map((article, index) => (
+                        <BlogCard
+                            key={index}
+                            {...article}
+                        />
                     ))}
                 </div>
 
