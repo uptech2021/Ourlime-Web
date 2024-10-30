@@ -3,14 +3,11 @@ import SettingsSidebar from '@/components/settings/nav/page';
 import { Button } from '@nextui-org/react';
 import React, { useState, useEffect } from 'react';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/firebaseConfig';
+import { db } from '@/firebaseConfig';
 import { useRouter } from 'next/navigation'
-import { loginRedirect } from '@/helpers/Auth'
 import { ResizeListener } from '@/helpers/Resize'
-
-
-// Initialize Firebase
-
+import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth'
+import { ProfileData, UserData } from '@/types/global';
 
 type NotificationItemProps = {
   title: string;
@@ -42,28 +39,43 @@ export default function Notification() {
   const [notificationSettings, setNotificationSettings] = useState<boolean[]>(Array(11).fill(false));
   const [initialSettings, setInitialSettings] = useState<boolean[]>(Array(11).fill(false));
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
-  const user = auth
   const router = useRouter()
   const [, setIsPc] = useState<boolean>(false)
-  const [isLoading, setIsLoading] = useState(false);
-
+  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
 
   useEffect(() => {
-    const fetchNotificationSettings = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const docRef = doc(db, 'profiles', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().notification) {
-          const settings = docSnap.data().notification;
-          setNotificationSettings(settings);
-          setInitialSettings(settings);
+    const initializeNotification = async () => {
+      try {
+        const currentUser = await loginRedirect(router, true);
+        if (currentUser) {
+          setUserId(currentUser.uid);
+          const profileSnap = await fetchProfile(currentUser.uid);
+          const userSnap = await fetchUser(currentUser.uid);
+          setProfile(profileSnap.data() as ProfileData);
+          setUser(userSnap.data() as UserData);
+
+          const docRef = doc(db, 'profiles', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists() && docSnap.data().notification) {
+            const settings = docSnap.data().notification;
+            setNotificationSettings(settings);
+            setInitialSettings(settings);
+          }
         }
+      } catch (error) {
+        console.error('Error initializing notification:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchNotificationSettings();
-  }, []);
+    initializeNotification();
+    const cleanup = ResizeListener(setIsPc);
+    return () => cleanup();
+  }, [router]);
 
   const handleToggle = (index: number, value: boolean) => {
     const newSettings = [...notificationSettings];
@@ -73,9 +85,8 @@ export default function Notification() {
 
   const saveNotificationSettings = async () => {
     setIsLoading(true);
-    const user = auth.currentUser;
-    if (user) {
-      const docRef = doc(db, 'profiles', user.uid);
+    if (userId) {
+      const docRef = doc(db, 'profiles', userId);
       await setDoc(docRef, { notification: notificationSettings }, { merge: true });
       setShowSuccessMessage(true);
       setTimeout(() => {
@@ -85,7 +96,6 @@ export default function Notification() {
     }
     setIsLoading(false);
   };
-
 
   const hasChanges = JSON.stringify(notificationSettings) !== JSON.stringify(initialSettings);
 
@@ -103,15 +113,15 @@ export default function Notification() {
     "You have remembrance on this day"
   ];
 
-  useEffect(() => {
-    loginRedirect(router)
-    const cleanup = ResizeListener(setIsPc)
-    return () => cleanup()
-  }, [router])
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-  if (!user.currentUser) return <></>
+  if (!profile || !user || !userId) {
+    return <></>;
+  }
 
-  else return (
+  return (
     <div className='flex flex-row bg-gray-200 min-h-screen'>
       <SettingsSidebar />
 
@@ -147,7 +157,6 @@ export default function Notification() {
               >
                 {isLoading ? 'Loading...' : 'Save'}
               </Button>
-
             </div>
           </div>
         </div>

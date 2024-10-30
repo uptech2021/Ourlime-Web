@@ -37,12 +37,10 @@ export default function Address() {
   const [showDeleteSuccessMessage, setShowDeleteSuccessMessage] = useState(false);
   const [isOverlayActive, setIsOverlayActive] = useState(false);
 
-
   const areAllFieldsFilled = () => {
     return name !== '' && phone !== '' && city !== '' && country !== '' && zip !== '' && address !== '';
   };
 
-  // Reset form fields function
   const resetFormFields = () => {
     setName('');
     setPhone('');
@@ -51,13 +49,14 @@ export default function Address() {
     setZip('');
     setAddress('');
   };
+  
   const handleAddNewAddress = () => {
     resetFormFields();
-    setEditIndex(null); // Ensure it's not in edit mode
+    setEditIndex(null);
     setShowAddress(true);
-    setIsOverlayActive(true); // Show the overlay
-
+    setIsOverlayActive(true);
   };
+  
   const checkIfEdited = () => {
     if (editIndex !== null) {
       const currentAddress = addresses[editIndex];
@@ -70,16 +69,10 @@ export default function Address() {
     return name !== '' || phone !== '' || city !== '' || country !== '' || zip !== '' || address !== '';
   };
 
-
-
-
-
-
   const handleEdit = (index: number) => {
-    setEditIndex(index); // Set index to edit mode
+    setEditIndex(index);
     const addressToEdit = addresses[index];
 
-    // Populate form with existing address data
     setName(addressToEdit.name);
     setPhone(addressToEdit.phone);
     setCity(addressToEdit.city);
@@ -90,10 +83,6 @@ export default function Address() {
     setIsOverlayActive(true);
   };
 
-
-
-
-
   const handleDelete = async (index: number) => {
     const user = auth.currentUser;
 
@@ -103,12 +92,10 @@ export default function Address() {
 
       if (docSnap.exists()) {
         const currentAddresses = docSnap.data().address || [];
-        currentAddresses.splice(index, 1); // Remove the address at the specified index
+        currentAddresses.splice(index, 1);
 
-        // Update Firestore
         await updateDoc(userRef, { address: currentAddresses });
 
-        // Update local state
         setAddresses(currentAddresses);
         setShowDeleteSuccessMessage(true);
         setTimeout(() => setShowDeleteSuccessMessage(false), 3000);
@@ -117,13 +104,11 @@ export default function Address() {
   };
 
   const confirmDelete = (index: number) => {
-    setAddressToDeleteIndex(index); // Store the index of the address to delete
-    setShowDeleteConfirmation(true); // Show confirmation modal
+    setAddressToDeleteIndex(index);
+    setShowDeleteConfirmation(true);
   };
 
-
   const handleSave = async () => {
-
     const user = auth.currentUser;
 
     if (user) {
@@ -133,16 +118,14 @@ export default function Address() {
         const newAddress: Address = { name, phone, city, country, zip, address };
 
         if (editIndex !== null) {
-          // Update existing address
           const docSnap = await getDoc(userRef);
           if (docSnap.exists()) {
             const addresses = docSnap.data().address || [];
             addresses[editIndex] = newAddress;
             await updateDoc(userRef, { address: addresses });
-            setAddresses(addresses); // Update the local state
+            setAddresses(addresses);
           }
         } else {
-          // Add new address
           await updateDoc(userRef, {
             address: arrayUnion(newAddress)
           });
@@ -153,13 +136,12 @@ export default function Address() {
         setShowSuccessMessage(true);
         setTimeout(() => setShowSuccessMessage(false), 3000);
 
-        resetFormFields(); // Reset the form after saving
-        setEditIndex(null); // Exit edit mode
-        setIsOverlayActive(false); // Remove the overlay
+        resetFormFields();
+        setEditIndex(null);
+        setIsOverlayActive(false);
 
       } catch (error) {
         console.error("Error updating document: ", error);
-
       }
     } else {
       console.log("User not logged in");
@@ -168,9 +150,9 @@ export default function Address() {
 
   const handleCloseForm = () => {
     resetFormFields();
-    setEditIndex(null); // Exit edit mode
+    setEditIndex(null);
     setShowAddress(false);
-    setIsOverlayActive(false); // Remove the overlay
+    setIsOverlayActive(false);
   };
 
   useEffect(() => {
@@ -192,15 +174,20 @@ export default function Address() {
     };
 
     fetchAddresses();
-  }, [showSuccessMessage]); // Refetch addresses on successful save
+  }, [showSuccessMessage]);
 
   useEffect(() => {
     loginRedirect(router)
-    const cleanup = ResizeListener(setIsPc)
-    return () => cleanup()
-  }, [router])
+      .then(() => {
+        const cleanup = ResizeListener(setIsPc);
+        return () => cleanup();
+      })
+      .catch((error) => {
+        console.error('Error during login redirect:', error);
+      });
+  }, [router]);
 
-  if (!auth.currentUser) return <></>
+  if (!auth.currentUser) return <div>Loading...</div>;
 
   else return (
     <>
@@ -234,15 +221,12 @@ export default function Address() {
                     <button className="w-8 h-8 rounded-full bg-red-500 text-white" onClick={() => confirmDelete(index)}>
                       Del
                     </button>
-
-
                   </div>
                 </div>
               </section>
             ))}
             {showAddress && (
               <div className="z-40 absolute top-[18rem] w-60 lg:w-[40rem] mr-20 rounded border border-gray-300 bg-white p-4 shadow-md">
-                {/* Form fields */}
                 <div className="mb-4">
                   <Input type='text'
                     label="Name"
@@ -317,7 +301,6 @@ export default function Address() {
                     }} />
                 </div>
 
-                {/* Action buttons */}
                 <div className="flex justify-between mt-4">
                   <Button
                     color="success"
@@ -327,7 +310,6 @@ export default function Address() {
                   >
                     {editIndex !== null ? 'Save' : 'Add'}
                   </Button>
-
 
                   <Button color="danger" className="ml-4" onClick={handleCloseForm}>
                     Cancel
@@ -348,7 +330,7 @@ export default function Address() {
                   <Button color="success" onClick={() => {
                     if (addressToDeleteIndex !== null) {
                       handleDelete(addressToDeleteIndex);
-                      setShowDeleteConfirmation(false); // Close the modal after deletion
+                      setShowDeleteConfirmation(false);
                     }
                   }}>Yes</Button>
                   <Button color="danger" onClick={() => setShowDeleteConfirmation(false)}>No</Button>
@@ -357,7 +339,6 @@ export default function Address() {
               <div className="fixed inset-0 bg-gray-500 opacity-50 z-30"></div>
             </div>
           )}
-
         </main>
       </div>
     </>
