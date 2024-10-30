@@ -2,11 +2,12 @@
 import SettingsSidebar from "@/components/settings/nav/page";
 import { Select, SelectItem, Button } from "@nextui-org/react";
 import { useState, useEffect } from 'react';
-import { auth, db } from '@/firebaseConfig';
+import { db } from '@/firebaseConfig';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
-import { loginRedirect } from '@/helpers/Auth';
+import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
+import { ProfileData, UserData } from '@/types/global';
 
 const privacyOptions = {
   status: ["Online", "Away", "Offline"],
@@ -23,8 +24,10 @@ const privacyOptions = {
 
 export default function Privacy() {
   const router = useRouter();
-	const [, setIsPc] = useState<boolean>(false);
-	const user = auth;
+  const [, setIsPc] = useState<boolean>(false);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [privacySettings, setPrivacySettings] = useState({
     status: "Online",
     followMe: "Everyone",
@@ -37,24 +40,38 @@ export default function Privacy() {
     shareLocation: "Yes",
     allowSearch: "Yes"
   });
-
   const [isChanged, setIsChanged] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-    const fetchPrivacySettings = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const docRef = doc(db, 'profiles', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().privacy) {
-          setPrivacySettings(docSnap.data().privacy);
+    const initializePrivacy = async () => {
+      try {
+        const currentUser = await loginRedirect(router, true);
+        if (currentUser) {
+          setUserId(currentUser.uid);
+          const profileSnap = await fetchProfile(currentUser.uid);
+          const userSnap = await fetchUser(currentUser.uid);
+          setProfile(profileSnap.data() as ProfileData);
+          setUser(userSnap.data() as UserData);
+
+          const docRef = doc(db, 'profiles', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists() && docSnap.data().privacy) {
+            setPrivacySettings(docSnap.data().privacy);
+          }
         }
+      } catch (error) {
+        console.error('Error initializing privacy:', error);
+      } finally {
+        setIsLoading(false);
       }
     };
 
-    fetchPrivacySettings();
-  }, []);
+    initializePrivacy();
+    const cleanup = ResizeListener(setIsPc);
+    return () => cleanup();
+  }, [router]);
 
   const handleChange = (key: string, value: string) => {
     setPrivacySettings(prev => ({ ...prev, [key]: value }));
@@ -62,9 +79,8 @@ export default function Privacy() {
   };
 
   const handleSave = async () => {
-    const user = auth.currentUser;
-    if (user) {
-      const docRef = doc(db, 'profiles', user.uid);
+    if (userId) {
+      const docRef = doc(db, 'profiles', userId);
       await setDoc(docRef, { privacy: privacySettings }, { merge: true });
       setShowSuccessMessage(true);
       setTimeout(() => {
@@ -74,15 +90,15 @@ export default function Privacy() {
     }
   };
 
-  useEffect(() => {
-		loginRedirect(router)
-		const cleanup = ResizeListener(setIsPc)
-		return () => cleanup()
-	}, [router])
+  if (isLoading) {
+    return <div>Loading...</div>;
+  }
 
-	if (!user.currentUser) return <></>
+  if (!profile || !user || !userId) {
+    return <></>;
+  }
 
-	else return (
+  return (
     <>
     <div className='md:flex flex-row bg-gray-200 min-h-screen'>
       <SettingsSidebar />
