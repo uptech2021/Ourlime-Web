@@ -1,10 +1,10 @@
 import Image, { StaticImageData } from 'next/image';
 
-type postProps = {
+type PopularPostsProps = {
 	posts: Array<StaticImageData>;
 };
 
-export default function PopularPosts({ posts }: postProps) {
+export default function PopularPosts({ posts }: PopularPostsProps) {
 	return (
 		<div className="rounded-lg bg-white p-4 shadow-md">
 			<div className="flex items-center border-b pb-2">

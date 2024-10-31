@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
 
-type Blog = {
+type Articles = {
     id: string;
     title: string;
     image: string;
@@ -12,20 +12,20 @@ type Blog = {
 
 type CategoriesProps = {
     categories: Array<string>;
-    filteredBlogs: Blog[];
+    filteredArticles: Articles[];
 };
 
 
-export default function Categories({ categories, filteredBlogs }: CategoriesProps) {
+export default function Categories({ categories, filteredArticles }: CategoriesProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     
     const [categoriesWithData, setCategoriesWithData] = useState<Set<string>>(new Set());
 
     useEffect(() => {
-        const availableCategories = new Set(filteredBlogs?.map(blog => blog.category) || []);
+        const availableCategories = new Set(filteredArticles?.map(article => article.category) || []);
         setCategoriesWithData(availableCategories);
-    }, [filteredBlogs]);
+    }, [filteredArticles]);
 
     const [selectedCategories, setSelectedCategories] = useState<string[]>(() => {
         const urlCategories = searchParams.get('categories')?.split(',') || ['All'];
@@ -62,7 +62,7 @@ export default function Categories({ categories, filteredBlogs }: CategoriesProp
             if (currentSearch) {
                 router.push(`?search=${currentSearch}`);
             } else {
-                router.push('/blogs');
+                router.push('/articles');
             }
         } else {
             const categoryParam = `categories=${newCategories.join(',')}`;

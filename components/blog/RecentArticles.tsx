@@ -4,7 +4,7 @@ import { useRouter, useSearchParams } from 'next/navigation';
 import BlogCard from '../comm/BlogCard';
 
 
-type Blog = {
+type Articles = {
     id: string;
     title: string;
     image: string;
@@ -13,11 +13,11 @@ type Blog = {
     category?: string;
 };
 
-type BlogsProps = {
-    articles: Blog[];
+type ArticlesProps = {
+    articles: Articles[];
 };
 
-export default function RecentArticles({ articles }: BlogsProps) {
+export default function RecentArticles({ articles }: ArticlesProps) {
     const router = useRouter();
     const searchParams = useSearchParams();
     const [searchTerm, setSearchTerm] = useState(searchParams.get('search') || '');
