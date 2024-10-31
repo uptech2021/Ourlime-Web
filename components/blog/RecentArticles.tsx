@@ -1,17 +1,8 @@
-import Image, { StaticImageData } from 'next/image';
 import React, { useEffect, useState } from 'react';
 import { useRouter, useSearchParams } from 'next/navigation';
 import BlogCard from '../comm/BlogCard';
+import { Articles } from '@/types/global';
 
-
-type Articles = {
-    id: string;
-    title: string;
-    image: string;
-    date: { seconds: number; nanoseconds: number };
-    author: string;
-    category?: string;
-};
 
 type ArticlesProps = {
     articles: Articles[];

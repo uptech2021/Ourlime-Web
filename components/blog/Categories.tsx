@@ -1,18 +1,12 @@
 import { useEffect, useState } from "react";
 import { useRouter, useSearchParams } from 'next/navigation';
+import type { Articles, Categories } from '@/types/global';
+import { Spinner } from "@nextui-org/react";
 
-type Articles = {
-    id: string;
-    title: string;
-    image: string;
-    date: { seconds: number; nanoseconds: number };
-    author: string;
-    category: string;
-};
 
 type CategoriesProps = {
-    categories: Array<string>;
-    filteredArticles: Articles[];
+    categories: Categories[];
+    filteredArticles?: Articles[];
 };
 
 
@@ -92,21 +86,21 @@ export default function Categories({ categories, filteredArticles }: CategoriesP
                 <h2 className="text-2xl font-semibold">Categories</h2>
             </div>
             <div className="mt-2 flex flex-wrap">
-                {categories.map((category) => (
+                {categories ? categories.map((category) => (
                     <span
-                    key={category}
-                    onClick={() => handleCategoryClick(category)}
+                    key={category.id}
+                    onClick={() => handleCategoryClick(category.name)}
                     className={`mb-2 mr-2 cursor-pointer rounded-full px-3 py-1 text-sm flex items-center transition-colors duration-200 ${
-                        selectedCategories.includes(category)
-                            ? categoriesWithData.has(category) || category === 'All'
+                        selectedCategories.includes(category.name)
+                            ? categoriesWithData.has(category.name) || category.name === 'All'
                                 ? 'bg-green-500 text-white'
                                 : 'bg-red-500 text-white'
                             : 'bg-gray-200 hover:bg-gray-300'
                     }`}
                 >
-                    {category}
-                    {selectedCategories.includes(category) && (
-                        categoriesWithData.has(category) || category === 'All' ? (
+                    {category.name}
+                    {selectedCategories.includes(category.name) && (
+                        categoriesWithData.has(category.name) || category.name === 'All' ? (
                             <svg className="w-4 h-4 ml-1" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M5 13l4 4L19 7"/>
                             </svg>
@@ -118,7 +112,7 @@ export default function Categories({ categories, filteredArticles }: CategoriesP
                     )}
                 </span>
                 
-                ))}
+                )) : < Spinner/>}
             </div>
         </div>
     );
