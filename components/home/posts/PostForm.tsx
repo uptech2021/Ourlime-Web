@@ -131,17 +131,31 @@ export default function PostForm({
   			const locationData = await getIpAddressAndLocation();
 
 			const newSocialPost = {
-				profileImage: user.photoURL, // This line is correct now
+				profileImage: user.photoURL,
 				username: user.userName as string,
 				email: user.email as string,
 				time: serverTimestamp(),
 				content: content as string,
-				postImage: postImageUrl as string,
-				video: videoUrl as string,
 				ipAddress: locationData?.ip,
 				location: `${locationData?.city}, ${locationData?.region}, ${locationData?.country}`,
+				type: {} as {image?: string, video?: string}
 			};
-		
+
+			if (postImageUrl && videoUrl) {
+				newSocialPost.type = {
+					image: postImageUrl as string,
+					video: videoUrl as string
+				};
+			} else if (postImageUrl) {
+				newSocialPost.type = {
+					image: postImageUrl as string
+				};
+			} else if (videoUrl) {
+				newSocialPost.type = {
+					video: videoUrl as string
+				};
+			}
+
 			console.log(newSocialPost, "isSocialPost")
 
 			try {

@@ -39,6 +39,10 @@ export type SocialPosts = {
   email: string;
   profileImage: StaticImageData | string;
   postImage?: StaticImageData | string;
+  type: {
+    image: string;
+    video: string;
+  };
   video?: string;
   content: string;
   likes?: number;
