@@ -95,8 +95,5 @@
     @apply bg-none
   }
 }
-/* Ensure the text stays white when the select has a value (NEXTUI COMPONENTS) */
-.white-text-select [data-slot="trigger"] [data-slot="value"] {
-  color: white !important;
-}
+
 

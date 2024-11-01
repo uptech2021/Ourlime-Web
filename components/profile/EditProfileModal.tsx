@@ -9,6 +9,7 @@ import { ProfileData, UserData } from '@/types/global';
 import { toast } from 'react-toastify';
 import CropModal from './CropModal';
 import { useRouter } from 'next/navigation';
+import Image from 'next/image';
 
 
 interface EditProfileModalProps {
@@ -50,7 +51,7 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
   const handleBannerChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const file = e.target.files?.[0];
     if (file) {
-      const img = new Image();
+      const img = new window.Image();
       img.onload = () => {
         if (img.width > img.height) {
           setBanner(file);
@@ -149,7 +150,9 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
           <div className="flex justify-center mt-2">
             {profilePicturePreview ? (
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                <img 
+                <Image
+                  width={100}
+                  height={100}
                   src={profilePicturePreview} 
                   alt="Profile Preview" 
                   className="w-full h-full object-cover"
@@ -157,7 +160,9 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
               </div>
             ) : (
               <div className="w-32 h-32 rounded-full overflow-hidden border-4 border-white shadow-lg">
-                <img 
+                <Image
+                  width={100}
+                  height={100}
                   src={initialData.photoURL} 
                   alt="Current Profile" 
                   className="w-full h-full object-cover"
@@ -176,7 +181,10 @@ const EditProfileModal = ({ isOpen, onClose, onSave, initialData, onNavigateToAb
         <div className="mb-4">
           <label className="font-semibold">Change Banner (Landscape orientation only)</label>
           {bannerPreview && (
-            <img src={bannerPreview} alt="Banner Preview" className="mt-2 w-full h-32 object-cover rounded" />
+            <Image
+              width={100}
+              height={100}
+              src={bannerPreview} alt="Banner Preview" className="mt-2 w-full h-32 object-cover rounded" />
           )}
           <Input 
             type="file" 

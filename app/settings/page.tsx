@@ -11,6 +11,7 @@ import { useEffect, useState } from 'react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function General() {
   const router = useRouter()
@@ -121,11 +122,11 @@ export default function General() {
   };
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <AnimatedLogo />;
   }
 
   if (!profile || !user) {
-    return <></>;
+    return <AnimatedLogo />; 
   }
 
   return (

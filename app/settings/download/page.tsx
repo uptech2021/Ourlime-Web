@@ -10,6 +10,7 @@ import { useRouter } from 'next/navigation';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { useEffect, useState } from 'react';
 import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 type Download = {
     title: string,
@@ -73,11 +74,11 @@ export default function Download() {
     }, [router]);
 
     if (isLoading) {
-        return <div>Loading...</div>;
+        return <AnimatedLogo />;
     }
 
     if (!profile || !user) {
-        return <></>;
+        return <AnimatedLogo />; 
     }
 
     return (

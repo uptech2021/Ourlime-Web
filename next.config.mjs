@@ -1,6 +1,16 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
 	reactStrictMode: true,
+	images: {
+		remotePatterns: [
+			{
+				protocol: 'https',
+				hostname: 'firebasestorage.googleapis.com',
+				port: '',
+				pathname: '/**',
+			},
+		],
+	},
 	env: {
 		IPINFO_API_TOKEN: process.env.IPINFO_API_TOKEN,
 	},

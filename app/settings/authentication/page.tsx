@@ -8,6 +8,7 @@ import { loginRedirect } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
 import { doc, getDoc } from 'firebase/firestore';
 import { db } from '@/firebaseConfig';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function Authentication() {
 	const router = useRouter();
@@ -48,11 +49,11 @@ export default function Authentication() {
 	}, [router]);
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 
 	if (!profile || !userId) {
-		return <></>;
+		return <AnimatedLogo />; 
 	}
 
 	return (

@@ -8,6 +8,7 @@ import { DatePicker, DateValue } from "@nextui-org/react";
 import { Timestamp } from 'firebase/firestore';
 import { parse } from 'date-fns';
 import { countries } from 'countries-list';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 interface AboutProps {
   onProfileUpdate: (updatedData: Partial<ProfileData>) => void;
@@ -218,7 +219,7 @@ export default function About({ onProfileUpdate, onUserDataUpdate }: AboutProps)
   );
 
   if (loading) {
-    return <p>Loading...</p>;
+    return <AnimatedLogo />;
   }
 
   return (

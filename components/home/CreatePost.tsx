@@ -8,8 +8,8 @@ type CreatePostProp = {
 } 
 export default function CreatePost({ setTogglePostForm, profilePicture }: CreatePostProp) { 
 	return (
-		<div className="box-border flex flex-col justify-around rounded-xl bg-white p-5 shadow-md">
-			<div className="overflow-huidden h-10 w-10 rounded-full">
+		<div className="box-border flex flex-col justify-around  rounded-xl bg-white p-5 shadow-md">
+			<div className="overflow-hidden h-10 w-10 rounded-full">
 				<Avatar
 					src={profilePicture}
 					alt="profile picture"

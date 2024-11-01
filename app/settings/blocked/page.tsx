@@ -9,6 +9,7 @@ import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firesto
 import { getStorage, ref, getDownloadURL } from 'firebase/storage';
 import Image from 'next/image';
 import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from "@/components/AnimatedLoader";
 
 export default function Blocked() {
 	const router = useRouter();
@@ -67,11 +68,11 @@ export default function Blocked() {
 	}, [router, storage]);
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 
 	if (!profile || !user) {
-		return <></>;
+		return <AnimatedLogo />; 
 	}
 
 	return (
