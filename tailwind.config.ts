@@ -36,7 +36,7 @@ const config = {
 			colors: {
 				redTheme: '#c64d53',
 				greenTheme: '#01eb53 !important',
-			  greenForm: '#02782399',
+				greenForm: '#02782399',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',

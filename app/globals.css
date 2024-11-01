@@ -96,4 +96,10 @@
   }
 }
 
+@layer utilities {
+  .bg-buttonGradientTheme {
+    @apply bg-gradient-to-r from-theme-start to-theme-end;
+  }
+}
+
 
