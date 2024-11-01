@@ -11,11 +11,11 @@ const SettingsSidebar = () => {
   return (
     <>
       {/* Mobile Toggle Button */}
-      <div className="md:hidden p-4 bg-[#1e2321] text-white">
+      <div className="md:hidden fixed bottom-0 left-0 w-full p-4 bg-[#1e2321] text-white z-50">
         <button onClick={toggleSidebar} aria-label="Toggle sidebar">
           {isOpen ? (
             <svg
-              className="absolute bottom-0 right-0 cursor-pointer"
+              className="cursor-pointer"
               width="50"
               height="50"
               viewBox="0 0 250 250"
@@ -39,7 +39,7 @@ const SettingsSidebar = () => {
             </svg>
           ) : (
             <svg
-              className="nav-arrow fixed bottom-0 left-0 z-20 mb-5 cursor-pointer"
+              className="cursor-pointer"
               width="50"
               height="50"
               viewBox="0 0 250 250"
@@ -65,94 +65,50 @@ const SettingsSidebar = () => {
         </button>
       </div>
 
-      {/* Mobile Sidebar */}
+      {/* Sidebar */}
       <div
-        className={`fixed top-0 left-0 w-64 h-full bg-[#1e2321] text-white z-50 transition-transform duration-300 ease-in-out ${
-          isOpen ? 'transform translate-x-0' : 'transform -translate-x-full'
-        } md:hidden`}
+        className={`fixed top-0 left-0 w-64 h-full bg-[#1e2321] text-white z-40 transition-transform duration-300 ease-in-out ${
+          isOpen ? 'translate-x-0' : '-translate-x-full'
+        } md:translate-x-0`}
       >
         <div className="p-4">
-          <h2 className="text-lg font-semibold">SETTINGS</h2>
+          <h2 className="text-sm font-semibold">SETTINGS</h2>
           <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings">General</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/notification">Notification Settings</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/social">Social Links</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings">General</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/notification">Notification Settings</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/social">Social Links</Link></li>
           </ul>
         </div>
         <div className="p-4">
-          <h2 className="text-lg font-semibold">PROFILE</h2>
+          <h2 className="text-sm font-semibold">PROFILE</h2>
           <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/profile">Profile Settings</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/address">My Addresses</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/avatar">Avatar & Cover</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/download">My Information</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/profile">Profile Settings</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/address">My Addresses</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/avatar">Avatar & Cover</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/download">My Information</Link></li>
           </ul>
         </div>
         <div className="p-4">
-          <h2 className="text-lg font-semibold">SECURITY</h2>
+          <h2 className="text-sm font-semibold">SECURITY</h2>
           <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/privacy">Privacy</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/password">Password</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/manage">Manage Sessions</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/authentication">Two-factor authentication</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/privacy">Privacy</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/password">Password</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/manage">Manage Sessions</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/authentication">Two-factor authentication</Link></li>
           </ul>
         </div>
         <div className="p-4">
-          <h2 className="text-lg font-semibold">EARNINGS</h2>
+          <h2 className="text-sm font-semibold">EARNINGS</h2>
           <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/monetization">Monetization</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="#">My Affiliates</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/monetization">Monetization</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="#">My Affiliates</Link></li>
           </ul>
         </div>
         <div className="p-4">
-          <h2 className="text-lg font-semibold">OTHER</h2>
+          <h2 className="text-sm font-semibold">OTHER</h2>
           <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/blocked">Blocked Users</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/deleteuser">Delete Account</Link></li>
-          </ul>
-        </div>
-      </div>
-
-      {/* Desktop Sidebar */}
-      <div className="bg-[#1e2321] text-white hidden md:block">
-        <div className="p-4">
-          <h2 className="text-lg font-semibold">SETTINGS</h2>
-          <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings">General</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/notification">Notification Settings</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/social">Social Links</Link></li>
-          </ul>
-        </div>
-        <div className="p-4">
-          <h2 className="text-lg font-semibold">PROFILE</h2>
-          <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/profile">Profile Settings</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/address">My Addresses</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/avatar">Avatar & Cover</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/download">My Information</Link></li>
-          </ul>
-        </div>
-        <div className="p-4">
-          <h2 className="text-lg font-semibold">SECURITY</h2>
-          <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/privacy">Privacy</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/password">Password</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/manage">Manage Sessions</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/authentication">Two-factor authentication</Link></li>
-          </ul>
-        </div>
-        <div className="p-4">
-          <h2 className="text-lg font-semibold">EARNINGS</h2>
-          <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/monetization">Monetization</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="#">My Affiliates</Link></li>
-          </ul>
-        </div>
-        <div className="p-4">
-          <h2 className="text-lg font-semibold">OTHER</h2>
-          <ul>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/blocked">Blocked Users</Link></li>
-            <li className="py-2"><i className="icon-class"></i> <Link href="/settings/deleteuser">Delete Account</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/blocked">Blocked Users</Link></li>
+            <li className="py-2 text-sm"><i className="icon-class"></i> <Link href="/settings/deleteuser">Delete Account</Link></li>
           </ul>
         </div>
       </div>
