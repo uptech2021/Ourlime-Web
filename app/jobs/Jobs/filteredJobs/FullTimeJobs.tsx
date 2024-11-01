@@ -1,6 +1,5 @@
 import { Job } from '@/types/global';
 import Link from 'next/link';
-import Image from 'next/image';
 
 export default function FullTimeJobs({ job }: { job: Job[] }) {
 	const fullTimeJob = job.filter((job) => job.type === 'Full time');
@@ -14,18 +13,23 @@ export default function FullTimeJobs({ job }: { job: Job[] }) {
 					{fullTimeJob.map((job) => (
 						<div
 							key={job.id}
-							className="job-card flex flex-col items-center rounded-lg border border-gray-300 bg-white p-4 shadow-sm transition-shadow duration-200 hover:shadow-lg"
+							className="rounded-sm border border-gray-300 bg-white shadow-default hover:shadow-lg transition-shadow duration-300"
 						>
 							<Link href={`/jobs/${job.id}`}>
-								<div className="image-container relative mb-4 h-80 w-full">
+								<div className="block px-4 py-2">
 									<img
 										src={job.imageUrl.toString()}
 										alt={job.title}
-										className="h-full w-full rounded-md"
+										className="rounded-t-lg h-60 w-full object-cover"
+										loading="lazy"
 									/>
 								</div>
-								<h2 className="mb-2 text-xl font-semibold">{job.title}</h2>
-								<p className="text-gray-700">{job.description}</p>
+								<div className="p-6">
+									<h4 className="mb-3 text-xl font-semibold text-black hover:text-primary">
+										{job.title}
+									</h4>
+									<p className="text-gray-600">{job.description}</p>
+								</div>
 							</Link>
 						</div>
 					))}
