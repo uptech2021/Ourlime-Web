@@ -1,9 +1,5 @@
 .nextuiInput button, .nextuiInput div,
 .nextuiInput button:hover, .nextuiInput div:hover, 
 .nextuiInput button:focus, .nextuiInput div:focus{ 
-    @apply bg-transparent text-white;
-}
-
-.nextuiInput span{
-    @apply text-white;
+    @apply text-white bg-transparent;
 }

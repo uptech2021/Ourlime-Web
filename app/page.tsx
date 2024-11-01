@@ -1,5 +1,6 @@
 'use client';
 import Navbar from '@/comm/Navbar';
+import AnimatedLogo from '@/components/AnimatedLoader';
 import AddStory from '@/components/home/AddStory';
 import CommunitiesSlider from '@/components/home/CommunitiesSlider';
 import CreatePost from '@/components/home/CreatePost';
@@ -111,7 +112,7 @@ export default function Home() {
 	  };
 
 	if (loading || !profile || !user) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 	return (
 		<Navbar>

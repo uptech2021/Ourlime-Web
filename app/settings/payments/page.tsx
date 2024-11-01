@@ -5,6 +5,7 @@ import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function Payments() {
   const [textModel, setTextModel] = useState('Paypal');
@@ -39,11 +40,11 @@ export default function Payments() {
   }, [router]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <AnimatedLogo />;
   }
 
   if (!profile || !user) {
-    return <></>;
+    return <AnimatedLogo />; 
   }
 
   return (

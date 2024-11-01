@@ -1,25 +1,25 @@
 'use client';
 
 import Navbar from '@/comm/Navbar';
+import AnimatedLogo from '@/components/AnimatedLoader';
+import PostForm from '@/components/home/posts/PostForm';
+import EditProfileModal from '@/components/profile/EditProfileModal';
+import About from '@/components/profile/filters/About';
+import FollowModal from '@/components/profile/FollowModal';
+import ProfilePosts from '@/components/profile/profilePosts';
+import { db } from '@/firebaseConfig';
+import { loginRedirect } from '@/helpers/Auth';
 import communityImage2 from '@/public/images/home/computer.webp';
+import { Communities, Follower, Following, ProfileData, SocialPosts, UserData } from '@/types/global';
+import { fetchFollowersAndFollowing, fetchUserCommunities, fetchUserData, fetchUserPosts, updateUserProfile } from '@/utils/profileUtils';
 import { Avatar, AvatarGroup, Button, Image } from '@nextui-org/react';
+import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
+import { collection, getDocs } from 'firebase/firestore';
 import { CircleEllipsis, Smile, UsersRound } from 'lucide-react';
 import Link from 'next/link';
-import { ProfileData, UserData, SocialPosts, Communities, Follower, Following } from '@/types/global';
-import { useEffect, useState } from 'react';
-import { auth, db } from '@/firebaseConfig';
-import { collection, getDocs, doc, getDoc, query, where, documentId, updateDoc, doc as firestoreDoc } from 'firebase/firestore';
-import { onAuthStateChanged, User, updateProfile, getAuth } from 'firebase/auth';
-import { fetchProfile, loginRedirect } from '@/helpers/Auth';
-import { useRouter, usePathname, useSearchParams } from 'next/navigation';
-import ProfilePosts from '@/components/profile/profilePosts';
-import PostForm from '@/components/home/posts/PostForm'; 
-import React, { Suspense } from 'react';
-import EditProfileModal from '@/components/profile/EditProfileModal';
+import { useRouter, useSearchParams } from 'next/navigation';
+import { Suspense, useEffect, useState } from 'react';
 import styles from './profile.module.css';
-import About from '@/components/profile/filters/About';
-import { fetchUserData, fetchUserPosts, fetchUserCommunities, fetchFollowersAndFollowing, updateUserProfile } from '@/utils/profileUtils';
-import FollowModal from '@/components/profile/FollowModal';
 
 // Create a new client component to handle the search params
 const FilterHandler = ({ setSelectedFilter }: { setSelectedFilter: (filter: string) => void }) => {
@@ -75,12 +75,12 @@ export default function Profile() {
       if (currentUser) {
         setUser(currentUser);
   
-        console.log('Authenticated user:', {
-          uid: currentUser.uid,
-          email: currentUser.email,
-          displayName: currentUser.displayName,
-          photoURL: currentUser.photoURL
-        });
+        // console.log('Authenticated user:', {
+        //   uid: currentUser.uid,
+        //   email: currentUser.email,
+        //   displayName: currentUser.displayName,
+        //   photoURL: currentUser.photoURL
+        // });
   
         const userData = await fetchUserData(currentUser);
         if (userData) {
@@ -103,7 +103,7 @@ export default function Profile() {
         setUserData(null);
         setPosts([]);
         setCommunities([]);
-        console.log('No authenticated user');
+        // console.log('No authenticated user');
       }
   
       setLoading(false);
@@ -168,7 +168,7 @@ export default function Profile() {
   };
 
   if (loading) {
-    return <div>Loading...</div>; // Optional: Add a loading spinner
+    return <AnimatedLogo />; 
   }
 
   if (!user || !profile || !userData) {
@@ -366,9 +366,14 @@ export default function Profile() {
                           className="mb-4 rounded-xl bg-white p-4 shadow-lg cursor-pointer"
                           onClick={() => setTogglePostForm(true)}
                         >
-                          <div className="flex flex-col md:flex-row justify-around rounded-xl p-5">
+                          <div className="flex flex-col md:flex-row justify-around items-center gap-4 rounded-xl p-5">
                             <div className="h-10 w-10 overflow-hidden rounded-full">
-                              <Avatar src={user.photoURL as string} alt="Avatar" className="h-full w-full object-cover" />
+                              <Avatar 
+                                src={user.photoURL as string} 
+                                alt="Avatar" 
+                                className="h-full w-full object-cover rounded-full"
+                                isBordered
+                              />
                             </div>
                             <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
                               What&apos;s going on?

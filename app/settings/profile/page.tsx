@@ -8,6 +8,7 @@ import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { fetchProfile, loginRedirect } from '@/helpers/Auth';
 import { ProfileData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function ProfilePage() {
   const router = useRouter();
@@ -116,11 +117,11 @@ export default function ProfilePage() {
   }, [useCurrentLocation]);
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <AnimatedLogo />;
   }
 
   if (!profile || !userId) {
-    return <></>;
+    return <AnimatedLogo />; 
   }
 
   return (

@@ -8,6 +8,7 @@ import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function Password() {
 	const router = useRouter();
@@ -83,11 +84,11 @@ export default function Password() {
 	};
 
 	if (isLoading) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 
 	if (!profile || !user) {
-		return <></>;
+		return <AnimatedLogo />; 
 	}
 
 	return (

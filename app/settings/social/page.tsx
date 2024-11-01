@@ -7,6 +7,7 @@ import { db } from '@/firebaseConfig';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { loginRedirect } from '@/helpers/Auth';
+import AnimatedLogo from "@/components/AnimatedLoader";
 
 export default function Social() {
   const [socialLinks, setSocialLinks] = useState({
@@ -70,11 +71,11 @@ export default function Social() {
   const isFormValid = Object.values(socialLinks).some(value => value !== '');
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <AnimatedLogo />;
   }
 
   if (!userId) {
-    return <></>;
+    return <AnimatedLogo />; 
   }
 
   return (

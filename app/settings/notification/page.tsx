@@ -8,6 +8,7 @@ import { useRouter } from 'next/navigation'
 import { ResizeListener } from '@/helpers/Resize'
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth'
 import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 type NotificationItemProps = {
   title: string;
@@ -114,11 +115,11 @@ export default function Notification() {
   ];
 
   if (isLoading) {
-    return <div>Loading...</div>;
+    return <AnimatedLogo />;
   }
 
   if (!profile || !user || !userId) {
-    return <></>;
+    return <AnimatedLogo />; 
   }
 
   return (
