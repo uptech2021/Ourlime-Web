@@ -39,17 +39,17 @@ export default function AllPosts({ allPosts }: { allPosts: SocialPosts[] }) {
 						<div className="mt-3">
 							<p className="text-base">{post.content}</p>
 							<div className="flex w-full flex-wrap gap-3">
-								{post.video && (
+								{post.type.video?.length > 1 && (
 									<ReactPlayer
-										url={post.video}
+										url={post.type.video}
 										controls
 										width="100%"
 										height="15rem"
 									/>
 								)}
-								{post.postImage && (
+								{post.type.image?.length > 1 && (
 									<Image
-										src={post.postImage.toString()}
+										src={post.type.image}
 										alt="post image"
 										className="max-h-65 w-86 object-cover"
 										width={1000}
