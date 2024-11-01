@@ -1,29 +1,53 @@
 'use client';
 import React, { useEffect, useState } from 'react';
 import { Button, Input, Select, SelectItem } from "@nextui-org/react";
-import { auth } from '@/firebaseConfig';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
-import { loginRedirect } from '@/helpers/Auth';
+import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
+import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function Payments() {
   const [textModel, setTextModel] = useState('Paypal');
   const [email, setEmail] = useState('');
   const [amount, setAmount] = useState('');
   const router = useRouter();
-	const [, setIsPc] = useState<boolean>(false);
-	const user = auth;
-	
+  const [, setIsPc] = useState<boolean>(false);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
-		loginRedirect(router)
-		const cleanup = ResizeListener(setIsPc)
-		return () => cleanup()
-	}, [router])
+    const initializePayments = async () => {
+      try {
+        const currentUser = await loginRedirect(router, true);
+        if (currentUser) {
+          const profileSnap = await fetchProfile(currentUser.uid);
+          const userSnap = await fetchUser(currentUser.uid);
+          setProfile(profileSnap.data() as ProfileData);
+          setUser(userSnap.data() as UserData);
+        }
+      } catch (error) {
+        console.error('Error initializing payments:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
 
-	if (!user.currentUser) return <></>
+    initializePayments();
+    const cleanup = ResizeListener(setIsPc);
+    return () => cleanup();
+  }, [router]);
 
-	else return (
+  if (isLoading) {
+    return <AnimatedLogo />;
+  }
+
+  if (!profile || !user) {
+    return <AnimatedLogo />; 
+  }
+
+  return (
     <>
       <main className="flex flex-col bg-gray-200 min-h-screen">
         <h1 className="text-xl mb-4 mt-5 text-gray-800 text-left font-bold ml-10" >My Earnings $0.00</h1>
@@ -36,7 +60,6 @@ export default function Payments() {
           </p>
           <form className='mb-5 flex flex-col gap-3'>
             <Select
-
               label="Withdrawal Method"
               value={textModel}
               onChange={(e) => setTextModel(e.target.value)}
@@ -77,10 +100,8 @@ export default function Payments() {
           <p>Payment History</p>
           <hr />
 
-
           <button className="w-12 h-12 rounded-full bg-blue-200 mt-16 lg:mt-6 mx-[40%] md:mx-[50%]" />
           <p className="mt-2 text-gray-800 text-sm text-center">Looks like you don&apos;t have any transactions yet</p>
-
 
         </div>
       </main>

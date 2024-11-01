@@ -2,20 +2,19 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Select, SelectItem, Button, Checkbox } from "@nextui-org/react";
 import SettingsSidebar from '@/components/settings/nav/page';
-import { auth, db } from '@/firebaseConfig';
+import { db } from '@/firebaseConfig';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
-import { loginRedirect } from '@/helpers/Auth';
-
-
-
-
+import { fetchProfile, loginRedirect } from '@/helpers/Auth';
+import { ProfileData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function ProfilePage() {
   const router = useRouter();
   const [, setIsPc] = useState<boolean>(false);
-  const user = auth;
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [userId, setUserId] = useState<string | null>(null);
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [aboutMe, setAboutMe] = useState('');
@@ -27,19 +26,49 @@ export default function ProfilePage() {
   const [workingAt, setWorkingAt] = useState('');
   const [companyWebsite, setCompanyWebsite] = useState('');
   const [useCurrentLocation, setUseCurrentLocation] = useState(false);
-
-
   const [isLoading, setIsLoading] = useState(false);
-
-
-  const [, setIsFormComplete] = useState(false);
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
+
+  useEffect(() => {
+    const initializeProfile = async () => {
+      try {
+        const currentUser = await loginRedirect(router, true);
+        if (currentUser) {
+          setUserId(currentUser.uid);
+          const profileSnap = await fetchProfile(currentUser.uid);
+          setProfile(profileSnap.data() as ProfileData);
+
+          if (profileSnap.exists()) {
+            const data = profileSnap.data();
+            setFirstName(data.firstName || '');
+            setLastName(data.lastName || '');
+            setAboutMe(data.aboutMe || '');
+            setLocation(data.location || '');
+            setGender(data.gender || '');
+            setWebsite(data.website || '');
+            setSchool(data.school || '');
+            setIsSchoolCompleted(data.isSchoolCompleted || false);
+            setWorkingAt(data.workingAt || '');
+            setCompanyWebsite(data.companyWebsite || '');
+          }
+        }
+      } catch (error) {
+        console.error('Error initializing profile:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeProfile();
+    const cleanup = ResizeListener(setIsPc);
+    return () => cleanup();
+  }, [router]);
+
   const handleSave = async () => {
     setIsLoading(true);
-    const user = auth.currentUser;
-    if (user) {
+    if (userId) {
       try {
-        const profileRef = doc(db, 'profiles', user.uid);
+        const profileRef = doc(db, 'profiles', userId);
         await updateDoc(profileRef, {
           firstName,
           lastName,
@@ -63,6 +92,7 @@ export default function ProfilePage() {
     }
     setIsLoading(false);
   };
+
   const getCurrentLocation = () => {
     if (navigator.geolocation) {
       navigator.geolocation.getCurrentPosition(
@@ -80,35 +110,24 @@ export default function ProfilePage() {
     }
   };
 
-
-
-
-
   useEffect(() => {
     if (useCurrentLocation) {
       getCurrentLocation();
     }
   }, [useCurrentLocation]);
 
-  useEffect(() => {
-    setIsFormComplete(
-      !!(firstName || lastName || aboutMe || location || gender || website || school || workingAt || companyWebsite)
-    );
-  }, [firstName, lastName, aboutMe, location, gender, website, school, workingAt, companyWebsite]);
+  if (isLoading) {
+    return <AnimatedLogo />;
+  }
 
-  useEffect(() => {
-    loginRedirect(router)
-    const cleanup = ResizeListener(setIsPc)
-    return () => cleanup()
-  }, [router])
+  if (!profile || !userId) {
+    return <AnimatedLogo />; 
+  }
 
-  if (!user.currentUser) return <></>
-
-  else return (
+  return (
     <div className='md:flex md:flex-row bg-gray-200 min-h-screen'>
       <SettingsSidebar />
       <main className="flex flex-col mx-auto">
-
         <div className="text-gray-600 bg-white p-4 rounded-lg shadow-md mx-auto w-[90%] md:w-[40rem] mt-8 ">
           <h2 className="text-2xl text-gray-700 font-semibold mb-4 lg:mr-[20rem]">Profile Settings</h2>
           {showSuccessMessage && (
@@ -142,8 +161,6 @@ export default function ProfilePage() {
               Use current location
             </Checkbox>
           </div>
-
-
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Select
               label="Gender"
@@ -155,7 +172,6 @@ export default function ProfilePage() {
               <SelectItem key="female" value="female">Female</SelectItem>
               <SelectItem key="other" value="other">Other</SelectItem>
             </Select>
-
             <Input label="Website" value={website} onChange={(e) => setWebsite(e.target.value)} />
           </div>
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
@@ -167,7 +183,6 @@ export default function ProfilePage() {
           <div className="mt-4 grid grid-cols-1 lg:grid-cols-2 gap-4">
             <Input label="Working at" value={workingAt} onChange={(e) => setWorkingAt(e.target.value)} />
             <Input label="Company Website" value={companyWebsite} onChange={(e) => setCompanyWebsite(e.target.value)} />
-
           </div>
           <Button
             className={`mt-4 mx-auto block rounded px-4 py-2 text-white ${firstName || lastName || aboutMe || location || gender || website || school || workingAt || companyWebsite
@@ -179,8 +194,6 @@ export default function ProfilePage() {
           >
             {isLoading ? 'Loading...' : 'Save'}
           </Button>
-
-
         </div>
       </main>
     </div>

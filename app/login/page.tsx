@@ -1,5 +1,6 @@
 'use client';
 
+import AnimatedLogo from '@/components/AnimatedLoader';
 import { auth } from '@/firebaseConfig';
 import { homeRedirect } from '@/helpers/Auth';
 import { Button } from '@nextui-org/react';
@@ -92,7 +93,7 @@ export default function LoginPage() {
 	}
 
 	if (loading) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 
 	return (

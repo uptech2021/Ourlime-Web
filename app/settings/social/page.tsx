@@ -3,10 +3,11 @@ import { useState, useEffect } from "react";
 import { Button, Input } from "@nextui-org/react";
 import SettingsSidebar from "@/components/settings/nav/page";
 import { doc, setDoc, getDoc } from 'firebase/firestore';
-import { auth, db } from '@/firebaseConfig';
+import { db } from '@/firebaseConfig';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { loginRedirect } from '@/helpers/Auth';
+import AnimatedLogo from "@/components/AnimatedLoader";
 
 export default function Social() {
   const [socialLinks, setSocialLinks] = useState({
@@ -19,26 +20,31 @@ export default function Social() {
   });
   const router = useRouter();
   const [, setIsPc] = useState<boolean>(false);
-  const user = auth;
+  const [userId, setUserId] = useState<string | null>(null);
   const [isLoading, setIsLoading] = useState(false);
-
-
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
 
   useEffect(() => {
     const fetchSocialLinks = async () => {
-      const user = auth.currentUser;
-      if (user) {
-        const docRef = doc(db, 'profiles', user.uid);
-        const docSnap = await getDoc(docRef);
-        if (docSnap.exists() && docSnap.data().social) {
-          setSocialLinks(docSnap.data().social);
+      try {
+        const currentUser = await loginRedirect(router, true);
+        if (currentUser) {
+          setUserId(currentUser.uid);
+          const docRef = doc(db, 'profiles', currentUser.uid);
+          const docSnap = await getDoc(docRef);
+          if (docSnap.exists() && docSnap.data().social) {
+            setSocialLinks(docSnap.data().social);
+          }
         }
+      } catch (error) {
+        console.error('Error fetching social links:', error);
       }
     };
 
     fetchSocialLinks();
-  }, []);
+    const cleanup = ResizeListener(setIsPc);
+    return () => cleanup();
+  }, [router]);
 
   const handleInputChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     const { name, value } = e.target;
@@ -47,30 +53,32 @@ export default function Social() {
 
   const handleSave = async () => {
     setIsLoading(true);
-    const user = auth.currentUser;
-    if (user) {
-      const docRef = doc(db, 'profiles', user.uid);
-      await setDoc(docRef, { social: socialLinks }, { merge: true });
-      setShowSuccessMessage(true);
-      setTimeout(() => {
-        setShowSuccessMessage(false);
-      }, 3000);
+    if (userId) {
+      try {
+        const docRef = doc(db, 'profiles', userId);
+        await setDoc(docRef, { social: socialLinks }, { merge: true });
+        setShowSuccessMessage(true);
+        setTimeout(() => {
+          setShowSuccessMessage(false);
+        }, 3000);
+      } catch (error) {
+        console.error('Error saving social links:', error);
+      }
     }
     setIsLoading(false);
   };
 
-
   const isFormValid = Object.values(socialLinks).some(value => value !== '');
 
-  useEffect(() => {
-    loginRedirect(router)
-    const cleanup = ResizeListener(setIsPc)
-    return () => cleanup()
-  }, [router])
+  if (isLoading) {
+    return <AnimatedLogo />;
+  }
 
-  if (!user.currentUser) return <></>
+  if (!userId) {
+    return <AnimatedLogo />; 
+  }
 
-  else return (
+  return (
     <div className='flex flex-row bg-gray-200 min-h-screen'>
       <SettingsSidebar />
 

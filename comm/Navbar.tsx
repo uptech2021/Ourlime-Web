@@ -46,7 +46,7 @@ export default function Navbar({ children }: NavbarProps) {
 								href={
 									link === 'Home'
 										? '/'
-										: `/${link.toLowerCase().replace(' ', '-')}${link === 'Settings' ? '/general' : ''}`
+										: `/${link.toLowerCase().replace(' ', '-')}`
 								}
 							>
 								{link}

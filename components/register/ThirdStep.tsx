@@ -139,6 +139,11 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 					placeholder="Gender"
 					onChange={(e) => setGender(e.target.value)}
 					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					classNames={{
+						base: "text-white",
+						trigger: "text-white",
+						value: "text-white"
+					}}
 				>
 					<SelectItem className="greenForm" key="male" value="male">
 						Male
@@ -154,8 +159,14 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 					<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
 				)}
 				<DatePicker
+					variant='underlined'
 					onChange={(date) => setBirthday(date.toString())}
-					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					classNames={{
+						base: "text-white",
+						selectorIcon: "text-white",
+						input: "text-white"
+					}}
 				/>
 				{attemptedNextStep && birthdayError && (
 					<p className="text-bold mt-1 text-left text-red-500">

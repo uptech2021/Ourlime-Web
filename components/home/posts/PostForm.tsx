@@ -115,7 +115,7 @@ export default function PostForm({
   			const locationData = await getIpAddressAndLocation();
 
 			const newSocialPost = {
-				profileImage: profile.profilePicture as string,
+				profileImage: user.photoURL, // This line is correct now
 				username: user.userName as string,
 				email: user.email as string,
 				time: serverTimestamp(),
