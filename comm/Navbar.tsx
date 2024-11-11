@@ -33,7 +33,7 @@ export default function Navbar({ children }: NavbarProps) {
 						'Home',
 						'Advertise',
 						'Album',
-						'Blog',
+						'Articles',
 						'Jobs',
 						'Market',
 						'Profile',

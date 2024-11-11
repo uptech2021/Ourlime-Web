@@ -1,6 +1,6 @@
 'use client'
 import DownloadData from '@/components/settings/download/data';
-import post2 from '@/public/images/blogs/post2.jpg';
+import post2 from '@/public/images/articles/post2.jpg';
 import { StaticImageData } from 'next/image';
 import SettingsSidebar from '@/components/settings/nav/page';
 import { Button } from '@nextui-org/react';

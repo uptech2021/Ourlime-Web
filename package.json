@@ -16,7 +16,8 @@
     "test": "cypress run",
     "test:open": "cypress open",
     "test:auth": "pnpm exec cypress run --spec 'cypress/e2e/auth.cy.ts'",
-    "test:registration": "pnpm exec cypress run --spec 'cypress/e2e/registration.cy.ts'"
+    "test:registration": "pnpm exec cypress run --spec 'cypress/e2e/registration.cy.ts'",
+    "check": "tsc --noEmit && eslint . --ext .js,.jsx,.ts,.tsx"
   },
   "dependencies": {
     "@cypress/webpack-preprocessor": "^6.0.2",

@@ -74,6 +74,8 @@ export default function MediaSection({
 					accept="image/*,video/*"
 					className="hidden"
 					onChange={handleFileChange}
+					aria-label="File upload"
+					title="Upload file"
 				/>
 			</div>
 
