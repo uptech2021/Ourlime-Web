@@ -59,6 +59,7 @@
   }
 }
 
+
 @layer base {
   * {
     @apply border-border;
@@ -95,11 +96,20 @@
     @apply bg-none
   }
 }
+/* Ensure the text stays white when the select has a value (NEXTUI COMPONENTS) */
+
+
+[data-focus=true] {
+  --nextui-focus-border: transparent !important;
+  --nextui-focus-ring: transparent !important;
+  box-shadow: none !important;
+}
 
 @layer utilities {
   .bg-buttonGradientTheme {
     @apply bg-gradient-to-r from-theme-start to-theme-end;
   }
+
 }
 
 
