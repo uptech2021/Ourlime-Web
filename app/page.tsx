@@ -1,5 +1,6 @@
 'use client';
 import Navbar from '@/comm/Navbar';
+import AnimatedLogo from '@/components/AnimatedLoader';
 import AddStory from '@/components/home/AddStory';
 import CommunitiesSlider from '@/components/home/CommunitiesSlider';
 import CreatePost from '@/components/home/CreatePost';
@@ -111,99 +112,103 @@ export default function Home() {
 	  };
 
 	if (loading || !profile || !user) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 	return (
 		<Navbar>
 			{/* Overlay for post form */}
 			{togglePostForm && (
-				<div className="fixed top-0 z-40 h-full w-full bg-black opacity-50"></div>
+				<div className="fixed inset-0 z-40 bg-black bg-opacity-50"></div>
 			)}
 
 			<main
 				className={`relative flex flex-col gap-5 px-5 ${isPc ? 'flex-row' : 'flex-col'}`}
 			>
-				{/* Layout for larger screens */}
-				{isPc && (
-					<div className="relative mb-2 flex flex-row gap-5 overflow-hidden pl-5 pt-5">
-						<LeftSection user={user} profile={profile} />
-						<MiddleSection
-							profile={profile}
-							user={user}
-							socialPosts={socialPosts}
-							setSocialPosts={setSocialPosts}
-							togglePostForm={togglePostForm}
-							setTogglePostForm={setTogglePostForm}
-						/>
-						<RightSection />
-					</div>
-				)}
-
-				{/* Layout for smaller screens */}
-				{!isPc && (
-					<div className="mt-4 flex flex-col border">
-						<div className="flex flex-row items-center justify-between pl-10 pr-10">
-							<h2 className="text-2xl">Stories</h2>
-							<div>
-								<p
-									onClick={() => setViewCommunities((prev) => !prev)}
-									className="cursor-pointer text-gray-700"
-								>
-									{!viewCommunities ? 'View Communities' : 'Hide Communities'}
-								</p>
-							</div>
-						</div>
-
-						<StoriesSlider stories={stories} setAddStory={setAddStory} />
-						{viewCommunities && <CommunitiesSlider />}
-
-						{/* Filter Posts */}
-						<div className="relative mt-8 flex flex-col">
-							<PostFilter
-								showDropdown={showDropdown}
-								setShowDropdown={setShowDropdown}
-								selected={selected}
-								setSelected={setSelected}
+					{/* Layout for larger screens */}
+					{isPc && (
+						<div className="relative mb-2 flex flex-row gap-5 overflow-hidden pl-5 pt-5">
+							<LeftSection user={user} profile={profile} />
+							<MiddleSection
+								profile={profile}
+								user={user}
+								socialPosts={socialPosts}
+								setSocialPosts={setSocialPosts}
+								togglePostForm={togglePostForm}
+								setTogglePostForm={setTogglePostForm}
 							/>
-							{showDropdown && (
-								<div className="left-0 mt-1 w-2/3 rounded-md bg-white px-3 py-1 shadow-sm shadow-greenTheme sm:w-1/3">
-									<ul className="flex flex-col rounded-md text-sm text-black">
-										<li
-											onClick={() => setSelectedFilter('all')}
-											className={`${selectedFilter === 'all' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
-										>
-											<BookImage /> All Posts
-										</li>
-										<li
-											onClick={() => setSelectedFilter('following')}
-											className={`${selectedFilter === 'following' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
-										>
-											<UsersRound />
-											People I Follow
-										</li>
-									</ul>
-								</div>
-							)}
+							<RightSection />
 						</div>
+					)}
 
-						<CreatePost profilePicture={profile.profilePicture} setTogglePostForm={setTogglePostForm} />
-						<Posts socialPosts={socialPosts} selectedPost={selected} />
-					</div>
-				)}
+					{/* Layout for smaller screens */}
+					{!isPc && (
+						<div className="mt-4 flex flex-col border">
+							<div className="flex flex-row items-center justify-between pl-10 pr-10">
+								<h2 className="text-2xl">Stories</h2>
+								<div>
+									<p
+										onClick={() => setViewCommunities((prev) => !prev)}
+										className="cursor-pointer text-gray-700"
+									>
+										{!viewCommunities ? 'View Communities' : 'Hide Communities'}
+									</p>
+								</div>
+							</div>
+
+							<StoriesSlider stories={stories} setAddStory={setAddStory} />
+							{viewCommunities && <CommunitiesSlider />}
+
+							{/* Filter Posts */}
+							<div className="relative mt-8 flex flex-col">
+								<PostFilter
+									showDropdown={showDropdown}
+									setShowDropdown={setShowDropdown}
+									selected={selected}
+									setSelected={setSelected}
+								/>
+								{showDropdown && (
+									<div className="left-0 mt-1 w-2/3 rounded-md bg-white px-3 py-1 shadow-sm shadow-greenTheme sm:w-1/3">
+										<ul className="flex flex-col rounded-md text-sm text-black">
+											<li
+												onClick={() => setSelectedFilter('all')}
+												className={`${selectedFilter === 'all' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
+											>
+												<BookImage /> All Posts
+											</li>
+											<li
+												onClick={() => setSelectedFilter('following')}
+												className={`${selectedFilter === 'following' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
+											>
+												<UsersRound />
+												People I Follow
+											</li>
+										</ul>
+									</div>
+								)}
+							</div>
+
+							<CreatePost profilePicture={user.photoURL} setTogglePostForm={setTogglePostForm} />
+							<Posts socialPosts={socialPosts} selectedPost={selected} />
+						</div>
+					)}
 			</main>
 
-			{/* Upload Form Form */}
+			{/* Upload Form */}
 			{addStory && (
 				<AddStory setStories={setStories} setAddStory={setAddStory} />
 			)}
 			{togglePostForm && (
-				<PostForm
-					profile={profile}
-					user={user}
-					setSocialPosts={setSocialPosts}
-					setTogglePostForm={setTogglePostForm}
-					onPostCreated={onPostCreated}
-				/>
+				<div className={`fixed inset-0 z-50 ${isPc ? 'flex items-center justify-center' : ''}`}>
+					<div className={`bg-white ${isPc ? 'rounded-lg shadow-xl max-w-md w-full' : 'h-full'}`}>
+						<PostForm
+							profile={profile}
+							user={user}
+							setSocialPosts={setSocialPosts}
+							setTogglePostForm={setTogglePostForm}
+							onPostCreated={onPostCreated}
+						/>
+					</div>
+				</div>
 			)}
 		</Navbar>
 	);

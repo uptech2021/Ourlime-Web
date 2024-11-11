@@ -1,7 +1,9 @@
+"use client"
 import { db } from '@/firebaseConfig';
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { ProfileData, SocialPosts, UserData } from '@/types/global';
-import { Button, Image } from '@nextui-org/react';
+import { Button } from '@nextui-org/react';
+import Image from 'next/image';
 import EmojiPicker, { EmojiClickData } from 'emoji-picker-react';
 import { addDoc, collection, serverTimestamp, Timestamp } from 'firebase/firestore';
 import {
@@ -22,7 +24,7 @@ import {
 	Video,
 	X,
 } from 'lucide-react';
-import React, { SetStateAction, useRef, useState } from 'react';
+import React, { SetStateAction, useRef, useState, useEffect } from 'react';
 import ReactPlayer from 'react-player';
 import axios from 'axios';
 import { toast, ToastContainer } from 'react-toastify';
@@ -51,6 +53,19 @@ export default function PostForm({
 	const [selectedImage, setSelectedImage] = useState<File | null>(null);
 	const [selectedVideo, setSelectedVideo] = useState<File | null>(null);
 	const [textareaValue, setTextareaValue] = useState('');
+	const [videoSrc, setVideoSrc] = useState<string | null>(null); // State for video source
+	const [isLoading, setIsLoading] = useState<boolean>(false); // Add loading state
+
+	// Update the video source when a new video is selected
+	useEffect(() => {
+		if (selectedVideo) {
+			const objectUrl = URL.createObjectURL(selectedVideo);
+			setVideoSrc(objectUrl);
+			
+			// Clean up the object URL when the component unmounts or when selectedVideo changes
+			return () => URL.revokeObjectURL(objectUrl);
+		}
+	}, [selectedVideo]);
 
 	//Closes the post form by toggling the `togglePostForm`, `togglePrivacy`, and `toggleEmojiPicker` state variables.
 	const closeForm = () => {
@@ -91,6 +106,7 @@ export default function PostForm({
 
 	const createSocialPost = async (event: React.FormEvent<HTMLFormElement>) => {
 		event.preventDefault();
+		setIsLoading(true); // Set loading to true when form is submitted
 
 		const formData = new FormData(event.currentTarget);
 		const content = formData.get('content') as string;
@@ -115,17 +131,31 @@ export default function PostForm({
   			const locationData = await getIpAddressAndLocation();
 
 			const newSocialPost = {
-				profileImage: profile.profilePicture as string,
+				profileImage: user.photoURL,
 				username: user.userName as string,
 				email: user.email as string,
 				time: serverTimestamp(),
 				content: content as string,
-				postImage: postImageUrl as string,
-				video: videoUrl as string,
 				ipAddress: locationData?.ip,
 				location: `${locationData?.city}, ${locationData?.region}, ${locationData?.country}`,
+				type: {} as {image?: string, video?: string}
 			};
-		
+
+			if (postImageUrl && videoUrl) {
+				newSocialPost.type = {
+					image: postImageUrl as string,
+					video: videoUrl as string
+				};
+			} else if (postImageUrl) {
+				newSocialPost.type = {
+					image: postImageUrl as string
+				};
+			} else if (videoUrl) {
+				newSocialPost.type = {
+					video: videoUrl as string
+				};
+			}
+
 			console.log(newSocialPost, "isSocialPost")
 
 			try {
@@ -149,7 +179,9 @@ export default function PostForm({
 				onPostCreated(); // Call this after the post is created
 
 				setTogglePostForm(false);
+				setIsLoading(false); // Reset loading state after successful post
 			} catch (error) {
+				setIsLoading(false); // Reset loading state on error
 				toast.error('Error creating post. Please try again.', {
 					position: 'top-right',
 					autoClose: 3000,
@@ -185,9 +217,10 @@ export default function PostForm({
 					<X onClick={closeForm} className="cursor-pointer" />
 
 					<Button
-						isDisabled={!textareaValue.trim()}
+						isDisabled={!textareaValue.trim() || isLoading}
+						isLoading={isLoading}
 						type="submit"
-						className="bg-buttonGradientTheme"
+						className={`bg-buttonGradientTheme ${(!textareaValue.trim() || isLoading) ? 'cursor-not-allowed' : ''}`}
 					>
 						Share
 					</Button>
@@ -195,7 +228,7 @@ export default function PostForm({
 
 				<textarea
 					ref={textareaRef}
-					onChange={(event) => setTextareaValue(event.target.value)}
+					onChange={(event) => setTextareaValue(event.target.value)} // Update textareaValue on change
 					name="content"
 					placeholder="What's happening?"
 					className="relative h-full w-full resize-none p-3 outline-none"
@@ -255,16 +288,17 @@ export default function PostForm({
 							<Image
 								src={URL.createObjectURL(selectedImage)}
 								alt="post image"
-								radius="sm"
-								className="mx-auto h-56 w-full object-contain"
+								width={100}
+								height={100}
+								className="mx-auto rounded-md h-56 w-full object-contain"
 							/>
 						)}
-						{selectedVideo && (
+						{videoSrc && (
 							<ReactPlayer
-								url={URL.createObjectURL(selectedVideo)}
-								controls
+								url={videoSrc} // Use the videoSrc state for the ReactPlayer
 								width="100%"
 								height="15rem"
+								controls
 							/>
 						)}
 						

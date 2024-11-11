@@ -77,12 +77,16 @@
     --focus-border-color: #38a169;
     --focus-box-shadow: 0 0 0 3px #38a169;
   }
+  
   .phone {
     @apply bg-greenForm bg-opacity-60 p-2;
   }
 
   .phone .PhoneInputInput {
     @apply w-full rounded-md border-none bg-transparent text-white outline-none;
+  }
+  .phoneS .PhoneInputInput {
+    @apply  rounded-md border-none bg-transparent outline-none ;
   }
   button:not(".submit") {
     @apply bg-buttonGradientTheme from-theme-start to-theme-end;
@@ -99,6 +103,13 @@
   --nextui-focus-border: transparent !important;
   --nextui-focus-ring: transparent !important;
   box-shadow: none !important;
+}
+
+@layer utilities {
+  .bg-buttonGradientTheme {
+    @apply bg-gradient-to-r from-theme-start to-theme-end;
+  }
+
 }
 
 

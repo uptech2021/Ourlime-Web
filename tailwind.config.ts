@@ -37,7 +37,7 @@ const config = {
 			colors: {
 				redTheme: '#c64d53',
 				greenTheme: '#01eb53 !important',
-			  greenForm: '#02782399',
+				greenForm: '#02782399',
 				border: 'hsl(var(--border))',
 				input: 'hsl(var(--input))',
 				ring: 'hsl(var(--ring))',
@@ -82,6 +82,10 @@ const config = {
 					from: { height: '0' },
 					to: { height: 'var(--radix-accordion-content-height)' },
 				},
+				fadeIn: {
+					'0%': { opacity: '0' },
+					'100%': { opacity: '1' },
+				},
 				'accordion-up': {
 					from: { height: 'var(--radix-accordion-content-height)' },
 					to: { height: '0' },
@@ -90,6 +94,7 @@ const config = {
 			animation: {
 				'accordion-down': 'accordion-down 0.2s ease-out',
 				'accordion-up': 'accordion-up 0.2s ease-out',
+				fadeIn: 'fadeIn 0.3s ease-in-out',
 			},
 		},
 	},

@@ -1,5 +1,5 @@
 # Ourlime Communities Network
-![image](https://github.com/user-attachments/assets/b8a2a7ac-dd7d-48b1-8285-1257f5f36aeb)
+
 
 ## Getting Started
 These instructions will get you a copy of the project up and running on your local machine for development and testing. For clarity on standards, 

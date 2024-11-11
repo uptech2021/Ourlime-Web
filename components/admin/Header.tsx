@@ -1,7 +1,7 @@
 'use client';
 import Image from 'next/image';
 import logo from '@/public/images/logo-long.png';
-import ourlimeProfilePicture from '@/public/images/transparent ourlime logo.png';
+import ourlimeProfilePicture from '@/public/images/transparentLogo.png';
 import { Menu } from 'lucide-react';
 import { useState } from 'react';
 import MobileNavbar from './MobileNavbar';

@@ -1,15 +1,17 @@
 'use client'
 import { Button, Input, Select, SelectItem } from '@nextui-org/react';
 import { auth, db } from '@/firebaseConfig'
-import { doc, setDoc } from 'firebase/firestore'
+import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { ResizeListener } from '@/helpers/Resize'
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { useRouter } from 'next/navigation'
-import { loginRedirect } from '@/helpers/Auth'
+import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth'
 import SettingsSidebar from '@/components/settings/nav/page';
 import { useEffect, useState } from 'react';
 import PhoneInput from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
+import { ProfileData, UserData } from '@/types/global';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function General() {
   const router = useRouter()
@@ -25,10 +27,54 @@ export default function General() {
   const [showSuccessMessage, setShowSuccessMessage] = useState(false);
   const [isSubmitted, setIsSubmitted] = useState(false);
   const [isInvalid, setIsInvalid] = useState(false);
-  const user = auth;
-  const [isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profile, setProfile] = useState<ProfileData | null>(null);
+  const [user, setUser] = useState<UserData | null>(null);
+  const [usernameStatus, setUsernameStatus] = useState('');
 
+  useEffect(() => {
+    const initializeSettings = async () => {
+      try {
+        const currentUser = await loginRedirect(router, true);
+        if (currentUser) {
+          const profileSnap = await fetchProfile(currentUser.uid);
+          const userSnap = await fetchUser(currentUser.uid);
+          setProfile(profileSnap.data() as ProfileData);
+          setUser(userSnap.data() as UserData);
 
+          // Set state variables with fetched data
+          setUsername(userSnap.data()?.userName || '');
+          setEmail(userSnap.data()?.email || '');
+          setGender(userSnap.data()?.gender || '');
+          setPhone(profileSnap.data()?.phone || '');
+          setBirthday(profileSnap.data()?.birthday || '');
+          setCountry(profileSnap.data()?.country || '');
+          setMemberType(profileSnap.data()?.memberType || '');
+          setbalance(profileSnap.data()?.balance || '');
+        }
+      } catch (error) {
+        console.error('Error initializing settings:', error);
+      } finally {
+        setIsLoading(false);
+      }
+    };
+
+    initializeSettings();
+    const cleanup = ResizeListener(setIsPc);
+    return () => cleanup();
+  }, [router]);
+
+  const checkUsername = async (username: string) => {
+    if (username.trim() === '') {
+      setUsernameStatus('');
+      return;
+    }
+    const q = query(collection(db, "users"), where("userName", "==", username));
+    const querySnapshot = await getDocs(q);
+    setUsernameStatus(querySnapshot.empty ? "Username is available" : "Username is already taken");
+  };
+
+  const validateEmail = (email: string) => email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+.[A-Z]{2,4}$/i);
 
   const handleSave = async () => {
     setIsSubmitted(true);
@@ -43,7 +89,7 @@ export default function General() {
           const userData: { [key: string]: any } = {};
           const profileData: { [key: string]: any } = {};
 
-          if (username) userData.username = username;
+          if (username) userData.userName = username;
           if (email) userData.email = email;
           if (gender) userData.gender = gender;
 
@@ -75,29 +121,15 @@ export default function General() {
     }
   };
 
-  const [usernameStatus, setUsernameStatus] = useState('');
+  if (isLoading) {
+    return <AnimatedLogo />;
+  }
 
-  const checkUsername = async (username: string) => {
-    if (username.trim() === '') {
-      setUsernameStatus('');
-      return;
-    }
-    const q = query(collection(db, "users"), where("userName", "==", username));
-    const querySnapshot = await getDocs(q);
-    setUsernameStatus(querySnapshot.empty ? "Username is available" : "Username is already taken");
-  };
+  if (!profile || !user) {
+    return <AnimatedLogo />; 
+  }
 
-  const validateEmail = (email: string) => email.match(/^[A-Z0-9._%+-]+@[A-Z0-9.-]+.[A-Z]{2,4}$/i);
-
-  useEffect(() => {
-    loginRedirect(router)
-    const cleanup = ResizeListener(setIsPc)
-    return () => cleanup()
-  }, [router])
-
-  if (!user.currentUser) return <></>
-
-  else return (
+  return (
     <>
       <div className='flex flex-row bg-gray-200 min-h-screen'>
         <SettingsSidebar />
@@ -113,7 +145,7 @@ export default function General() {
             )}
             <Input
               label="Username"
-              placeholder='Admin'
+              placeholder={username || 'Admin'}
               radius="sm"
               type="text"
               className='mb-6'
@@ -126,7 +158,7 @@ export default function General() {
             />
             <Input
               label="Email"
-              placeholder={user.currentUser.email}
+              placeholder={email || 'example@gmail.com'}
               radius="sm"
               type="text"
               className="mb-6"
@@ -140,9 +172,11 @@ export default function General() {
             <div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-6">
               <Input
                 label="Birthday"
+                value={birthday}
                 radius="sm"
                 type="date"
                 onChange={(e) => setBirthday(e.target.value)}
+                className="md:w-[48%]"
               />
               <div className="">
                 <PhoneInput
@@ -151,7 +185,7 @@ export default function General() {
                   defaultCountry="TT"
                   value={phone}
                   onChange={setPhone}
-                  className="custom-phone-input w-[16rem] md:w-[18.5rem] h-[3.5rem] rounded-lg border px-8 py-4 text-sm border-none focus:outline-none focus:border-blue-500"
+                  className="phoneS w-[90%] md:w-[115%] h-[3.5rem] rounded-lg bg-gray-100 px-8 py-4 text-sm focus:outline-none focus:border-none"
                 />
 
               </div>
@@ -161,7 +195,9 @@ export default function General() {
             </div>
             <div className="flex w-full flex-wrap md:flex-nowrap gap-4 mb-6">
               <Select
-                label="Select Gender"
+                label="Gender"
+                placeholder='Select Gender'
+                selectedKeys={gender ? [gender] : []}
                 onChange={(e) => setGender(e.target.value)}
                 className="selectTag"
               >
@@ -172,6 +208,7 @@ export default function General() {
               <Select
                 label="Country"
                 placeholder='Select Country'
+                selectedKeys={country ? [country] : []}
                 onChange={(e) => setCountry(e.target.value)}
                 className="selectTag"
               >
@@ -184,6 +221,7 @@ export default function General() {
               <Select
                 label="Member Type"
                 placeholder='Select Member Type'
+                selectedKeys={memberType ? [memberType] : []}
                 onChange={(e) => setMemberType(e.target.value)}
                 className="selectTag"
               >
@@ -196,6 +234,7 @@ export default function General() {
               <Input
                 label="wallet"
                 placeholder="0"
+                value={balance}
                 radius="sm"
                 type="text"
                 onKeyPress={(event) => {

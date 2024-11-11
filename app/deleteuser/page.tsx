@@ -10,6 +10,7 @@ import {
 	User,
 } from 'firebase/auth';
 import { homeRedirect, loginRedirect } from '@/helpers/Auth';
+import AnimatedLogo from '@/components/AnimatedLoader';
 
 const DeleteUserPage = () => {
 	const [email, setEmail] = useState('');
@@ -112,7 +113,7 @@ const DeleteUserPage = () => {
 
 
 	if (loading) {
-		return <div>Loading...</div>;
+		return <AnimatedLogo />;
 	}
 
 	return (

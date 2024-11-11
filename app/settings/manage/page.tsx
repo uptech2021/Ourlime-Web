@@ -104,7 +104,10 @@ export default function Manage() {
 		return () => cleanup()
 	}, [router]);
 
-	if (!user.currentUser) return <></>
+	if (!user.currentUser) {
+		router.push('/login');
+		return null;
+	}
 
 	else return (
     <>

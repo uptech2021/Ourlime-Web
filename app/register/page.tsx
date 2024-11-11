@@ -1,4 +1,5 @@
 'use client';
+import AnimatedLogo from '@/components/AnimatedLoader';
 import FirstStep from '@/components/register/FirstStep';
 import SecondStep from '@/components/register/SecondStep';
 import ThirdStep from '@/components/register/ThirdStep';
@@ -17,7 +18,6 @@ import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import 'react-phone-number-input/style.css';
-import avatar from 'public/images/register/cartoonAvatarBlackBoy.svg';
 export default function Page() {
 	const [step, setStep] = useState(1);
 	const [prevStep, setPrevStep] = useState(1);
@@ -25,7 +25,6 @@ export default function Page() {
 
 	let newUser: User | null = null;
 
-	// State variables for input fields
 	const [firstName, setFirstName] = useState('');
 	const [lastName, setLastName] = useState('');
 	const [profilePicture, setProfilePicture] = useState('');
@@ -38,7 +37,6 @@ export default function Page() {
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
 
-	// State variables for error messages
 	const [firstNameError, setFirstNameError] = useState('');
 	const [lastNameError, setLastNameError] = useState('');
 	const [countryError, setCountryError] = useState('');
@@ -60,7 +58,6 @@ export default function Page() {
 		selectedRealisticAvatarBlackWoman,
 		setSelectedRealisticAvatarBlackWoman,
 	] = useState(false);
-	// const [phoneError, setPhoneError] = useState('');
 
 	const [emailError, setEmailError] = useState('');
 	const [passwordError, setPasswordError] = useState('');
@@ -84,7 +81,7 @@ export default function Page() {
 
 	useEffect(() => {
 		if (user && user.emailVerified) {
-			router.push('/'); // Redirect to home if user is authenticated and email is verified
+			router.push('/'); 
 		}
 	}, [user, router]);
 
@@ -255,24 +252,21 @@ export default function Page() {
 				isAdmin: true,
 				last_loggedIn: new Date(Date.now()),
 				friends: [],
+				photoURL: await uploadFile(
+					new File(
+						[
+							await fetch(`/images/register/${profilePicture}`).then(
+								(res) => res.blob()
+							),
+						],
+						profilePicture,
+						{ type: 'image/svg+xml' }
+					),
+					`images/profilePictures/${profilePicture}`
+				),
 			});
 			
-			const avatarFile = new File(
-				[
-					await fetch(`/images/register/${profilePicture}`).then(
-						(res) => res.blob()
-					),
-				],
-				profilePicture,
-				{ type: 'image/svg+xml' }
-			);
-			const _profilePicture = await uploadFile(
-				avatarFile,
-				`images/profilePictures/${profilePicture}`
-			);
 			await setDoc(doc(db, 'profiles', user.uid), {
-				profilePicture: _profilePicture,
-				banner: 'uptech.png',
 				firstName,
 				lastName,
 				email: user.email,
@@ -317,11 +311,11 @@ export default function Page() {
 	};
 
 	if (loading) {
-		return <div>Loading...</div>;
-	}
+		return <AnimatedLogo />;
+	  }
 
 	if (user && user.emailVerified) {
-		return null; // Do not show the page if the user is authenticated and email is verified
+		return <AnimatedLogo />; 
 	}
 	return (
 		<div className="relative h-screen bg-gray-100">

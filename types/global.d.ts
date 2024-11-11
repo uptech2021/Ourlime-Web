@@ -1,5 +1,22 @@
 import { StaticImageData } from "next/image";
 
+
+export type Articles = {
+  id: string;
+  title: string;
+  image: string;
+  date: { seconds: number; nanoseconds: number };
+  author: string;
+  category: string;
+};
+
+export type Categories = {
+  id: string;
+  name: string;
+};
+
+
+
 export type Metadata = {
   metadataBase: string;
   title: string;
@@ -39,6 +56,10 @@ export type SocialPosts = {
   email: string;
   profileImage: StaticImageData | string;
   postImage?: StaticImageData | string;
+  type: {
+    image: string;
+    video: string;
+  };
   video?: string;
   content: string;
   likes?: number;
@@ -77,7 +98,6 @@ export type Job = {
 export type ProfileData = {
   firstName: string;
   lastName: string;
-  profilePicture: string;
   banner: string;
   email: string;
   country: string;
@@ -87,8 +107,7 @@ export type ProfileData = {
   posts: number;
   following: number
   followers: number;
-  birthday: string;
-  country: string;
+  birthday: Date | Firebase.Timestamp;
   school: string;
   workingAt: string;
   followerCount: number;
@@ -102,6 +121,7 @@ export type UserData = {
   isAdmin: boolean;
   last_loggedIn: Firebase.Timestamp;
   userName: string;
+  photoURL: string;
 };
 
 export type Communities = {
@@ -114,3 +134,17 @@ export type Communities = {
   isPublic: boolean;
   posts: SocialPostsData[];
 }
+
+export type Follower = {
+  uid: string;
+  username: string;
+  profilePicture: string;
+  email: string;
+};
+
+export type Following = {
+  uid: string;
+  username: string;
+  profilePicture: string;
+  email: string;
+};
