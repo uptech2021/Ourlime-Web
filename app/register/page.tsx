@@ -244,15 +244,22 @@ export default function Page() {
 
 			newUser = user;
 
-			// Check if the email is verified
+			// Save user data to 'users' collection
 			await setDoc(doc(db, 'users', user.uid), {
+				firstName,
+				lastName,
 				userName,
 				email: user.email,
 				gender,
+				birthday,
 				isAdmin: true,
 				last_loggedIn: new Date(Date.now()),
 				friends: [],
-				photoURL: await uploadFile(
+			});
+
+			// Save profile picture to 'profileImages' collection
+			await setDoc(doc(db, 'profileImages', user.uid), {
+				imageURL: await uploadFile(
 					new File(
 						[
 							await fetch(`/images/register/${profilePicture}`).then(
@@ -264,16 +271,9 @@ export default function Page() {
 					),
 					`images/profilePictures/${profilePicture}`
 				),
-			});
-			
-			await setDoc(doc(db, 'profiles', user.uid), {
-				firstName,
-				lastName,
-				email: user.email,
-				phone,
-				country,
-				birthday,
-				balance: 0,
+				typeOfImage: profilePicture, // Assuming this is the type of image
+				createdAt: new Date().toISOString(), // Store the creation date
+				userid: user.uid, // Link to the user
 			});
 
 			// Store the uid in localStorage
