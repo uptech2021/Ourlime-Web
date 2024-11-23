@@ -20,6 +20,10 @@ type ThirdStepProps = {
 	genderError: string;
 	birthdayError: string;
 	error: string;
+	setCity: Dispatch<SetStateAction<string>>;
+	cityError: string;
+	setPostalCode: Dispatch<SetStateAction<string>>;
+	postalCodeError: string;
 };
 
 const ThirdStep: React.FC<ThirdStepProps> = ({
@@ -38,7 +42,11 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 	countryError,
 	genderError,
 	birthdayError,
-	error
+	error,
+	setCity,
+	cityError,
+	setPostalCode,
+	postalCodeError
 }) => {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
 
@@ -124,12 +132,20 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						{lastNameError}
 					</p>
 				)}
-				<input
-					type="text"
-					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+				<Select
 					placeholder="Country"
 					onChange={(e) => setCountry(e.target.value)}
-				/>
+					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					classNames={{
+						base: "text-white",
+						trigger: "text-white",
+						value: "text-white"
+					}}
+				>
+					<SelectItem className="greenForm" key="trinidad" value="Trinidad and Tobago">
+						Trinidad and Tobago
+					</SelectItem>
+				</Select>
 				{attemptedNextStep && countryError && (
 					<p className="text-bold mt-1 text-left text-red-500">
 						{countryError}
@@ -162,6 +178,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 					variant='underlined'
 					onChange={(date) => setBirthday(date.toString())}
 					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					showMonthAndYearPickers
 					classNames={{
 						base: "text-white",
 						selectorIcon: "text-white",
@@ -171,6 +188,28 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 				{attemptedNextStep && birthdayError && (
 					<p className="text-bold mt-1 text-left text-red-500">
 						{birthdayError}
+					</p>
+				)}
+				<input
+					type="text"
+					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					placeholder="City"
+					onChange={(e) => setCity(e.target.value)}
+				/>
+				{attemptedNextStep && cityError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{cityError}
+					</p>
+				)}
+				<input
+					type="text"
+					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					placeholder="Postal Code"
+					onChange={(e) => setPostalCode(e.target.value)}
+				/>
+				{attemptedNextStep && postalCodeError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{postalCodeError}
 					</p>
 				)}
 				<div className="flex w-full flex-col gap-1 md:flex-row md:px-20">

@@ -71,6 +71,11 @@ export default function Page() {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	const [city, setCity] = useState('');
+	const [cityError, setCityError] = useState('');
+	const [postalCode, setPostalCode] = useState('');
+	const [postalCodeError, setPostalCodeError] = useState('');
+
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
 			setUser(currentUser);
@@ -276,6 +281,14 @@ export default function Page() {
 				userid: user.uid, // Link to the user
 			});
 
+			// Save address data to 'addresses' collection
+			await setDoc(doc(db, 'addresses', user.uid), {
+				userId: user.uid,
+				country,
+				postalCode,
+				city,
+			});
+
 			// Store the uid in localStorage
 			localStorage.setItem('uid', user.uid);
 			await handleSignOut(router);
@@ -412,6 +425,10 @@ export default function Page() {
 								genderError={genderError}
 								birthdayError={birthdayError}
 								error={error}
+								setCity={setCity}
+								cityError={cityError}
+								setPostalCode={setPostalCode}
+								postalCodeError={postalCodeError}
 							/>
 						) : null}
 					</div>
