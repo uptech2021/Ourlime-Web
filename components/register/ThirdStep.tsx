@@ -24,6 +24,10 @@ type ThirdStepProps = {
 	cityError: string;
 	setPostalCode: Dispatch<SetStateAction<string>>;
 	postalCodeError: string;
+	setStreet: Dispatch<SetStateAction<string>>;
+	streetError: string;
+	setZipCode: Dispatch<SetStateAction<string>>;
+	zipCodeError: string;
 };
 
 const ThirdStep: React.FC<ThirdStepProps> = ({
@@ -46,7 +50,12 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 	setCity,
 	cityError,
 	setPostalCode,
-	postalCodeError
+	postalCodeError,
+	setStreet,
+	streetError,
+	setZipCode,
+	zipCodeError,
+
 }) => {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
 
@@ -210,6 +219,28 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 				{attemptedNextStep && postalCodeError && (
 					<p className="text-bold mt-1 text-left text-red-500">
 						{postalCodeError}
+					</p>
+				)}
+				<input
+					type="text"
+					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					placeholder="Street"
+					onChange={(e) => setStreet(e.target.value)}
+				/>
+				{attemptedNextStep && streetError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{streetError}
+					</p>
+				)}
+				<input
+					type="text"
+					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					placeholder="Zip Code"
+					onChange={(e) => setZipCode(e.target.value)}
+				/>
+				{attemptedNextStep && zipCodeError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{zipCodeError}
 					</p>
 				)}
 				<div className="flex w-full flex-col gap-1 md:flex-row md:px-20">

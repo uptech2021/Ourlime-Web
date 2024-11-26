@@ -75,6 +75,11 @@ export default function Page() {
 	const [cityError, setCityError] = useState('');
 	const [postalCode, setPostalCode] = useState('');
 	const [postalCodeError, setPostalCodeError] = useState('');
+	const [street, setStreet] = useState('');
+	const [streetError, setStreetError] = useState('');
+	const [zipCode, SetZipCode] = useState('');
+	const [zipCodeError, setZipCodeError] = useState('');
+
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -164,6 +169,22 @@ export default function Page() {
 		} else {
 			setCountryError('');
 		}
+
+		if (street.trim() === '') {
+			setStreetError('Please enter your street.');
+			formValid = false;
+		} else {
+			setStreetError('');
+		}
+
+		if (zipCode.trim() === '') {
+			setZipCodeError('Please enter your zip code.');
+			formValid = false;
+		} else {
+			setZipCodeError('');
+		}
+
+
 		// Validate gender
 		if (!gender) {
 			setGenderError('Please select your gender');
@@ -259,7 +280,7 @@ export default function Page() {
 				birthday,
 				isAdmin: true,
 				last_loggedIn: new Date(Date.now()),
-				friends: [],
+				userTier: 1,
 			});
 
 			// Save profile picture to 'profileImages' collection
@@ -287,6 +308,8 @@ export default function Page() {
 				country,
 				postalCode,
 				city,
+				street,
+				zipCode
 			});
 
 			// Store the uid in localStorage
@@ -429,6 +452,10 @@ export default function Page() {
 								cityError={cityError}
 								setPostalCode={setPostalCode}
 								postalCodeError={postalCodeError}
+								setStreet={setStreet}
+								streetError={streetError}
+								setZipCode={SetZipCode}
+								zipCodeError={zipCodeError}
 							/>
 						) : null}
 					</div>
