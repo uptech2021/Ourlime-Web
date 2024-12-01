@@ -359,8 +359,10 @@ export default function Page() {
 			<div
 				className="bg-center-center absolute inset-0 bg-cover md:hidden"
 				style={{
-					backgroundImage:
-						"url('/images/register/registerBackgroundImage.png')",
+					backgroundImage: "url('/images/register/registerBackgroundImage.png')",
+					backgroundSize: 'cover',
+					backgroundPosition: 'center',
+					height: '100vh',
 				}}
 			></div>
 
@@ -374,7 +376,7 @@ export default function Page() {
 			></div>
 
 			{/* Form Container */}
-			<div className="relative flex h-screen w-screen justify-center bg-black bg-opacity-[35%] md:items-center">
+			<div className="relative flex h-screen w-screen justify-center bg-black bg-opacity-[35%] md:items-center overflow-auto">
 				<div className="w-9/12 pt-10 text-left sm:w-9/12 md:w-8/12 lg:w-1/2 xl:w-4/12">
 					{step == 1 && (
 						<div className="md:text-center">
@@ -401,6 +403,12 @@ export default function Page() {
 							<FirstStep
 								setUserName={setUserName}
 								userNameError={userNameError}
+								setFirstName={setFirstName}
+								firstNameError={firstNameError}
+								setLastName={setLastName}
+								lastNameError={lastNameError}
+								setGender={setGender}
+								genderError={genderError}
 								setEmail={setEmail}
 								emailError={emailError}
 								setPhone={setPhone}
@@ -412,6 +420,8 @@ export default function Page() {
 								validateStep={validateStep1}
 								passwordError={passwordError}
 								phone={phone}
+								setBirthday={setBirthday}
+								birthdayError={birthdayError}
 							/>
 						) : step === 2 ? (
 							<SecondStep
@@ -434,18 +444,12 @@ export default function Page() {
 							<ThirdStep
 								verificationMessage={verificationMessage}
 								setStep={setStep}
-								setFirstName={setFirstName}
-								setLastName={setLastName}
-								setGender={setGender}
 								setCountry={setCountry}
 								setBirthday={setBirthday}
 								validateStep={validateStep3}
 								isStepValid={isStep3Valid}
 								handleSubmit={handleRegister}
-								firstNameError={firstNameError}
-								lastNameError={lastNameError}
 								countryError={countryError}
-								genderError={genderError}
 								birthdayError={birthdayError}
 								error={error}
 								setCity={setCity}

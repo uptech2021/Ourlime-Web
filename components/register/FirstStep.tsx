@@ -1,17 +1,24 @@
 'use client';
 // import { sendOtp } from '@/helpers/Auth';
-import { Button, Checkbox } from '@nextui-org/react';
+import { Button, Checkbox, DatePicker, Select, SelectItem } from '@nextui-org/react';
 
 import { useEffect, useState } from 'react';
 import PhoneInput from 'react-phone-number-input';
 
 import { Dispatch, SetStateAction } from 'react';
+import styles from "./register.module.css"
+
 
 type FirstStepProps = {
 	setUserName: Dispatch<SetStateAction<string>>;
 	userNameError: string;
+	firstNameError: string;
+	lastNameError: string;
+	genderError: string;
 	setEmail: Dispatch<SetStateAction<string>>;
 	emailError: string;
+	setBirthday: Dispatch<SetStateAction<string>>;
+	birthdayError: string;
 	setPhone: Dispatch<SetStateAction<string>>;
 	phoneError?: string;
 	setPassword: Dispatch<SetStateAction<string>>;
@@ -21,13 +28,21 @@ type FirstStepProps = {
 	validateStep: () => boolean;
 	passwordError: string;
 	phone?: string;
+	setGender: Dispatch<SetStateAction<string>>;
+	setFirstName: Dispatch<SetStateAction<string>>;
+	setLastName: Dispatch<SetStateAction<string>>;
 };
 
 export default function FirstStep({
 	setUserName,
 	userNameError,
+	firstNameError,
+	lastNameError,
+	genderError,
 	setEmail,
 	emailError,
+	setBirthday,
+	birthdayError,
 	setPhone,
 	phoneError,
 	setPassword,
@@ -36,7 +51,10 @@ export default function FirstStep({
 	setStep,
 	validateStep,
 	passwordError,
-	phone
+	phone,
+	setGender,
+	setFirstName,
+	setLastName
 }: FirstStepProps) {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
 
@@ -50,9 +68,6 @@ export default function FirstStep({
 			setStep(2);
 		}
 	};
-
-	
-      
 
 	return (
 		<div className="step-1">
@@ -77,6 +92,65 @@ export default function FirstStep({
 			<div className="mb-4">
 				<div className="relative">
 					<input
+						type="text"
+						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+						placeholder="First Name"
+						onChange={(e) => setFirstName(e.target.value)}
+					/>
+					{attemptedNextStep && firstNameError && (
+						<p className="text-bold mt-1 text-left text-red-500">
+							{firstNameError}
+						</p>
+					)}
+				</div>
+			</div>
+			<div className="mb-4">
+				<div className="relative">
+
+					<input
+						type="text"
+						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+						placeholder="Last Name"
+						onChange={(e) => setLastName(e.target.value)}
+					/>
+					{attemptedNextStep && lastNameError && (
+						<p className="text-bold mt-1 text-left text-red-500">
+							{lastNameError}
+						</p>
+					)}	
+				</div>
+			</div>
+
+			{/* Gender Dropdown */}
+			<div className="mb-4">
+				<Select
+					placeholder="Gender"
+					onChange={(e) => setGender(e.target.value)}
+					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					classNames={{
+						base: "text-white",
+						trigger: "text-white",
+						value: "text-white"
+					}}
+				>
+					<SelectItem className="greenForm" key="male" value="male">
+						Male
+					</SelectItem>
+					<SelectItem className="greenForm" key="female" value="female">
+						Female
+					</SelectItem>
+					<SelectItem className="greenForm" key="other" value="other">
+						Other
+					</SelectItem>
+				</Select>
+				{attemptedNextStep && genderError && (
+					<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
+				)}
+			</div>
+			
+			<div className="mb-4">
+				<div className="relative">
+					<input
 						type="email"
 						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
 						placeholder="Email Address"
@@ -88,6 +162,24 @@ export default function FirstStep({
 					<p className="text-bold mt-1 text-left text-red-500">{emailError}</p>
 				)}
 			</div>
+
+			<DatePicker
+					variant='underlined'
+					onChange={(date) => setBirthday(date.toString())}
+					className={`${styles.nextuiInput} mb-4 w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					showMonthAndYearPickers
+					classNames={{
+						base: "text-white",
+						selectorIcon: "text-white",
+						input: "text-white"
+					}}
+				/>
+				{attemptedNextStep && birthdayError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{birthdayError}
+					</p>
+				)}
+				
 			<div className="mb-4">
 				<div className="relative">
 					<PhoneInput
