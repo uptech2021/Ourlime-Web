@@ -71,6 +71,16 @@ export default function Page() {
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 
+	const [city, setCity] = useState('');
+	const [cityError, setCityError] = useState('');
+	const [postalCode, setPostalCode] = useState('');
+	const [postalCodeError, setPostalCodeError] = useState('');
+	const [street, setStreet] = useState('');
+	const [streetError, setStreetError] = useState('');
+	const [zipCode, SetZipCode] = useState('');
+	const [zipCodeError, setZipCodeError] = useState('');
+
+
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
 			setUser(currentUser);
@@ -159,6 +169,22 @@ export default function Page() {
 		} else {
 			setCountryError('');
 		}
+
+		if (street.trim() === '') {
+			setStreetError('Please enter your street.');
+			formValid = false;
+		} else {
+			setStreetError('');
+		}
+
+		if (zipCode.trim() === '') {
+			setZipCodeError('Please enter your zip code.');
+			formValid = false;
+		} else {
+			setZipCodeError('');
+		}
+
+
 		// Validate gender
 		if (!gender) {
 			setGenderError('Please select your gender');
@@ -244,15 +270,22 @@ export default function Page() {
 
 			newUser = user;
 
-			// Check if the email is verified
+			// Save user data to 'users' collection
 			await setDoc(doc(db, 'users', user.uid), {
+				firstName,
+				lastName,
 				userName,
 				email: user.email,
 				gender,
+				birthday,
 				isAdmin: true,
 				last_loggedIn: new Date(Date.now()),
-				friends: [],
-				photoURL: await uploadFile(
+				userTier: 1,
+			});
+
+			// Save profile picture to 'profileImages' collection
+			await setDoc(doc(db, 'profileImages', user.uid), {
+				imageURL: await uploadFile(
 					new File(
 						[
 							await fetch(`/images/register/${profilePicture}`).then(
@@ -264,16 +297,19 @@ export default function Page() {
 					),
 					`images/profilePictures/${profilePicture}`
 				),
+				typeOfImage: profilePicture, // Assuming this is the type of image
+				createdAt: new Date().toISOString(), // Store the creation date
+				userid: user.uid, // Link to the user
 			});
-			
-			await setDoc(doc(db, 'profiles', user.uid), {
-				firstName,
-				lastName,
-				email: user.email,
-				phone,
+
+			// Save address data to 'addresses' collection
+			await setDoc(doc(db, 'addresses', user.uid), {
+				userId: user.uid,
 				country,
-				birthday,
-				balance: 0,
+				postalCode,
+				city,
+				street,
+				zipCode
 			});
 
 			// Store the uid in localStorage
@@ -323,8 +359,10 @@ export default function Page() {
 			<div
 				className="bg-center-center absolute inset-0 bg-cover md:hidden"
 				style={{
-					backgroundImage:
-						"url('/images/register/registerBackgroundImage.png')",
+					backgroundImage: "url('/images/register/registerBackgroundImage.png')",
+					backgroundSize: 'cover',
+					backgroundPosition: 'center',
+					height: '100vh',
 				}}
 			></div>
 
@@ -338,7 +376,7 @@ export default function Page() {
 			></div>
 
 			{/* Form Container */}
-			<div className="relative flex h-screen w-screen justify-center bg-black bg-opacity-[35%] md:items-center">
+			<div className="relative flex h-screen w-screen justify-center bg-black bg-opacity-[35%] md:items-center overflow-auto">
 				<div className="w-9/12 pt-10 text-left sm:w-9/12 md:w-8/12 lg:w-1/2 xl:w-4/12">
 					{step == 1 && (
 						<div className="md:text-center">
@@ -365,6 +403,12 @@ export default function Page() {
 							<FirstStep
 								setUserName={setUserName}
 								userNameError={userNameError}
+								setFirstName={setFirstName}
+								firstNameError={firstNameError}
+								setLastName={setLastName}
+								lastNameError={lastNameError}
+								setGender={setGender}
+								genderError={genderError}
 								setEmail={setEmail}
 								emailError={emailError}
 								setPhone={setPhone}
@@ -376,6 +420,8 @@ export default function Page() {
 								validateStep={validateStep1}
 								passwordError={passwordError}
 								phone={phone}
+								setBirthday={setBirthday}
+								birthdayError={birthdayError}
 							/>
 						) : step === 2 ? (
 							<SecondStep
@@ -398,20 +444,22 @@ export default function Page() {
 							<ThirdStep
 								verificationMessage={verificationMessage}
 								setStep={setStep}
-								setFirstName={setFirstName}
-								setLastName={setLastName}
-								setGender={setGender}
 								setCountry={setCountry}
 								setBirthday={setBirthday}
 								validateStep={validateStep3}
 								isStepValid={isStep3Valid}
 								handleSubmit={handleRegister}
-								firstNameError={firstNameError}
-								lastNameError={lastNameError}
 								countryError={countryError}
-								genderError={genderError}
 								birthdayError={birthdayError}
 								error={error}
+								setCity={setCity}
+								cityError={cityError}
+								setPostalCode={setPostalCode}
+								postalCodeError={postalCodeError}
+								setStreet={setStreet}
+								streetError={streetError}
+								setZipCode={SetZipCode}
+								zipCodeError={zipCodeError}
 							/>
 						) : null}
 					</div>
