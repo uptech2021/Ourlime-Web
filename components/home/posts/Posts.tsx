@@ -13,9 +13,7 @@ export default function Posts({
 		<div className="posts">
 			{selectedPost === 'all' && <AllPosts allPosts={socialPosts} />}
 
-			{/* This has been removed because it doesn't make sense having filtering by text since text is mandatory
-				{selectedPost === 'text' && <TextPosts socialPosts={socialPosts} />} 
-			*/}
+			{/* This has been removed because it doesn't make sense having filtering by text since text is mandatory */}
 			{selectedPost === 'photos' && <PhotosPosts socialPosts={socialPosts} />}
 			{selectedPost === 'videos' && <VideosPosts socialPosts={socialPosts} />}
 			{selectedPost === 'sounds' && (

@@ -44,7 +44,7 @@ export default function VideosPosts({
 									fallback={<Skeleton className="h-full w-full" />}
 								/>
 							</div>
-							<p className="text-xl font-semibold">{post.username}</p>
+							<p className="text-xl font-semibold">{post.userName}</p>
 							<p className="ml-auto text-base text-gray-500">
 								{formatDate(post.time)}
 							</p>

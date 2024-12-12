@@ -132,7 +132,7 @@ export default function PostForm({
 
 			const newSocialPost = {
 				profileImage: user.photoURL,
-				username: user.userName as string,
+				userName: user.userName as string,
 				email: user.email as string,
 				time: serverTimestamp(),
 				content: content as string,

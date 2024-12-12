@@ -15,40 +15,42 @@ export default function Navbar({ children }: NavbarProps) {
 
 	const handleToggleNav = () => setIsOpen(!isOpen);
 
-	// Function to handle click events, conditionally triggering handleSignOut
 	const handleClick = (link: string) => {
 		if (link === 'Sign Out') handleSignOut(router);
 	};
 
+	const navLinks = [
+		'Home',
+		'Advertise',
+		'Album',
+		'Blog',
+		'Jobs',
+		'Market',
+		
+	];
+
 	return (
 		<div>
-			{children}
+			{/* Desktop Horizontal Navbar */}
+			<nav className="fixed top-14 left-0 right-0 z-30 hidden md:block bg-white border-b border-gray-200">
+				<ul className="flex flex-row justify-center space-x-8 py-3">
+					{navLinks.map((link) => (
+						<li key={link} className="hover:text-[#027823] transition-colors" onClick={() => handleClick(link)}>
+							<Link href={link === 'Home' ? '/' : `/${link.toLowerCase().replace(' ', '-')}`}>
+								{link}
+							</Link>
+						</li>
+					))}
+				</ul>
+			</nav>
 
-			<nav
-				className={`fixed left-0 top-0 z-20 flex h-full w-[20rem] flex-col bg-[#027823] pl-8 pt-8 text-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}
-			>
+			{/* Mobile Sidebar - adjust z-index to be above header */}
+			<nav className={`md:hidden fixed left-0 top-0 z-40 flex h-full w-[20rem] flex-col bg-[#027823] pl-8 pt-8 text-white transition-transform duration-300 ${isOpen ? 'translate-x-0' : '-translate-x-full'}`}>
 				<h1 className="text-xl">OURLIME</h1>
 				<ul className="mt-2">
-					{[
-						'Home',
-						'Advertise',
-						'Album',
-						'Blog',
-						'Jobs',
-						'Market',
-						'Profile',
-						'Settings',
-						'Wallet',
-						'Sign Out',
-					].map((link) => (
+					{navLinks.map((link) => (
 						<li key={link} className="py-2" onClick={() => handleClick(link)}>
-							<Link
-								href={
-									link === 'Home'
-										? '/'
-										: `/${link.toLowerCase().replace(' ', '-')}`
-								}
-							>
+							<Link href={link === 'Home' ? '/' : `/${link.toLowerCase().replace(' ', '-')}`}>
 								{link}
 							</Link>
 						</li>
@@ -84,7 +86,7 @@ export default function Navbar({ children }: NavbarProps) {
 			{/* Mobile Toggle Button */}
 			<svg
 				onClick={handleToggleNav}
-				className="nav-arrow fixed bottom-0 left-0 z-20 mb-5 hidden cursor-pointer md:block"
+				className="nav-arrow fixed bottom-0 left-0 z-40 block md:hidden cursor-pointer mb-5"
 				width="50"
 				height="50"
 				viewBox="0 0 250 250"
@@ -106,6 +108,11 @@ export default function Navbar({ children }: NavbarProps) {
 					strokeLinejoin="round"
 				/>
 			</svg>
+
+			{/* Add padding to main content to account for fixed header and nav */}
+			<div className="pt-28">
+				{children}
+			</div>
 		</div>
 	);
 }

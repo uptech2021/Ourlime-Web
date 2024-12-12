@@ -42,7 +42,7 @@ export default function TextPosts({
 									fallback={<Skeleton className="h-full w-full" />}
 								/>
 							</div>
-							<p className="text-lg font-semibold">{post.username}</p>
+							<p className="text-lg font-semibold">{post.userName}</p>
 							<p className="ml-auto text-sm text-gray-500">
 								{formatDate(post.time)}
 							</p>

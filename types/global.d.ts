@@ -35,7 +35,7 @@ export type Data = {
 
 export type SocialPosts = {
   uid?: string;
-  username: string;
+  userName: string;
   email: string;
   profileImage: StaticImageData | string;
   postImage?: StaticImageData | string;
@@ -48,6 +48,7 @@ export type SocialPosts = {
   likes?: number;
   comments?: string;
   time:Firebase.Timestamp; 
+  likedByUser?: boolean; 
 //TODO change to Date.now or something similar
 }
 

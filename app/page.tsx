@@ -16,9 +16,9 @@ import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { ResizeListener } from '@/helpers/Resize';
 import { ProfileData, SocialPosts, Stories, UserData } from '@/types/global';
 import { collection, getDocs } from 'firebase/firestore';
-import { BookImage, UsersRound } from 'lucide-react';
+import { BookImage, UsersRound, ArrowUp } from 'lucide-react';
 import { useRouter } from 'next/navigation';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 
 export default function Home() {
 	const router = useRouter();
@@ -73,6 +73,21 @@ export default function Home() {
 	const [socialPosts, setSocialPosts] = useState<SocialPosts[]>([]);
 
 	const [loading, setLoading] = useState(true);
+	const [showScrollTop, setShowScrollTop] = useState(false);
+
+	// Add scroll event listener
+	useEffect(() => {
+		const handleScroll = () => {
+			setShowScrollTop(window.scrollY > 400);
+		};
+
+		window.addEventListener('scroll', handleScroll);
+		return () => window.removeEventListener('scroll', handleScroll);
+	}, []);
+
+	const scrollToTop = useCallback(() => {
+		window.scrollTo({ top: 0, behavior: 'smooth' });
+	}, []);
 
   useEffect(() => {
 		const initializeHome = async () => {
@@ -116,81 +131,74 @@ export default function Home() {
 	}
 	return (
 		<Navbar>
-			{/* Overlay for post form */}
-			{togglePostForm && (
-				<div className="fixed inset-0 z-40 bg-black bg-opacity-50"></div>
-			)}
+			<main className={`relative flex flex-col gap-5 px-5 ${isPc ? 'flex-row' : 'flex-col'} mt-4`}>
+				{/* Layout for larger screens */}
+				{isPc && (
+					<div className="relative mb-2 flex flex-row gap-5 overflow-hidden pl-5 pt-0">
+						<LeftSection user={user} profile={profile} />
+						<MiddleSection
+							profile={profile}
+							user={user}
+							socialPosts={socialPosts}
+							setSocialPosts={setSocialPosts}
+							togglePostForm={togglePostForm}
+							setTogglePostForm={setTogglePostForm}
+						/>
+						<RightSection />
+					</div>
+				)}
 
-			<main
-				className={`relative flex flex-col gap-5 px-5 ${isPc ? 'flex-row' : 'flex-col'}`}
-			>
-					{/* Layout for larger screens */}
-					{isPc && (
-						<div className="relative mb-2 flex flex-row gap-5 overflow-hidden pl-5 pt-5">
-							<LeftSection user={user} profile={profile} />
-							<MiddleSection
-								profile={profile}
-								user={user}
-								socialPosts={socialPosts}
-								setSocialPosts={setSocialPosts}
-								togglePostForm={togglePostForm}
-								setTogglePostForm={setTogglePostForm}
+				{/* Layout for smaller screens */}
+				{!isPc && (
+					<div className="mt-4 flex flex-col border">
+						<div className="flex flex-row items-center justify-between pl-10 pr-10">
+							<h2 className="text-2xl">Stories</h2>
+							<div>
+								<p
+									onClick={() => setViewCommunities((prev) => !prev)}
+									className="cursor-pointer text-gray-700"
+								>
+									{!viewCommunities ? 'View Communities' : 'Hide Communities'}
+								</p>
+							</div>
+						</div>
+
+						<StoriesSlider stories={stories} setAddStory={setAddStory} />
+						{viewCommunities && <CommunitiesSlider />}
+
+						{/* Filter Posts */}
+						<div className="relative mt-8 flex flex-col">
+							<PostFilter
+								showDropdown={showDropdown}
+								setShowDropdown={setShowDropdown}
+								selected={selected}
+								setSelected={setSelected}
 							/>
-							<RightSection />
-						</div>
-					)}
-
-					{/* Layout for smaller screens */}
-					{!isPc && (
-						<div className="mt-4 flex flex-col border">
-							<div className="flex flex-row items-center justify-between pl-10 pr-10">
-								<h2 className="text-2xl">Stories</h2>
-								<div>
-									<p
-										onClick={() => setViewCommunities((prev) => !prev)}
-										className="cursor-pointer text-gray-700"
-									>
-										{!viewCommunities ? 'View Communities' : 'Hide Communities'}
-									</p>
+							{showDropdown && (
+								<div className="left-0 mt-1 w-2/3 rounded-md bg-white px-3 py-1 shadow-sm shadow-greenTheme sm:w-1/3">
+									<ul className="flex flex-col rounded-md text-sm text-black">
+										<li
+											onClick={() => setSelectedFilter('all')}
+											className={`${selectedFilter === 'all' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
+										>
+											<BookImage /> All Posts
+										</li>
+										<li
+											onClick={() => setSelectedFilter('following')}
+											className={`${selectedFilter === 'following' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
+										>
+											<UsersRound />
+											People I Follow
+										</li>
+									</ul>
 								</div>
-							</div>
-
-							<StoriesSlider stories={stories} setAddStory={setAddStory} />
-							{viewCommunities && <CommunitiesSlider />}
-
-							{/* Filter Posts */}
-							<div className="relative mt-8 flex flex-col">
-								<PostFilter
-									showDropdown={showDropdown}
-									setShowDropdown={setShowDropdown}
-									selected={selected}
-									setSelected={setSelected}
-								/>
-								{showDropdown && (
-									<div className="left-0 mt-1 w-2/3 rounded-md bg-white px-3 py-1 shadow-sm shadow-greenTheme sm:w-1/3">
-										<ul className="flex flex-col rounded-md text-sm text-black">
-											<li
-												onClick={() => setSelectedFilter('all')}
-												className={`${selectedFilter === 'all' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
-											>
-												<BookImage /> All Posts
-											</li>
-											<li
-												onClick={() => setSelectedFilter('following')}
-												className={`${selectedFilter === 'following' && 'bg-gray-100 active:bg-greenTheme'} flex flex-row gap-2 rounded-sm p-2`}
-											>
-												<UsersRound />
-												People I Follow
-											</li>
-										</ul>
-									</div>
-								)}
-							</div>
-
-							<CreatePost profilePicture={user.photoURL} setTogglePostForm={setTogglePostForm} />
-							<Posts socialPosts={socialPosts} selectedPost={selected} />
+							)}
 						</div>
-					)}
+
+						<CreatePost profilePicture={user.photoURL} setTogglePostForm={setTogglePostForm} />
+						<Posts socialPosts={socialPosts} selectedPost={selected} />
+					</div>
+				)}
 			</main>
 
 			{/* Upload Form */}
@@ -209,6 +217,17 @@ export default function Home() {
 						/>
 					</div>
 				</div>
+			)}
+
+			{/* Scroll to Top Button */}
+			{showScrollTop && (
+				<button
+					onClick={scrollToTop}
+					className="fixed bottom-8 right-8 z-50 rounded-full bg-[#027823] p-4 text-white shadow-lg transition-all hover:bg-[#025c1c] hover:scale-110"
+					aria-label="Scroll to top"
+				>
+					<ArrowUp size={28} />
+				</button>
 			)}
 		</Navbar>
 	);
