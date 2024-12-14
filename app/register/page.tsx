@@ -3,6 +3,7 @@ import AnimatedLogo from '@/components/AnimatedLoader';
 import FirstStep from '@/components/register/FirstStep';
 import SecondStep from '@/components/register/SecondStep';
 import ThirdStep from '@/components/register/ThirdStep';
+import SecondStepOptional from '@/components/register/SecondStepOptional'
 import { auth, db } from '@/firebaseConfig';
 import { handleSignOut } from '@/helpers/Auth';
 import { uploadFile } from '@/helpers/firebaseStorage';
@@ -106,7 +107,7 @@ export default function Page() {
 
 	const animateStepForward = (currentStep: number) => {
 		gsap.fromTo(
-			`.step-${currentStep}`,
+			`.step-${currentStep.toString().replace('.', '_')}`,
 			{ opacity: 0, x: 100 },
 			{ opacity: 1, x: 0, duration: 0.5 }
 		);
@@ -114,7 +115,7 @@ export default function Page() {
 
 	const animateStepBackward = (currentStep: number) => {
 		gsap.fromTo(
-			`.step-${currentStep}`,
+			`.step-${currentStep.toString().replace('.', '_')}`,
 			{ opacity: 0, x: -100 },
 			{ opacity: 1, x: 0, duration: 0.5 }
 		);
@@ -377,7 +378,7 @@ export default function Page() {
 
 			{/* Form Container */}
 			<div className="relative flex h-screen w-screen justify-center bg-black bg-opacity-[35%] md:items-center overflow-auto">
-				<div className="w-9/12 pt-10 text-left sm:w-9/12 md:w-8/12 lg:w-1/2 xl:w-4/12">
+				<div className="w-9/12 pt-10 text-left sm:w-9/12 md:w-8/12 lg:w-1/2">
 					{step == 1 && (
 						<div className="md:text-center">
 							<p className="text-2xl font-bold text-white xl:text-2xl">
@@ -440,7 +441,26 @@ export default function Page() {
 								profilePicture={profilePicture}
 								setProfilePicture={setProfilePicture}
 							/>
-						) : step === 3 ? (
+						) 
+						: step === 2.1 ? (
+							<SecondStepOptional
+								setStep={setStep}
+								handleAvatarSelection={handleAvatarSelection}
+								selectedCartoonAvatarBlackBoy={selectedCartoonAvatarBlackBoy}
+								selectedCartoonAvatarWhiteBoy={selectedCartoonAvatarWhiteBoy}
+								selectedCartoonAvatarBlackGirl={selectedCartoonAvatarBlackGirl}
+								selectedCartoonAvatarWhiteGirl={selectedCartoonAvatarWhiteGirl}
+								selectedRealisticAvatarWhiteMan={
+									selectedRealisticAvatarWhiteMan
+								}
+								selectedRealisticAvatarBlackWoman={
+									selectedRealisticAvatarBlackWoman
+								}
+								profilePicture={profilePicture}
+								setProfilePicture={setProfilePicture}
+							/>
+						)
+						: step === 3 ? (
 							<ThirdStep
 								verificationMessage={verificationMessage}
 								setStep={setStep}
