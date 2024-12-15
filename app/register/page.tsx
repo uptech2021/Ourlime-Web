@@ -389,7 +389,7 @@ export default function Page() {
 								Create your new account
 							</h2>
 							<p className="mt-4 flex flex-col gap-1 text-xl font-bold text-white md:flex-row md:justify-center">
-								Already have an account?
+								Already have an account ?
 								<Link
 									href="/login"
 									className="text-xl font-bold text-[#01EB53]"
