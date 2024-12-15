@@ -71,22 +71,36 @@ export default function FirstStep({
 
 	return (
 		<div className="step-1">
-			<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
-				<div className="w-full">
+			<div className="mb-4 flex flex-col md:flex-row md:gap-10">
+				<div className="w-full md:w-1/2">
 					<div className="relative">
 						<input
 							type="text"
 							className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-							placeholder="Username"
-							onChange={(e) => setUserName(e.target.value)}
-							required
+							placeholder="First Name"
+							onChange={(e) => setFirstName(e.target.value)}
 						/>
+						{attemptedNextStep && firstNameError && (
+							<p className="text-bold mt-1 text-left text-red-500">
+								{firstNameError}
+							</p>
+						)}
 					</div>
-					{attemptedNextStep && userNameError && (
-						<p className="text-bold mt-1 text-left text-red-500">
-							{userNameError}
-						</p>
-					)}
+				</div>
+				<div className="w-full md:w-1/2">
+					<div className="relative">
+						<input
+							type="text"
+							className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+							placeholder="Last Name"
+							onChange={(e) => setLastName(e.target.value)}
+						/>
+						{attemptedNextStep && lastNameError && (
+							<p className="text-bold mt-1 text-left text-red-500">
+								{lastNameError}
+							</p>
+						)}
+					</div>
 				</div>
 			</div>
 			<div className="mb-4">
@@ -94,34 +108,31 @@ export default function FirstStep({
 					<input
 						type="text"
 						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="First Name"
-						onChange={(e) => setFirstName(e.target.value)}
+						placeholder="Username"
+						onChange={(e) => setUserName(e.target.value)}
+						required
 					/>
-					{attemptedNextStep && firstNameError && (
-						<p className="text-bold mt-1 text-left text-red-500">
-							{firstNameError}
-						</p>
-					)}
 				</div>
+				{attemptedNextStep && userNameError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{userNameError}
+					</p>
+				)}
 			</div>
 			<div className="mb-4">
 				<div className="relative">
-
 					<input
-						type="text"
+						type="email"
 						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="Last Name"
-						onChange={(e) => setLastName(e.target.value)}
+						placeholder="Email Address"
+						onChange={(e) => setEmail(e.target.value)}
+						required
 					/>
-					{attemptedNextStep && lastNameError && (
-						<p className="text-bold mt-1 text-left text-red-500">
-							{lastNameError}
-						</p>
-					)}	
 				</div>
+				{attemptedNextStep && emailError && (
+					<p className="text-bold mt-1 text-left text-red-500">{emailError}</p>
+				)}
 			</div>
-
-			{/* Gender Dropdown */}
 			<div className="mb-4">
 				<Select
 					placeholder="Gender"
@@ -147,39 +158,22 @@ export default function FirstStep({
 					<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
 				)}
 			</div>
-			
-			<div className="mb-4">
-				<div className="relative">
-					<input
-						type="email"
-						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="Email Address"
-						onChange={(e) => setEmail(e.target.value)}
-						required
-					/>
-				</div>
-				{attemptedNextStep && emailError && (
-					<p className="text-bold mt-1 text-left text-red-500">{emailError}</p>
-				)}
-			</div>
-
 			<DatePicker
-					variant='underlined'
-					onChange={(date) => setBirthday(date.toString())}
-					className={`${styles.nextuiInput} mb-4 w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
-					showMonthAndYearPickers
-					classNames={{
-						base: "text-white",
-						selectorIcon: "text-white",
-						input: "text-white"
-					}}
-				/>
-				{attemptedNextStep && birthdayError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{birthdayError}
-					</p>
-				)}
-				
+				variant='underlined'
+				onChange={(date) => setBirthday(date.toString())}
+				className={`${styles.nextuiInput} mb-4 w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
+				showMonthAndYearPickers
+				classNames={{
+					base: "text-white",
+					selectorIcon: "text-white",
+					input: "text-white"
+				}}
+			/>
+			{attemptedNextStep && birthdayError && (
+				<p className="text-bold mt-1 text-left text-red-500">
+					{birthdayError}
+				</p>
+			)}
 			<div className="mb-4">
 				<div className="relative">
 					<PhoneInput
@@ -194,7 +188,6 @@ export default function FirstStep({
 					<p className="text-bold mt-1 text-left text-red-500">{phoneError}</p>
 				)}
 			</div>
-			
 			<div className="mb-4">
 				<div className="relative">
 					<input
@@ -231,13 +224,20 @@ export default function FirstStep({
 			<div className="justify-center items-center md:flex flex-col w-full">
 				<p className="text-sm font-bold text-white">
 					<Checkbox className="hidden md:inline" color="success"></Checkbox>
-					By creating your account, you agree to our
+					I accept Ourlime  <Checkbox className="md:hidden" color="success"></Checkbox>
+					<span className="font-bold text-greenTheme">
+						<a href="/terms-and-conditions" className="text-greenTheme underline">Terms and Conditions</a>
+					</span>
+				</p>
+				<p className="text-sm font-bold text-white">
+					<Checkbox className="hidden md:inline" color="success"></Checkbox>
+					I accept Ourlime  <Checkbox className="md:hidden" color="success"></Checkbox>
+					<span className="font-bold text-greenTheme">
+						<a href="/privacy-policy" className="text-greenTheme underline">Privacy Policy</a>
+					</span>
 				</p>
 
-				<div>
-					<Checkbox className="md:hidden" color="success"></Checkbox>
-					<span className="font-bold text-greenTheme">Terms and Condition</span>
-				</div>
+				
 			</div>
 
 			<Button
