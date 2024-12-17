@@ -401,7 +401,7 @@ export default function Page() {
 						</div>
 					)}
 					<div className="mt-4 flex flex-col justify-center">
-						{step === 4 ? (
+						{step === 1 ? (
 							<FirstStep
 								setUserName={setUserName}
 								userNameError={userNameError}
@@ -477,7 +477,7 @@ export default function Page() {
 								zipCodeError={zipCodeError}
 							/>
 						)
-						: step === 1 ? (
+						: step === 4 ? (
 							<FourthStep
 								setStep={setStep}
 								verificationMessage={verificationMessage}
