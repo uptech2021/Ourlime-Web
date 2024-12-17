@@ -358,15 +358,14 @@ export default function Page() {
 		return <AnimatedLogo />; 
 	}
 	return (
-		<div className="relative h-screen bg-gray-100">
+		<div className="fixed inset-0 bg-gray-100">
 			{/* Background Image for Mobile */}
 			<div
-				className="bg-center-center absolute inset-0 bg-cover md:hidden"
+				className="absolute inset-0 bg-cover bg-center md:hidden"
 				style={{
 					backgroundImage: "url('/images/register/registerBackgroundImage.png')",
 					backgroundSize: 'cover',
 					backgroundPosition: 'center',
-					height: '100vh',
 				}}
 			></div>
 
@@ -374,13 +373,12 @@ export default function Page() {
 			<div
 				className="absolute inset-0 hidden bg-cover bg-center md:block"
 				style={{
-					backgroundImage:
-						"url('/images/register/pcRegisterBackgroundImage.png')",
+					backgroundImage: "url('/images/register/pcRegisterBackgroundImage.png')",
 				}}
 			></div>
 
 			{/* Form Container */}
-			<div className="relative flex h-screen w-screen justify-center bg-black bg-opacity-[35%] md:items-center overflow-auto">
+			<div className="absolute inset-0 flex justify-center bg-black bg-opacity-[35%] overflow-auto">
 				<div className="w-9/12 pt-10 text-left sm:w-9/12 md:w-8/12 lg:w-1/2">
 					{step == 1 && (
 						<div className="md:text-center">
