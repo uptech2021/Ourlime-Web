@@ -5,6 +5,8 @@ import SecondStep from '@/components/register/SecondStep';
 import ThirdStep from '@/components/register/ThirdStep';
 import SecondStepOptional from '@/components/register/SecondStepOptional'
 import FourthStep from '@/components/register/FourthStep';
+import FifthStep from '@/components/register/FifthStep';
+import Authentication from '@/components/register/Authentication';
 import { auth, db } from '@/firebaseConfig';
 import { handleSignOut } from '@/helpers/Auth';
 import { uploadFile } from '@/helpers/firebaseStorage';
@@ -413,7 +415,6 @@ export default function Page() {
 								genderError={genderError}
 								setEmail={setEmail}
 								emailError={emailError}
-								setPhone={setPhone}
 								// phoneError={phoneError}
 								setPassword={setPassword}
 								setConfirmPassword={setConfirmPassword}
@@ -421,7 +422,6 @@ export default function Page() {
 								setStep={setStep}
 								validateStep={validateStep1}
 								passwordError={passwordError}
-								phone={phone}
 								setBirthday={setBirthday}
 								birthdayError={birthdayError}
 							/>
@@ -502,7 +502,11 @@ export default function Page() {
 								zipCodeError={zipCodeError}
 							/>
 						) 
-						: null}
+						: step === 5 ? (
+							<Authentication setStep={setStep} />
+						) : step === 6 ? (
+							<FifthStep setStep={setStep} />
+						) : null}
 					</div>
 				</div>
 			</div>
