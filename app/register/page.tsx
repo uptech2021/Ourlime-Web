@@ -18,7 +18,7 @@ import {
 } from 'firebase/auth';
 import { deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { gsap } from 'gsap';
-import Link from 'next/link';
+
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
 import 'react-phone-number-input/style.css';
@@ -83,6 +83,7 @@ export default function Page() {
 	const [AddressError, setAddressError] = useState('');
 	const [zipCode, SetZipCode] = useState('');
 	const [zipCodeError, setZipCodeError] = useState('');
+	
 
 
 	useEffect(() => {
@@ -188,22 +189,6 @@ export default function Page() {
 			setZipCodeError('');
 		}
 
-
-		// Validate gender
-		if (!gender) {
-			setGenderError('Please select your gender');
-			formValid = false;
-		} else {
-			setGenderError('');
-		}
-
-		// Validate birthday
-		if (!birthday) {
-			setBirthdayError('When were you born? 🤔');
-			formValid = false;
-		} else {
-			setBirthdayError('');
-		}
 
 		setIsStep3Valid(formValid);
 		return formValid;
@@ -378,29 +363,10 @@ export default function Page() {
 			></div>
 
 			{/* Form Container */}
-			<div className="absolute inset-0 flex justify-center bg-black bg-opacity-[35%] overflow-auto">
-				<div className="w-9/12 pt-10 text-left sm:w-9/12 md:w-8/12 lg:w-1/2">
-					{step == 1 && (
-						<div className="md:text-center">
-							<p className="text-2xl font-bold text-white xl:text-2xl">
-								Welcome to{' '}
-								<p className="text-4xl md:inline md:text-2xl">Ourlime</p>
-							</p>
-							<h2 className="text-2xl font-bold text-white md:text-4xl xl:text-5xl">
-								Create your new account
-							</h2>
-							<p className="mt-4 flex flex-col gap-1 text-xl font-bold text-white md:flex-row md:justify-center">
-								Already have an account ?
-								<Link
-									href="/login"
-									className="text-xl font-bold text-[#01EB53]"
-								>
-									Sign In
-								</Link>
-							</p>
-						</div>
-					)}
-					<div className="mt-4 flex flex-col justify-center">
+			<div className="absolute inset-0 flex justify-center bg-black bg-opacity-[35%] overflow-auto ">
+				<div className="w-9/12 text-left sm:w-9/12 md:w-8/12 lg:w-1/2 ">
+					
+					<div className=" flex flex-col justify-center">
 						{step === 1 ? (
 							<FirstStep
 								setUserName={setUserName}
@@ -455,12 +421,10 @@ export default function Page() {
 								verificationMessage={verificationMessage}
 								setStep={setStep}
 								setCountry={setCountry}
-								setBirthday={setBirthday}
 								validateStep={validateStep3}
 								isStepValid={isStep3Valid}
 								handleSubmit={handleRegister}
 								countryError={countryError}
-								birthdayError={birthdayError}
 								setPhone={setPhone}
 								phone={phone}
 								// phoneError={phoneError}

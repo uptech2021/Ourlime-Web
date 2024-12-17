@@ -3,7 +3,13 @@ import { Button } from '@nextui-org/react';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useState, useCallback } from 'react';
 import 'react-image-crop/dist/ReactCrop.css';
-import ImageCropper from '../ImageCropper';
+import transparentLogo from 'public/images/transparentLogo.png';
+
+
+
+const totalSteps = 5;
+const currentStep = 2;
+const progressPercentage = (currentStep / totalSteps) * 100;
 
 type SecondStepProps = {
   setStep: Dispatch<SetStateAction<number>>;
@@ -35,7 +41,22 @@ export default function SecondStep({
   	return (
 			<div className="step-2 gap- flex flex-col justify-center">
 				
-
+				<div className="relative w-full px-4 mb-4 mt-6">
+								<div className="w-full bg-gray-300 h-4 rounded-full">
+									<div
+										className="bg-greenTheme h-full relative rounded-full transition-all duration-300"
+										style={{ width: `${progressPercentage}%` }}
+									>
+										<Image
+											src={transparentLogo}
+											alt="Logo"
+											className="absolute top-1 right-0 transform translate-x-1/2 -translate-y-1/2"
+											width={40}
+											height={40}
+										/>
+									</div>
+								</div>
+							</div>
 				<div className="flex flex-col justify-center gap-3 border-1 border-x-0 border-greenTheme bg-black bg-opacity-[50%] px-5 py-4 font-bold text-white sm:border-x-2 lg:px-0  ">
 				<h1 className="text-xl text-center font-bold text-white">Select your avatar</h1>
 					{/* Avatars & Image Upload*/}

@@ -47,7 +47,7 @@ export default function FifthStep({ setStep }: FifthStepProps) {
     };
 
     return (
-        <div className="flex flex-col items-center">
+        <div className="step-4 flex flex-col  text-white items-center border-none bg-black bg-opacity-[50%] px-5 py-4 font-bold text-white sm:border-x-2 lg:px-0 min-h-screen">
             <h1 className="text-3xl font-bold mb-4 text-center text-white">Welcome to Ourlime</h1>
             <p className="text-center mb-6 text-white">
                 Please upload the required photos for verification:

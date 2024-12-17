@@ -16,13 +16,14 @@ export default function PrivacyModal({ isOpen, onClose }: PrivacyModalProps) {
             <ModalContent>
                 <ModalBody>
                     <div className="flex flex-col md:flex-row">
-                        <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-black pr-0 md:pr-4 mb-4 md:mb-0">
+                        <div className="w-full md:w-1/2 border-b md:border-b-0 md:border-r border-black pr-0 md:pr-4 mb-4 md:mb-0 relative">
                             <header className="text-center mb-6 border-b border-black">
                                 <Image src={logo} alt="Our Lime Logo" className="w-40 mx-auto" />
                             </header>
                             <div className="hidden md:block">
                                 <Image src={privacyImage} alt="Privacy Illustration" className="w-full" />
                             </div>
+                            <Image src={privacyImage} alt="Privacy Illustration" className="absolute inset-x-0 w-3/4 h-auto object-cover opacity-30 md:hidden" style={{ marginTop: '100px' }} />
                         </div>
                         <div className="w-full md:w-1/2 pl-0 md:pl-4">
                             <h1 className="text-3xl font-bold mb-2">Privacy Policy</h1>

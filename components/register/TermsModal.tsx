@@ -24,9 +24,10 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
                                 <Image src={termsImage} alt="Terms Illustration" className="w-full" />
                             </div>
                         </div>
-                        <div className="w-full md:w-1/2 pl-0 md:pl-4">
-                            <h1 className="text-3xl font-bold mb-2">Terms and Conditions</h1>
-                            <p className="text-gray-600 mb-4">Effective Date: 7<sup>th</sup> December 2024</p>
+                        <div className="relative w-full md:w-1/2 pl-0 md:pl-4">
+                            <Image src={termsImage} alt="Terms Illustration" className="absolute inset-0 w-full h-full object-cover opacity-20 md:hidden" />
+                            <h1 className="text-3xl font-bold mb-2 relative z-10 text-black">Terms and Conditions</h1>
+                            <p className="text-gray-600 mb-4 relative z-10 text-black">Effective Date: 7<sup>th</sup> December 2024</p>
                             
                             <p className="mb-4 text-gray-700">
                                 Welcome to the Ourlime Communities Network (OCN)! These Terms and Conditions ("Terms") govern your access to and use of OCN, including our website, mobile application, and any related services. By accessing or using OCN, you agree to comply with these Terms. If you do not agree, please do not use our services.
