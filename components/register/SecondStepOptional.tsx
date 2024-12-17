@@ -8,12 +8,7 @@ import ImageCropper from '../ImageCropper';
 type SecondStepProps = {
   setStep: Dispatch<SetStateAction<number>>;
   handleAvatarSelection: (avatar: string) => void;
-  selectedCartoonAvatarBlackBoy: boolean;
-  selectedCartoonAvatarWhiteBoy: boolean;
-  selectedCartoonAvatarBlackGirl: boolean;
-  selectedCartoonAvatarWhiteGirl: boolean;
-  selectedRealisticAvatarWhiteMan: boolean;
-  selectedRealisticAvatarBlackWoman: boolean;
+ 
   profilePicture: string | null;
   setProfilePicture: Dispatch<SetStateAction<string | null>>;
 };
@@ -21,12 +16,7 @@ type SecondStepProps = {
 export default function SecondStep({
   setStep,
   handleAvatarSelection,
-  selectedCartoonAvatarBlackBoy,
-  selectedCartoonAvatarWhiteBoy,
-  selectedCartoonAvatarBlackGirl,
-  selectedCartoonAvatarWhiteGirl,
-  selectedRealisticAvatarWhiteMan,
-  selectedRealisticAvatarBlackWoman,
+
   profilePicture,
   setProfilePicture,
 }: SecondStepProps) {
@@ -34,17 +24,19 @@ export default function SecondStep({
 
   	return (
 			<div className="step-2-optional  ">
-			<div className=" flex flex-col justify-center items-center py-40 bg-black bg-opacity-70">
+			<div className=" flex flex-col justify-center items-center py-40 bg-gray-100 bg-opacity-50 rounded-xl">
 				<h1 className="text-xl font-bold text-white mb-4">Select your photo</h1>
-				<div className="relative flex justify-center items-center w-1/3 max-w-md h-80 border-4 border-dashed rounded-lg bg-white">
+				<div className="relative flex justify-center items-center w-1/2 max-w-md h-96 border-4 border-dashed border-black rounded-xl bg-gray-200 bg-opacity-50">
 					{/* Centered "+" icon for photo upload */}
 					<div className="absolute flex items-center justify-center w-full h-full">
-						<div className="text-greenTheme text-4xl">+</div>
+						<div className="flex justify-center w-12 h-12 bg-greenTheme rounded-full">
+							<div className="text-white text-4xl">+</div>
+						</div>
 					</div>
 				</div>
 				</div>
 			
-				<div className="flex w-full flex-col gap-1 md:flex-row md:px-20 mt-4">
+				<div className="flex w-full flex-col gap-1 md:gap-12 md:flex-row md:px-20 mt-4">
 					<Button
 						onClick={() => setStep(2)}
 						type="button"

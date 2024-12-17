@@ -4,6 +4,7 @@ import FirstStep from '@/components/register/FirstStep';
 import SecondStep from '@/components/register/SecondStep';
 import ThirdStep from '@/components/register/ThirdStep';
 import SecondStepOptional from '@/components/register/SecondStepOptional'
+import FourthStep from '@/components/register/FourthStep';
 import { auth, db } from '@/firebaseConfig';
 import { handleSignOut } from '@/helpers/Auth';
 import { uploadFile } from '@/helpers/firebaseStorage';
@@ -76,8 +77,8 @@ export default function Page() {
 	const [cityError, setCityError] = useState('');
 	const [postalCode, setPostalCode] = useState('');
 	const [postalCodeError, setPostalCodeError] = useState('');
-	const [street, setStreet] = useState('');
-	const [streetError, setStreetError] = useState('');
+	const [Address, setAddress] = useState('');
+	const [AddressError, setAddressError] = useState('');
 	const [zipCode, SetZipCode] = useState('');
 	const [zipCodeError, setZipCodeError] = useState('');
 
@@ -171,11 +172,11 @@ export default function Page() {
 			setCountryError('');
 		}
 
-		if (street.trim() === '') {
-			setStreetError('Please enter your street.');
+		if (Address.trim() === '') {
+			setAddressError('Please enter your Address.');
 			formValid = false;
 		} else {
-			setStreetError('');
+			setAddressError('');
 		}
 
 		if (zipCode.trim() === '') {
@@ -309,7 +310,7 @@ export default function Page() {
 				country,
 				postalCode,
 				city,
-				street,
+				Address,
 				zipCode
 			});
 
@@ -400,7 +401,7 @@ export default function Page() {
 						</div>
 					)}
 					<div className="mt-4 flex flex-col justify-center">
-						{step === 1 ? (
+						{step === 4 ? (
 							<FirstStep
 								setUserName={setUserName}
 								userNameError={userNameError}
@@ -446,16 +447,7 @@ export default function Page() {
 							<SecondStepOptional
 								setStep={setStep}
 								handleAvatarSelection={handleAvatarSelection}
-								selectedCartoonAvatarBlackBoy={selectedCartoonAvatarBlackBoy}
-								selectedCartoonAvatarWhiteBoy={selectedCartoonAvatarWhiteBoy}
-								selectedCartoonAvatarBlackGirl={selectedCartoonAvatarBlackGirl}
-								selectedCartoonAvatarWhiteGirl={selectedCartoonAvatarWhiteGirl}
-								selectedRealisticAvatarWhiteMan={
-									selectedRealisticAvatarWhiteMan
-								}
-								selectedRealisticAvatarBlackWoman={
-									selectedRealisticAvatarBlackWoman
-								}
+								
 								profilePicture={profilePicture}
 								setProfilePicture={setProfilePicture}
 							/>
@@ -471,17 +463,46 @@ export default function Page() {
 								handleSubmit={handleRegister}
 								countryError={countryError}
 								birthdayError={birthdayError}
+								setPhone={setPhone}
+								phone={phone}
+								// phoneError={phoneError}
 								error={error}
 								setCity={setCity}
 								cityError={cityError}
 								setPostalCode={setPostalCode}
 								postalCodeError={postalCodeError}
-								setStreet={setStreet}
-								streetError={streetError}
+								setAddress={setAddress}
+								AddressError={AddressError}
 								setZipCode={SetZipCode}
 								zipCodeError={zipCodeError}
 							/>
-						) : null}
+						)
+						: step === 1 ? (
+							<FourthStep
+								setStep={setStep}
+								verificationMessage={verificationMessage}
+								setCountry={setCountry}
+								setBirthday={setBirthday}
+								validateStep={validateStep3}
+								isStepValid={isStep3Valid}
+								handleSubmit={handleRegister}
+								countryError={countryError}
+								birthdayError={birthdayError}
+								setPhone={setPhone}
+								phone={phone}
+								// phoneError={phoneError}
+								error={error}
+								setCity={setCity}
+								cityError={cityError}
+								setPostalCode={setPostalCode}
+								postalCodeError={postalCodeError}
+								setAddress={setAddress}
+								AddressError={AddressError}
+								setZipCode={SetZipCode}
+								zipCodeError={zipCodeError}
+							/>
+						) 
+						: null}
 					</div>
 				</div>
 			</div>

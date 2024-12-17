@@ -1,14 +1,17 @@
 'use client';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { Button, DatePicker, Select, SelectItem } from '@nextui-org/react';
+import { Button, Select, SelectItem } from '@nextui-org/react';
 import styles from "./register.module.css";
 import { countries } from 'countries-list';
+import PhoneInput from 'react-phone-number-input';
 
 type ThirdStepProps = {
 	verificationMessage: string;
 	setStep: Dispatch<SetStateAction<number>>;
 	setCountry: Dispatch<SetStateAction<string>>;
 	setBirthday: Dispatch<SetStateAction<string>>;
+	setPhone: Dispatch<SetStateAction<string>>;
+	phoneError?: string;
 	isStepValid: boolean;
 	validateStep: () => boolean;
 	handleSubmit: (e: React.FormEvent) => void;
@@ -19,8 +22,9 @@ type ThirdStepProps = {
 	cityError: string;
 	setPostalCode: Dispatch<SetStateAction<string>>;
 	postalCodeError: string;
-	setStreet: Dispatch<SetStateAction<string>>;
-	streetError: string;
+	setAddress: Dispatch<SetStateAction<string>>;
+	AddressError: string;
+	phone?: string;
 	setZipCode: Dispatch<SetStateAction<string>>;
 	zipCodeError: string;
 };
@@ -34,14 +38,16 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 	validateStep,
 	handleSubmit,
 	countryError,
-	birthdayError,
+	setPhone,
+	phoneError,
+	phone,
 	error,
 	setCity,
 	cityError,
 	setPostalCode,
 	postalCodeError,
-	setStreet,
-	streetError,
+	setAddress,
+	AddressError,
 	setZipCode,
 	zipCodeError,
 }) => {
@@ -81,6 +87,34 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 				</p>
 			)}
 			<form onSubmit={handleFormSubmit} className="mt-4 flex flex-col gap-4">
+			<div className='flex flex-col gap-4 md:flex-row md:gap-10'>
+			<div className="w-full md:w-1/2 ">
+			<div className="relative">
+			<input
+					type="text"
+					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					placeholder="City (Optional)"
+					onChange={(e) => setCity(e.target.value)}
+				/>
+				{attemptedNextStep && cityError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{cityError}
+					</p>
+				)}
+				</div>
+				</div>
+				<div className="w-full md:w-1/2 ">
+				<div className="relative">
+				<input
+					type="text"
+					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					placeholder="Region (Optional)"
+					onChange={(e) => setAddress(e.target.value)}
+				/>
+				
+				</div>
+				</div>
+				</div>
 				<Select
 					placeholder="Country"
 					onChange={(e) => setCountry(e.target.value)}
@@ -105,29 +139,32 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 				<input
 					type="text"
 					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="Street"
-					onChange={(e) => setStreet(e.target.value)}
+					placeholder="Address (Optional)"
+					onChange={(e) => setAddress(e.target.value)}
 				/>
-				{attemptedNextStep && streetError && (
+				{attemptedNextStep && AddressError && (
 					<p className="text-bold mt-1 text-left text-red-500">
-						{streetError}
+						{AddressError}
 					</p>
 				)}
+					<PhoneInput
+						value={phone}
+						className="phone"
+						defaultCountry="TT"
+						onChange={(value) => setPhone(value ?? '')}
+						inputClass="w-full rounded-md border-none bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+					/>
+				{attemptedNextStep && phoneError && (
+					<p className="text-bold mt-1 text-left text-red-500">{phoneError}</p>
+				)}
+				
+				<div className='flex flex-col gap-4 md:flex-row md:gap-10'>
+			<div className="w-full md:w-1/2 ">
+			<div className="relative">
 				<input
 					type="text"
 					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="City"
-					onChange={(e) => setCity(e.target.value)}
-				/>
-				{attemptedNextStep && cityError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{cityError}
-					</p>
-				)}
-				<input
-					type="text"
-					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="Zip Code"
+					placeholder="Zip Code (Optional)"
 					onChange={(e) => setZipCode(e.target.value)}
 				/>
 				{attemptedNextStep && zipCodeError && (
@@ -135,10 +172,15 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						{zipCodeError}
 					</p>
 				)}
+				</div>	
+				</div>
+				
+			<div className="w-full md:w-1/2 ">
+			<div className="relative">
 				<input
 					type="text"
 					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="Postal Code"
+					placeholder="Postal Code (Optional)"
 					onChange={(e) => setPostalCode(e.target.value)}
 				/>
 				{attemptedNextStep && postalCodeError && (
@@ -146,8 +188,10 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						{postalCodeError}
 					</p>
 				)}
-				
-				<div className="flex w-full flex-col gap-1 md:flex-row md:px-20">
+				</div>
+				</div>
+				</div>
+				<div className="flex w-full flex-col gap-1 md:gap-12 md:flex-row md:px-20">
 					<Button
 						onClick={() => setStep(2)}
 						type="button"
@@ -156,10 +200,11 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						Previous Step
 					</Button>
 					<Button
+						onClick={() => setStep(4)}
 						type="submit"
 						className="submit my-4 w-full rounded-full bg-greenTheme px-4 py-2 text-white hover:bg-green-600"
 					>
-						Register!
+						Confirm
 					</Button>
 				</div>
 			</form>
