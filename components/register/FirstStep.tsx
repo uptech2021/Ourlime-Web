@@ -6,6 +6,8 @@ import { useEffect, useState } from 'react';
 
 import { Dispatch, SetStateAction } from 'react';
 import styles from "./register.module.css"
+import TermsModal from './TermsModal';
+import PrivacyModal from './PrivacyModal';
 
 
 type FirstStepProps = {
@@ -50,6 +52,8 @@ export default function FirstStep({
 	setLastName
 }: FirstStepProps) {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
+	const [isTermsOpen, setIsTermsOpen] = useState(false);
+	const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
 
 	useEffect(() => {
 		validateStep();
@@ -209,7 +213,12 @@ export default function FirstStep({
 					<p className="text-sm font-bold text-white flex-grow">
 						I accept Ourlime 
 						<span className="font-bold text-greenTheme">
-							<a href="/terms-and-conditions" className="text-greenTheme underline ml-1">Terms and Conditions</a>
+							<button 
+								onClick={() => setIsTermsOpen(true)}
+								className="text-greenTheme underline ml-1"
+							>
+								Terms and Conditions
+							</button>
 						</span>
 					</p>
 					<Checkbox color="success" className="ml-2"></Checkbox>
@@ -219,7 +228,12 @@ export default function FirstStep({
 					<p className="text-sm font-bold text-white flex-grow">
 						I accept Ourlime 
 						<span className="font-bold text-greenTheme">
-							<a href="/privacy-policy" className="text-greenTheme underline ml-1">Privacy Policy</a>
+							<button 
+								onClick={() => setIsPrivacyOpen(true)}
+								className="text-greenTheme underline ml-1"
+							>
+								Privacy Policy
+							</button>
 						</span>
 					</p>
 					<Checkbox color="success" className="ml-2"></Checkbox>
@@ -233,6 +247,15 @@ export default function FirstStep({
 			>
 				Next Step!
 			</Button>
+
+			<TermsModal 
+				isOpen={isTermsOpen} 
+				onClose={() => setIsTermsOpen(false)} 
+			/>
+			<PrivacyModal 
+				isOpen={isPrivacyOpen} 
+				onClose={() => setIsPrivacyOpen(false)} 
+			/>
 		</div>
 	);
 }
