@@ -79,11 +79,11 @@
   }
   
   .phone {
-    @apply bg-greenForm bg-opacity-60 p-2;
+    @apply bg-white rounded-md pl-2;
   }
 
   .phone .PhoneInputInput {
-    @apply w-full rounded-md border-none bg-transparent text-white outline-none;
+    @apply w-full rounded-md border-none bg-transparent text-black outline-none;
   }
   .phoneS .PhoneInputInput {
     @apply  rounded-md border-none bg-transparent outline-none ;
