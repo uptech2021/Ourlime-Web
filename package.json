@@ -11,13 +11,12 @@
     "deploy": "firebase deploy",
     "emulator": "firebase emulators:start",
     "lint": "next lint",
-    "check": "tsc --noEmit && next lint && eslint . 'app/**/*.{js,jsx,ts,tsx}' 'components/**/*.{js,jsx,ts,tsx}' 'helpers/**/*.{js,jsx,ts,tsx}' 'lib/**/*.{js,jsx,ts,tsx}' 'types/**/*.{js,jsx,ts,tsx}' 'utils/**/*.{js,jsx,ts,tsx}'",
+    "check": "tsc --noEmit && eslint . --ext .js,.jsx,.ts,.tsx",
     "format": "prettier --write 'app/**/*.{js,jsx,ts,tsx}' 'components/**/*.{js,jsx,ts,tsx}'",
     "test": "cypress run",
     "test:open": "cypress open",
     "test:auth": "pnpm exec cypress run --spec 'cypress/e2e/auth.cy.ts'",
-    "test:registration": "pnpm exec cypress run --spec 'cypress/e2e/registration.cy.ts'",
-    "check": "tsc --noEmit && eslint . --ext .js,.jsx,.ts,.tsx"
+    "test:registration": "pnpm exec cypress run --spec 'cypress/e2e/registration.cy.ts'"
   },
   "dependencies": {
     "@cypress/webpack-preprocessor": "^6.0.2",
@@ -54,9 +53,11 @@
     "process": "^0.11.10",
     "react": "^18.3.1",
     "react-dom": "^18.3.1",
+    "react-easy-crop": "^5.2.0",
     "react-icons": "^5.3.0",
     "react-image-crop": "^11.0.7",
     "react-leaflet": "^4.2.1",
+    "react-modal": "^3.16.3",
     "react-phone-input-2": "^2.15.1",
     "react-phone-number-input": "^3.4.8",
     "react-player": "^2.16.0",

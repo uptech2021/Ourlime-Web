@@ -1,130 +1,215 @@
 'use client';
 import { Button } from '@nextui-org/react';
-import { Dispatch, SetStateAction, useState, useRef } from 'react';
+import { Dispatch, SetStateAction, useRef, useState, RefObject } from 'react';
 
 type FifthStepProps = {
     setStep: Dispatch<SetStateAction<number>>;
+    idFaceRef: RefObject<HTMLInputElement>;
+    idFrontRef: RefObject<HTMLInputElement>;
+    idBackRef: RefObject<HTMLInputElement>;
+    handleSubmit: (e: React.FormEvent) => void;
+    isStepValid: boolean;
+    validationError: string;
+    successMessage: string;
 };
 
-export default function FifthStep({ setStep }: FifthStepProps) {
-    const [photo1Name, setPhoto1Name] = useState('');
-    const [photo2Name, setPhoto2Name] = useState('');
-    const [photo3Name, setPhoto3Name] = useState('');
+export default function FifthStep({ setStep, idFaceRef, idFrontRef, idBackRef, handleSubmit, isStepValid, validationError, successMessage }: FifthStepProps) {
+    const [faceFileName, setFaceFileName] = useState<string>('');
+    const [frontFileName, setFrontFileName] = useState<string>('');
+    const [backFileName, setBackFileName] = useState<string>('');
     
-    const fileInput1Ref = useRef<HTMLInputElement>(null);
-    const fileInput2Ref = useRef<HTMLInputElement>(null);
-    const fileInput3Ref = useRef<HTMLInputElement>(null);
+    // Separate error states for each file
+    const [faceFileError, setFaceFileError] = useState<string>('');
+    const [frontFileError, setFrontFileError] = useState<string>('');
+    const [backFileError, setBackFileError] = useState<string>('');
 
     const handleUpload = (index: number) => {
         switch(index) {
             case 1:
-                fileInput1Ref.current?.click();
+                idFaceRef.current?.click();
                 break;
             case 2:
-                fileInput2Ref.current?.click();
+                idFrontRef.current?.click();
                 break;
             case 3:
-                fileInput3Ref.current?.click();
+                idBackRef.current?.click();
                 break;
         }
     };
 
-    const handleFileChange = (event: React.ChangeEvent<HTMLInputElement>, index: number) => {
-        const file = event.target.files?.[0];
+    const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
+        const file = e.target.files?.[0]; // Get the first file
         if (file) {
-            switch(index) {
-                case 1:
-                    setPhoto1Name(file.name);
+            switch (fileType) {
+                case 'face':
+                    setFaceFileName(file.name); // Update face file name
+                    setFaceFileError(''); // Clear any previous error
                     break;
-                case 2:
-                    setPhoto2Name(file.name);
+                case 'front':
+                    setFrontFileName(file.name); // Update front file name
+                    setFrontFileError(''); // Clear any previous error
                     break;
-                case 3:
-                    setPhoto3Name(file.name);
+                case 'back':
+                    setBackFileName(file.name); // Update back file name
+                    setBackFileError(''); // Clear any previous error
+                    break;
+                default:
+                    break;
+            }
+        } else {
+            // If no file is selected, set the error message
+            switch (fileType) {
+                case 'face':
+                    setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
+                    break;
+                case 'front':
+                    setFrontFileError('Please upload a photo of the front of your ID.');
+                    break;
+                case 'back':
+                    setBackFileError('Please upload a photo of the back of your ID.');
+                    break;
+                default:
                     break;
             }
         }
     };
 
+    // Validation function
+    const validateFiles = () => {
+        let formValid = true; // Initialize formValid
+
+        // Reset error messages
+        setFaceFileError('');
+        setFrontFileError('');
+        setBackFileError('');
+
+        if (!faceFileName) {
+            setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
+            formValid = false;
+        }
+        if (!frontFileName) {
+            setFrontFileError('Please upload a photo of the front of your ID.');
+            formValid = false;
+        }
+        if (!backFileName) {
+            setBackFileError('Please upload a photo of the back of your ID.');
+            formValid = false;
+        }
+
+        return formValid; // Return the validation status
+    };
+
+    const handleFormSubmit = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+        if (validateFiles()) { // Check if files are valid
+            handleSubmit(e); // Call the handleSubmit function passed as a prop
+        } else {
+            console.log("Step Validation failed."); // Log validation failure
+            console.log("Current validation states:");
+            console.log(`Face file name: ${faceFileName}`);
+            console.log(`Front file name: ${frontFileName}`);
+            console.log(`Back file name: ${backFileName}`);
+            console.log(`Face file error: ${faceFileError}`);
+            console.log(`Front file error: ${frontFileError}`);
+            console.log(`Back file error: ${backFileError}`);
+        }
+    };
+
     return (
-        <div className="step-4 flex flex-col  text-white items-center border-none bg-black bg-opacity-[50%] px-5 py-4 font-bold text-white sm:border-x-2 lg:px-0 min-h-screen">
+        <div className="step-4 flex flex-col text-white items-center border-none bg-black bg-opacity-[50%] px-5 py-4 font-bold text-white sm:border-x-2 lg:px-0 min-h-screen">
             <h1 className="text-3xl font-bold mb-4 text-center text-white">Welcome to Ourlime</h1>
             <p className="text-center mb-6 text-white">
                 Please upload the required photos for verification:
             </p>
-            <div className="flex flex-col w-full max-w-md space-y-4">
-                <div className="flex items-center rounded-md p-4">
+            {successMessage && <p className="text-green-500">{successMessage}</p>}
+            <form onSubmit={handleFormSubmit} className="flex flex-col w-full max-w-md space-y-4">
+                <div className="flex flex-col rounded-md p-4">
+                    <label className="mb-2 text-white">1.) Please upload a photo of yourself holding your ID next to your face:</label>
                     <input
                         type="file"
-                        ref={fileInput1Ref}
-                        onChange={(e) => handleFileChange(e, 1)}
+                        ref={idFaceRef}
+                        onChange={(e) => handleFileChange(e, 'face')}
                         className="hidden"
                         accept="image/*"
                         aria-label="Upload photo of yourself holding your ID next to your face"
+                        title="Upload photo of yourself holding your ID next to your face"
                     />
                     <input
                         type="text"
-                        value={photo1Name}
-                        placeholder="1.) Please upload a photo of yourself holding your ID next to your face"
-                        className="flex-1 bg-white text-black px-4 py-2 rounded-md mr-2"
+                        value={faceFileName}
                         readOnly
+                        className="p-2 border border-gray-300 rounded text-green-500"
+                        placeholder="No file chosen"
                     />
-                    <Button onClick={() => handleUpload(1)} className="ml-4 bg-greenTheme text-white rounded-full">
-                        +
-                    </Button>
+                    {faceFileError && <p className="text-red-500">{faceFileError}</p>}
+                    <div className="flex flex-col items-center mt-2">
+                        <Button onClick={() => handleUpload(1)} className="bg-greenTheme text-white rounded-full w-8 h-8 flex items-center justify-center">
+                            +
+                        </Button>
+                        <span className="text-white text-sm mt-1">Upload</span>
+                    </div>
                 </div>
-                <div className="flex items-center rounded-md p-4">
+                <div className="flex flex-col rounded-md p-4">
+                    <label className="mb-2 text-white">2.) Please upload a photo of the front of your ID:</label>
                     <input
                         type="file"
-                        ref={fileInput2Ref}
-                        onChange={(e) => handleFileChange(e, 2)}
+                        ref={idFrontRef}
+                        onChange={(e) => handleFileChange(e, 'front')}
                         className="hidden"
                         accept="image/*"
                         aria-label="Upload photo of the front of your ID"
+                        title="Upload photo of the front of your ID"
                     />
                     <input
                         type="text"
-                        value={photo2Name}
-                        placeholder="2.) Please upload a photo of the front of your ID"
-                        className="flex-1 bg-white text-black px-4 py-2 rounded-md mr-2"
+                        value={frontFileName}
                         readOnly
+                        className="p-2 border border-gray-300 rounded text-green-500"
+                        placeholder="No file chosen"
                     />
-                    <Button onClick={() => handleUpload(2)} className="ml-4 bg-greenTheme text-white rounded-full">
-                        +
-                    </Button>
+                    {frontFileError && <p className="text-red-500">{frontFileError}</p>}
+                    <div className="flex flex-col items-center mt-2">
+                        <Button onClick={() => handleUpload(2)} className="bg-greenTheme text-white rounded-full w-8 h-8 flex items-center justify-center">
+                            +
+                        </Button>
+                        <span className="text-white text-sm mt-1">Upload</span>
+                    </div>
                 </div>
-                <div className="flex items-center rounded-md p-4">
+                <div className="flex flex-col rounded-md p-4">
+                    <label className="mb-2 text-white">3.) Please upload a photo of the back of your ID:</label>
                     <input
                         type="file"
-                        ref={fileInput3Ref}
-                        onChange={(e) => handleFileChange(e, 3)}
+                        ref={idBackRef}
+                        onChange={(e) => handleFileChange(e, 'back')}
                         className="hidden"
                         accept="image/*"
                         aria-label="Upload photo of the back of your ID"
+                        title="Upload photo of the back of your ID"
                     />
                     <input
                         type="text"
-                        value={photo3Name}
-                        placeholder="3.) Please upload a photo of the back of your ID"
-                        className="flex-1 bg-white text-black px-4 py-2 rounded-md mr-2"
+                        value={backFileName}
                         readOnly
+                        className="p-2 border border-gray-300 rounded text-green-500"
+                        placeholder="No file chosen"
                     />
-                    <Button onClick={() => handleUpload(3)} className="ml-4 bg-greenTheme text-white rounded-full">
-                        +
+                    {backFileError && <p className="text-red-500">{backFileError}</p>}
+                    <div className="flex flex-col items-center mt-2">
+                        <Button onClick={() => handleUpload(3)} className="bg-greenTheme text-white rounded-full w-8 h-8 flex items-center justify-center">
+                            +
+                        </Button>
+                        <span className="text-white text-sm mt-1">Upload</span>
+                    </div>
+                </div>
+                <div className="flex space-x-4 mt-6">
+                    <Button type="submit" className="px-4 py-2 bg-greenTheme text-white rounded-full hover:bg-green-600">
+                        Confirm
+                    </Button>
+                    <Button onClick={() => setStep(4)} type="button" className="px-4 py-2 bg-white text-greenTheme rounded-full hover:bg-gray-200">
+                        Previous Step
                     </Button>
                 </div>
-            </div>
-            <p className="mt-6 text-center text-white">
-                Your information is in safe hands, all data is private!
-            </p>
-            <div className="flex space-x-4 mt-6">
-                <Button onClick={() => setStep(5)} className="px-4 py-2 bg-white text-greenTheme rounded-full hover:bg-gray-200">
-                    Previous Step
-                </Button>
-                <Button onClick={() => setStep(7)} className="px-4 py-2 bg-greenTheme text-white rounded-full hover:bg-green-600">
-                    Confirm
-                </Button>
-            </div>
+            </form>
         </div>
     );
 }

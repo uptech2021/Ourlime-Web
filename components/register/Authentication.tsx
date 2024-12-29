@@ -2,6 +2,16 @@
 import React from 'react';
 import { Button } from '@nextui-org/react';
 
+// const handleInfoSubmit = (e: React.FormEvent) => {
+//     e.preventDefault();
+//     setAttemptedNextStep(true);
+//     console.log('submitted');
+//     if (isStepValid) {
+//         handleSubmit(e);
+//         console.log('validated');
+//     }
+// };
+
 export default function Authentication({ setStep }) {
     return (
         <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">

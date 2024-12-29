@@ -20,7 +20,7 @@ import { deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { gsap } from 'gsap';
 
 import { useRouter } from 'next/navigation';
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import 'react-phone-number-input/style.css';
 export default function Page() {
 	const [step, setStep] = useState(1);
@@ -69,6 +69,8 @@ export default function Page() {
 	const [error, setError] = useState('');
 
 	const [isStep3Valid, setIsStep3Valid] = useState(false);
+	const [isStep5Valid, setIsStep5Valid] = useState(false);
+	
 
 	const [verificationMessage, setVerificationMessage] = useState('');
 
@@ -84,7 +86,21 @@ export default function Page() {
 	const [zipCode, SetZipCode] = useState('');
 	const [zipCodeError, setZipCodeError] = useState('');
 	
+	const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
 
+	const [idFaceRef] = useState<React.RefObject<HTMLInputElement>>(useRef(null));
+	const [idFrontRef] = useState<React.RefObject<HTMLInputElement>>(useRef(null));
+	const [idBackRef] = useState<React.RefObject<HTMLInputElement>>(useRef(null));
+
+	const [faceFileName, setFaceFileName] = useState<string>('');
+	const [frontFileName, setFrontFileName] = useState<string>('');
+	const [backFileName, setBackFileName] = useState<string>('');
+	const [validationError, setValidationError] = useState<string>('');
+	const [isStepValid, setIsStepValid] = useState<boolean>(false);
+	const [successMessage, setSuccessMessage] = useState<string>('');
+	const [faceFileError, setFaceFileError] = useState<string>('');
+	const [frontFileError, setFrontFileError] = useState<string>('');
+	const [backFileError, setBackFileError] = useState<string>('');
 
 	useEffect(() => {
 		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
@@ -194,6 +210,45 @@ export default function Page() {
 		return formValid;
 	};
 
+	const validateStep5 = () => {
+		let formValid = true;
+
+		if (!faceFileName) {
+			console.log('Face file is missing.');
+			setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
+			formValid = false;
+		} else {
+			setFaceFileError('');
+		}
+
+		if (!frontFileName) {
+			console.log('Front file is missing.');
+			setFrontFileError('Please upload a photo of the front of your ID.');
+			formValid = false;
+		} else {
+			setFrontFileError('');
+		}
+
+		if (!backFileName) {
+			console.log('Back file is missing.');
+			setBackFileError('Please upload a photo of the back of your ID.');
+			formValid = false;
+		} else {
+			setBackFileError('');
+		}
+
+		console.log('Step 5 validation result:', formValid);
+		return formValid;
+	};
+
+	useEffect(() => {
+		console.log('Face file name:', faceFileName);
+		console.log('Front file name:', frontFileName);
+		console.log('Back file name:', backFileName);
+		const valid = validateStep5();
+		setIsStepValid(valid);
+	}, [faceFileName, frontFileName, backFileName]);
+
 	const handleAvatarSelection = (avatar: string) => {
 		// Reset all avatar selections
 		setSelectedCartoonAvatarBlackBoy(false);
@@ -236,16 +291,26 @@ export default function Page() {
 
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
-		setError('');
+		console.log('Registration process initiated.');
 		let formValid = true;
-
-		if (!validateStep3()) {
+		if (!validateStep5()) {
 			formValid = false;
 		}
 
-		if (!formValid) return;
+		if(!formValid) {
+			console.log("Step Validation failed.")
+			console.log('Current validation states:'); // Log current validation states
+			console.log('Face file name:', faceFileName); // Log face file name
+			console.log('Front file name:', frontFileName); // Log front file name
+			console.log('Back file name:', backFileName); // Log back file name
+			console.log('Face file error:', faceFileError); // Log face file error
+			console.log('Front file error:', frontFileError); // Log front file error
+			console.log('Back file error:', backFileError); // Log back file error
+			return;}
 
 		try {
+			console.log('Proceeding with registration...');
+
 			const userCredentials = await createUserWithEmailAndPassword(
 				auth,
 				email,
@@ -272,7 +337,33 @@ export default function Page() {
 				userTier: 1,
 			});
 
-			// Save profile picture to 'profileImages' collection
+			// Upload authentication images to Firebase Storage
+			const faceImageURL = await uploadFile(idFaceRef.current?.files[0], `authentication/${user.uid}/faceID`);
+			const frontImageURL = await uploadFile(idFrontRef.current?.files[0], `authentication/${user.uid}/frontID`);
+			const backImageURL = await uploadFile(idBackRef.current?.files[0], `authentication/${user.uid}/backID`);
+
+			// Save authentication data to 'authentication' collection
+			await setDoc(doc(db, 'authentication', user.uid), {
+				userId: user.uid,
+				proofOfId: faceImageURL, // Use the uploaded face image URL
+				idFront: frontImageURL, // Use the uploaded front ID image URL
+				idBack: backImageURL, // Use the uploaded back ID image URL
+				createdAt: new Date().toISOString(), // Store the creation date
+			});
+
+			// Save user preferences to 'preferences' collection
+			if (selectedInterests.length > 0) {
+				const preferencesPromises = selectedInterests.map((interest) =>
+					setDoc(doc(db, 'preferences', `${user.uid}_${interest}`), {
+						preference: interest,
+						userId: user.uid,
+					})
+				);
+
+				await Promise.all(preferencesPromises);
+			}
+
+			// Upload profile picture(s) to Firebase Storage and save to Firestore
 			await setDoc(doc(db, 'profileImages', user.uid), {
 				imageURL: await uploadFile(
 					new File(
@@ -304,6 +395,15 @@ export default function Page() {
 			// Store the uid in localStorage
 			localStorage.setItem('uid', user.uid);
 			await handleSignOut(router);
+
+			// Set success message after successful registration
+			setSuccessMessage('Successfully signed up! A verification email has been sent to your email address.');
+			console.log('Registration successful.');
+
+			// Optionally, redirect to another page after a short delay
+			setTimeout(() => {
+				router.push('/some-other-page'); // Change to your desired route
+			}, 3000); // Redirect after 3 seconds
 		} catch (error: any) {
 			// console.error('Error writing document: ', error);
 			// Delete user data if profile creation fails
@@ -332,6 +432,8 @@ export default function Page() {
 					setError('Something went wrong.');
 					break;
 			}
+			console.error('Error during registration:', error);
+			setValidationError('An error occurred during registration. Please try again.');
 		}
 	};
 
@@ -467,7 +569,16 @@ export default function Page() {
 						: step === 5 ? (
 							<Authentication setStep={setStep} />
 						) : step === 6 ? (
-							<FifthStep setStep={setStep} />
+							<FifthStep 
+								setStep={setStep} 
+								idFaceRef={idFaceRef} 
+								idFrontRef={idFrontRef} 
+								idBackRef={idBackRef} 
+								handleSubmit={handleRegister}
+								isStepValid={isStepValid}
+								validationError={validationError}
+								successMessage={successMessage}
+							/>
 						) : null}
 					</div>
 				</div>
