@@ -30,7 +30,7 @@ export default function TermsModal({ isOpen, onClose }: TermsModalProps) {
                             <p className="text-gray-600 mb-4 relative z-10 text-black">Effective Date: 7<sup>th</sup> December 2024</p>
                             
                             <p className="mb-4 text-gray-700">
-                                Welcome to the Ourlime Communities Network (OCN)! These Terms and Conditions ("Terms") govern your access to and use of OCN, including our website, mobile application, and any related services. By accessing or using OCN, you agree to comply with these Terms. If you do not agree, please do not use our services.
+                                Welcome to the Ourlime Communities Network (OCN)! These Terms and Conditions (&quot;Terms&quot;) govern your access to and use of OCN, including our website, mobile application, and any related services. By accessing or using OCN, you agree to comply with these Terms. If you do not agree, please do not use our services.
                             </p>
                             
                             <div className="hidden md:block border-t border-b border-gray-200 my-4"></div>
