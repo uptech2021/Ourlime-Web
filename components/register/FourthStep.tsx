@@ -27,44 +27,40 @@ type FourthStepProps = {
 	phone?: string;
 	setZipCode: Dispatch<SetStateAction<string>>;
 	zipCodeError: string;
+	selectedInterests: string[];
+	setSelectedInterests: Dispatch<SetStateAction<string[]>>;
 };
 
-const interests = [
-	{ name: "Vehicles", icon: "Car" },
-	{ name: "Fashion", icon: "ShoppingCart" },
-	{ name: "Technology", icon: "Smartphone" },
-	{ name: "Videogames", icon: "Gamepad" },
-	{ name: "Sports", icon: "Dumbbell" },
-	{ name: "Nature", icon: "Trees" },
-	{ name: "News", icon: "Newspaper" },
-	{ name: "Music", icon: "Music" },
-	{ name: "Cooking", icon: "ChefHat" },
-	{ name: "Business", icon: "Briefcase" },
-	{ name: "Religious", icon: "Church" },
-	{ name: "Fitness", icon: "Dumbbell" },
-	{ name: "Movies", icon: "Film" },
-	{ name: "Anime", icon: "Film" },
-	{ name: "Science", icon: "TestTube" },
-	{ name: "Animals", icon: "Paw" },
-	{ name: "Politics", icon: "Globe" },
-	{ name: "History", icon: "BookOpen" },
-	{ name: "Travel", icon: "Plane" },
-	{ name: "Reading", icon: "Book" },
-	{ name: "Health", icon: "Heart" },
-	{ name: "Education", icon: "GraduationCap" },
-	{ name: "Martial Arts", icon: "Sword" },
-	{ name: "TV Show", icon: "Tv" },
-	{ name: "Work", icon: "Briefcase" },
-];
 
-const FourthStep: React.FC<FourthStepProps> = ({
-	verificationMessage,
-	setStep,
-	
-}) => {
-	const [selectedInterests, setSelectedInterests] = useState<string[]>([]);
+export default function FourthStep({verificationMessage, selectedInterests, setSelectedInterests, setStep}: FourthStepProps){
 	const [errorMessage, setErrorMessage] = useState<string | null>(null);
-
+	const interests = [
+		{ name: "Vehicles", icon: "Car" },
+		{ name: "Fashion", icon: "ShoppingCart" },
+		{ name: "Technology", icon: "Smartphone" },
+		{ name: "Videogames", icon: "Gamepad" },
+		{ name: "Sports", icon: "Dumbbell" },
+		{ name: "Nature", icon: "Trees" },
+		{ name: "News", icon: "Newspaper" },
+		{ name: "Music", icon: "Music" },
+		{ name: "Cooking", icon: "ChefHat" },
+		{ name: "Business", icon: "Briefcase" },
+		{ name: "Religious", icon: "Church" },
+		{ name: "Fitness", icon: "Dumbbell" },
+		{ name: "Movies", icon: "Film" },
+		{ name: "Anime", icon: "Film" },
+		{ name: "Science", icon: "TestTube" },
+		{ name: "Animals", icon: "Paw" },
+		{ name: "Politics", icon: "Globe" },
+		{ name: "History", icon: "BookOpen" },
+		{ name: "Travel", icon: "Plane" },
+		{ name: "Reading", icon: "Book" },
+		{ name: "Health", icon: "Heart" },
+		{ name: "Education", icon: "GraduationCap" },
+		{ name: "Martial Arts", icon: "Sword" },
+		{ name: "TV Show", icon: "Tv" },
+		{ name: "Work", icon: "Briefcase" },
+	];
 	const totalSteps = 5;
 	const currentStep = 4;
 	const progressPercentage = (currentStep / totalSteps) * 100;
@@ -157,5 +153,3 @@ const FourthStep: React.FC<FourthStepProps> = ({
 		</div>
 	);
 };
-
-export default FourthStep;

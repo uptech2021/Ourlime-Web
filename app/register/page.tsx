@@ -5,7 +5,7 @@ import SecondStep from '@/components/register/SecondStep';
 import ThirdStep from '@/components/register/ThirdStep';
 import SecondStepOptional from '@/components/register/SecondStepOptional'
 import FourthStep from '@/components/register/FourthStep';
-import FifthStep from '@/components/register/FifthStep';
+import SixthStep from '@/components/register/SixthStep';
 import Authentication from '@/components/register/Authentication';
 import { auth, db } from '@/firebaseConfig';
 import { handleSignOut } from '@/helpers/Auth';
@@ -125,6 +125,12 @@ export default function Page() {
 		setPrevStep(step);
 	}, [step, prevStep]);
 
+	/* 
+	[Confirm function]
+	- creates the user.
+	- check if the user is created, if they were created create a function that:
+	- post request => api/verification/aaron@gmail.com/123abc
+*/
 	const animateStepForward = (currentStep: number) => {
 		gsap.fromTo(
 			`.step-${currentStep.toString().replace('.', '_')}`,
@@ -402,7 +408,7 @@ export default function Page() {
 
 			// Optionally, redirect to another page after a short delay
 			setTimeout(() => {
-				router.push('/some-other-page'); // Change to your desired route
+				router.push('/login'); // Change to your desired route
 			}, 3000); // Redirect after 3 seconds
 		} catch (error: any) {
 			// console.error('Error writing document: ', error);
@@ -564,12 +570,14 @@ export default function Page() {
 								AddressError={AddressError}
 								setZipCode={SetZipCode}
 								zipCodeError={zipCodeError}
+								selectedInterests={selectedInterests}
+								setSelectedInterests={setSelectedInterests}
 							/>
 						) 
 						: step === 5 ? (
 							<Authentication setStep={setStep} />
 						) : step === 6 ? (
-							<FifthStep 
+							<SixthStep 
 								setStep={setStep} 
 								idFaceRef={idFaceRef} 
 								idFrontRef={idFrontRef} 
@@ -578,6 +586,12 @@ export default function Page() {
 								isStepValid={isStepValid}
 								validationError={validationError}
 								successMessage={successMessage}
+								faceFileName={faceFileName}
+								frontFileName={frontFileName}
+								backFileName={backFileName}
+								setFaceFileName={setFaceFileName}
+								setFrontFileName={setFrontFileName}
+								setBackFileName={setBackFileName}
 							/>
 						) : null}
 					</div>

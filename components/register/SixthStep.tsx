@@ -2,7 +2,7 @@
 import { Button } from '@nextui-org/react';
 import { Dispatch, SetStateAction, useRef, useState, RefObject } from 'react';
 
-type FifthStepProps = {
+type SixthStepProps = {
     setStep: Dispatch<SetStateAction<number>>;
     idFaceRef: RefObject<HTMLInputElement>;
     idFrontRef: RefObject<HTMLInputElement>;
@@ -11,13 +11,31 @@ type FifthStepProps = {
     isStepValid: boolean;
     validationError: string;
     successMessage: string;
+    faceFileName: string | null;
+    frontFileName: string | null;
+    backFileName: string | null;
+    setFaceFileName: Dispatch<SetStateAction<string | null>>;
+    setFrontFileName: Dispatch<SetStateAction<string | null>>;
+    setBackFileName: Dispatch<SetStateAction<string | null>>;
 };
 
-export default function FifthStep({ setStep, idFaceRef, idFrontRef, idBackRef, handleSubmit, isStepValid, validationError, successMessage }: FifthStepProps) {
-    const [faceFileName, setFaceFileName] = useState<string>('');
-    const [frontFileName, setFrontFileName] = useState<string>('');
-    const [backFileName, setBackFileName] = useState<string>('');
-    
+export default function SixthStep({ 
+    setStep, 
+    idFaceRef, 
+    idFrontRef, 
+    idBackRef,
+    handleSubmit, 
+    isStepValid, 
+    validationError, 
+    successMessage,
+    faceFileName,
+    frontFileName,
+    backFileName,
+    setFaceFileName,
+    setFrontFileName,
+    setBackFileName,
+    }: SixthStepProps) {
+        
     // Separate error states for each file
     const [faceFileError, setFaceFileError] = useState<string>('');
     const [frontFileError, setFrontFileError] = useState<string>('');
@@ -38,20 +56,20 @@ export default function FifthStep({ setStep, idFaceRef, idFrontRef, idBackRef, h
     };
 
     const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>, fileType: string) => {
-        const file = e.target.files?.[0]; // Get the first file
+        const file = e.target.files?.[0]; // Get the file object from the file's array
         if (file) {
             switch (fileType) {
                 case 'face':
-                    setFaceFileName(file.name); // Update face file name
-                    setFaceFileError(''); // Clear any previous error
+                    setFaceFileName(file.name); 
+                    setFaceFileError(''); 
                     break;
                 case 'front':
-                    setFrontFileName(file.name); // Update front file name
-                    setFrontFileError(''); // Clear any previous error
+                    setFrontFileName(file.name); 
+                    setFrontFileError(''); 
                     break;
                 case 'back':
-                    setBackFileName(file.name); // Update back file name
-                    setBackFileError(''); // Clear any previous error
+                    setBackFileName(file.name);
+                    setBackFileError(''); 
                     break;
                 default:
                     break;
@@ -74,15 +92,16 @@ export default function FifthStep({ setStep, idFaceRef, idFrontRef, idBackRef, h
         }
     };
 
-    // Validation function
+
     const validateFiles = () => {
         let formValid = true; // Initialize formValid
-
         // Reset error messages
         setFaceFileError('');
         setFrontFileError('');
         setBackFileError('');
-
+        console.log(`Face file name: ${faceFileName}`);
+        console.log(`Front file name: ${frontFileName}`);
+        console.log(`Back file name: ${backFileName}`);
         if (!faceFileName) {
             setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
             formValid = false;
@@ -96,23 +115,19 @@ export default function FifthStep({ setStep, idFaceRef, idFrontRef, idBackRef, h
             formValid = false;
         }
 
-        return formValid; // Return the validation status
+        return formValid; 
     };
 
     const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault(); // Prevent default form submission
-        if (validateFiles()) { // Check if files are valid
-            handleSubmit(e); // Call the handleSubmit function passed as a prop
-        } else {
-            console.log("Step Validation failed."); // Log validation failure
-            console.log("Current validation states:");
-            console.log(`Face file name: ${faceFileName}`);
-            console.log(`Front file name: ${frontFileName}`);
-            console.log(`Back file name: ${backFileName}`);
-            console.log(`Face file error: ${faceFileError}`);
-            console.log(`Front file error: ${frontFileError}`);
-            console.log(`Back file error: ${backFileError}`);
-        }
+        e.preventDefault(); 
+        if (validateFiles()) { 
+            handleSubmit(e); 
+         } 
+        //else {
+        //     console.log(`Face file name: ${faceFileName}`);
+        //     console.log(`Front file name: ${frontFileName}`);
+        //     console.log(`Back file name: ${backFileName}`);
+        // }
     };
 
     return (
