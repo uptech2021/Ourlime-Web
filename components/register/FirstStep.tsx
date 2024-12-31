@@ -58,6 +58,10 @@ export default function FirstStep({
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
 	const [isTermsOpen, setIsTermsOpen] = useState(false);
 	const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+	const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+	const [isPrivacyAccepted, setIsPrivacyAccepted] = useState(false);
+	const [termsError, setTermsError] = useState('');
+	const [privacyError, setPrivacyError] = useState('');
 
 	useEffect(() => {
 		validateStep();
@@ -66,7 +70,23 @@ export default function FirstStep({
 	
 	const handleNextStep = () => {
 		setAttemptedNextStep(true);
-		if (validateStep()) {
+		let valid = true;
+
+		if (!isTermsAccepted) {
+			setTermsError('You must accept the Terms and Conditions to proceed.');
+			valid = false;
+		} else {
+			setTermsError(''); // Clear error if accepted
+		}
+
+		if (!isPrivacyAccepted) {
+			setPrivacyError('You must accept the Privacy Policy to proceed.');
+			valid = false;
+		} else {
+			setPrivacyError(''); // Clear error if accepted
+		}
+
+		if (valid && validateStep()) {
 			setStep(2);
 		}
 	};
@@ -265,7 +285,11 @@ export default function FirstStep({
 							</button>
 						</span>
 					</p>
-					<Checkbox color="success" className="ml-2"></Checkbox>
+					<Checkbox 
+					 isSelected={isTermsAccepted}
+					 onChange={() => setIsTermsAccepted(!isTermsAccepted)}
+					 color="success" className="ml-2">	
+					 </Checkbox>
 				</div>
 				
 				<div className="flex items-center justify-between">
@@ -280,9 +304,17 @@ export default function FirstStep({
 							</button>
 						</span>
 					</p>
-					<Checkbox color="success" className="ml-2"></Checkbox>
+					<Checkbox 
+					 isSelected={isPrivacyAccepted}
+					 onChange={() => setIsPrivacyAccepted(!isPrivacyAccepted)}
+					 color="success" className="ml-2"></Checkbox>
 				</div>
 			</div>
+
+			 {/* Display error message if checkboxes are not accepted */}
+			 {termsError && <p className="text-red-500">{termsError}</p>}
+			 {privacyError && <p className="text-red-500">{privacyError}</p>}
+
 
 			<Button
 				onClick={handleNextStep}

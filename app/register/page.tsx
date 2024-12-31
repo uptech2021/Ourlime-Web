@@ -73,6 +73,7 @@ export default function Page() {
 	
 
 	const [verificationMessage, setVerificationMessage] = useState('');
+	 const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
 
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
@@ -220,7 +221,7 @@ export default function Page() {
 		return formValid;
 	};
 
-	const validateStep5 = () => {
+	const validateStep6 = () => {
 		let formValid = true;
 
 		if (!faceFileName) {
@@ -252,7 +253,7 @@ export default function Page() {
 	};
 
 	useEffect(() => {
-		const valid = validateStep5();
+		const valid = validateStep6();
 		setIsStepValid(valid);
 	});
 
@@ -299,8 +300,126 @@ export default function Page() {
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
 		console.log('Registration process initiated.');
+
+		const uploadBasicData = async () => {
+			console.log("Uploading all data besides authentication data to the database...");
+			try {
+				console.log('Proceeding with registration...');
+	
+				const userCredentials = await createUserWithEmailAndPassword(
+					auth,
+					email,
+					password
+				);
+				const user = userCredentials.user;
+				await sendEmailVerification(user);
+				setVerificationMessage(
+					'Verification email sent. Please check your inbox.'
+				);
+	
+				newUser = user;
+	
+				// Save user data to 'users' collection
+				await setDoc(doc(db, 'users', user.uid), {
+					firstName,
+					lastName,
+					userName,
+					email: user.email,
+					gender,
+					birthday,
+					isAdmin: true,
+					last_loggedIn: new Date(Date.now()),
+					userTier: 1,
+				});
+	
+				// Save user interests to 'interests' collection
+				if (selectedInterests.length > 0) {
+					const interestsPromises = selectedInterests.map((interest) =>
+						setDoc(doc(db, 'interests', `${user.uid}_${interest}`), {
+							preference: interest,
+							userId: user.uid,
+						})
+					);
+	
+					await Promise.all(interestsPromises);
+				}
+	
+				// Upload profile picture(s) to Firebase Storage and save to Firestore
+				await setDoc(doc(db, 'profileImages', user.uid), {
+					imageURL: await uploadFile(
+						new File(
+							[
+								await fetch(`/images/register/${profilePicture}`).then(
+									(res) => res.blob()
+								),
+							],
+							profilePicture,
+							{ type: 'image/svg+xml' }
+						),
+						`images/profilePictures/${profilePicture}`
+					),
+					typeOfImage: profilePicture, // Assuming this is the type of image
+					createdAt: new Date().toISOString(), // Store the creation date
+					userid: user.uid, // Link to the user
+				});
+	
+				// Save address data to 'addresses' collection
+				await setDoc(doc(db, 'addresses', user.uid), {
+					userId: user.uid,
+					country,
+					postalCode,
+					city,
+					Address,
+					zipCode
+				});
+	
+				// Store the uid in localStorage
+				localStorage.setItem('uid', user.uid);
+				await handleSignOut(router);
+	
+				// Set success message after successful registration
+				setSuccessMessage('Successfully signed up! A verification email has been sent to your email address.');
+				console.log('Registration successful.');
+	
+				// Optionally, redirect to another page after a short delay
+				setTimeout(() => {
+					router.push('/login'); // Change to your desired route
+				}, 3000); // Redirect after 3 seconds
+			} catch (error: any) {
+				// console.error('Error writing document: ', error);
+				// Delete user data if profile creation fails
+				if (newUser) {
+					try {
+						await deleteDoc(doc(db, 'users', newUser.uid));
+						await newUser.delete();
+					} catch (deleteError) {
+						// console.error('Error deleting user data: ', deleteError);
+					}
+				}
+				switch (error.code) {
+					case 'auth/email-already-in-use':
+						setError('Email already in use.');
+						break;
+					case 'auth/invalid-email':
+						setError('Invalid email.');
+						break;
+					case 'auth/operation-not-allowed':
+						setError('Operation not allowed.');
+						break;
+					case 'auth/weak-password':
+						setError('Weak password.');
+						break;
+					default:
+						setError('Something went wrong.');
+						break;
+				}
+				console.error('Error during registration:', error);
+				setValidationError('An error occurred during registration. Please try again.');
+			}
+		}
+		const uploadAllData = async () => {
 		let formValid = true;
-		if (!validateStep5()) {
+		if (!validateStep6()) {
 			formValid = false;
 		}
 
@@ -343,7 +462,6 @@ export default function Page() {
 				last_loggedIn: new Date(Date.now()),
 				userTier: 1,
 			});
-
 			// Upload authentication images to Firebase Storage
 			const faceImageURL = await uploadFile(idFaceRef.current?.files[0], `authentication/${user.uid}/faceID`);
 			const frontImageURL = await uploadFile(idFrontRef.current?.files[0], `authentication/${user.uid}/frontID`);
@@ -441,7 +559,21 @@ export default function Page() {
 			}
 			console.error('Error during registration:', error);
 			setValidationError('An error occurred during registration. Please try again.');
-		}
+		}}
+
+		 // Check if the user is on the Sixth Step
+		 if (step === 6) {
+            if (isAuthenticated) {
+                await uploadAllData(); // Upload all data including authentication
+            } else {
+                console.log('User did not complete authentication, skipping upload of authentication data.');
+            }
+        } else if (step === 5) {
+            console.log('User skipped authentication, uploading basic data.');
+            await uploadBasicData(); // Upload basic data only
+        } else {
+            console.log('Proceeding without authentication.');
+        }
 	};
 
 	if (loading) {
@@ -576,7 +708,10 @@ export default function Page() {
 							/>
 						) 
 						: step === 5 ? (
-							<Authentication setStep={setStep} />
+							<Authentication 
+								setStep={setStep} 
+								handleSubmit={handleRegister}
+							/>
 						) : step === 6 ? (
 							<SixthStep 
 								setStep={setStep} 
@@ -585,6 +720,7 @@ export default function Page() {
 								idBackRef={idBackRef} 
 								handleSubmit={handleRegister}
 								isStepValid={isStepValid}
+								setIsAuthenticated={setIsAuthenticated}
 								validationError={validationError}
 								successMessage={successMessage}
 								faceFileName={faceFileName}

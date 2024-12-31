@@ -2,17 +2,13 @@
 import React from 'react';
 import { Button } from '@nextui-org/react';
 
-// const handleInfoSubmit = (e: React.FormEvent) => {
-//     e.preventDefault();
-//     setAttemptedNextStep(true);
-//     console.log('submitted');
-//     if (isStepValid) {
-//         handleSubmit(e);
-//         console.log('validated');
-//     }
-// };
+export default function Authentication({ setStep, handleSubmit }) {
+    const handleSkipAuthentication = (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+        console.log('Skipping authentication');
+        handleSubmit(e); // Call the handleSubmit function to submit the form
+    };
 
-export default function Authentication({ setStep }) {
     return (
         <div className="flex flex-col items-center p-6 bg-gray-100 min-h-screen">
             <h1 className="text-3xl font-bold mb-4 text-center">Welcome to Ourlime Communities Network!</h1>
@@ -31,7 +27,7 @@ export default function Authentication({ setStep }) {
                 Take a moment to authenticate your account today and join us in building a community rooted in trust, creativity, and collaboration. You can skip authentication for now and complete this process later from the settings on your profile page. Together, we can make Ourlime the vibrant and secure social platform we all deserve.
             </p>
             <div className="flex space-x-4">
-                <Button className="px-4 py-2 bg-greenTheme text-white rounded hover:bg-gray-500">
+                <Button onClick={handleSkipAuthentication} className="px-4 py-2 bg-greenTheme text-white rounded hover:bg-gray-500">
                     Skip Authentication
                 </Button>
                 <Button onClick={() => setStep(6)} className="px-4 py-2 bg-greenTheme text-white rounded hover:bg-green-600">
