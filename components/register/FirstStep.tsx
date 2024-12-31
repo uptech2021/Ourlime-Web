@@ -152,7 +152,7 @@ export default function FirstStep({
 					<div className="relative">
 						<input
 							type="text"
-							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-white placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 							placeholder="Last Name"
 							onChange={(e) => setLastName(e.target.value)}
 						/>
@@ -184,7 +184,7 @@ export default function FirstStep({
 				<div className="relative">
 					<input
 						type="email"
-						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-white placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 						placeholder="Email Address"
 						onChange={(e) => setEmail(e.target.value)}
 						required
