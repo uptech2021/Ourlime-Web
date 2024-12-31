@@ -4,7 +4,8 @@ import { Button, Checkbox, DatePicker, Select, SelectItem } from '@nextui-org/re
 
 
 import { useEffect, useState } from 'react';
-
+import { db } from '@/firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Dispatch, SetStateAction } from 'react';
 import styles from "./register.module.css"
 import TermsModal from './TermsModal';
@@ -13,15 +14,37 @@ import Link from 'next/link';
 import transparentLogo from 'public/images/transparentLogo.png';
 import Image from 'next/image';
 
+// Function to check if a user exists
+const checkUserExists = async (email: string, username: string) => {
+	const usersRef = collection(db, 'users'); // Replace 'users' with your collection name
+
+	const promises = [];
+
+	if (email) {
+		const emailQuery = query(usersRef, where('email', '==', email));
+		promises.push(getDocs(emailQuery));
+	}
+
+	if (username) {
+		const usernameQuery = query(usersRef, where('username', '==', username));
+		promises.push(getDocs(usernameQuery));
+	}
+
+	const results = await Promise.all(promises);
+	const exists = results.some(snapshot => !snapshot.empty);
+	return exists;
+};
 
 type FirstStepProps = {
 	setUserName: Dispatch<SetStateAction<string>>;
 	userNameError: string;
+	userExistsError: string;
 	firstNameError: string;
 	lastNameError: string;
 	genderError: string;
 	setEmail: Dispatch<SetStateAction<string>>;
 	emailError: string;
+	emailExistsError: string;
 	setBirthday: Dispatch<SetStateAction<string>>;
 	birthdayError: string;
 	setPassword: Dispatch<SetStateAction<string>>;
@@ -33,15 +56,19 @@ type FirstStepProps = {
 	setGender: Dispatch<SetStateAction<string>>;
 	setFirstName: Dispatch<SetStateAction<string>>;
 	setLastName: Dispatch<SetStateAction<string>>;
+	handleUsernameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export default function FirstStep({
 	setUserName,
 	userNameError,
+	userExistsError,
 	firstNameError,
 	lastNameError,
 	genderError,
 	setEmail,
+	emailExistsError,
 	emailError,
 	setBirthday,
 	birthdayError,
@@ -53,7 +80,9 @@ export default function FirstStep({
 	passwordError,
 	setGender,
 	setFirstName,
-	setLastName
+	setLastName,
+	handleUsernameChange,
+	handleEmailChange
 }: FirstStepProps) {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
 	const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -67,7 +96,6 @@ export default function FirstStep({
 		validateStep();
 	}, [validateStep]);
 
-	
 	const handleNextStep = () => {
 		setAttemptedNextStep(true);
 		let valid = true;
@@ -90,6 +118,17 @@ export default function FirstStep({
 			setStep(2);
 		}
 	};
+
+	// const handleEmailChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const email = e.target.value;
+    //     setEmail(email); // Call the handler passed from the Page component
+    // };
+
+    // const handleUsernameChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    //     const username = e.target.value;
+    //     setUserName(username);
+    // };
+
 	const totalSteps = 5;
 	const currentStep = 1;
 	const progressPercentage = (currentStep / totalSteps) * 100;
@@ -170,7 +209,7 @@ export default function FirstStep({
 						type="text"
 						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 						placeholder="Username"
-						onChange={(e) => setUserName(e.target.value)}
+						onChange={handleUsernameChange}
 						required
 					/>
 				</div>
@@ -179,6 +218,12 @@ export default function FirstStep({
 						{userNameError}
 					</p>
 				)}
+				{attemptedNextStep && userExistsError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{userExistsError}
+					</p>
+				)}
+
 			</div>
 			<div className="mb-4">
 				<div className="relative">
@@ -186,12 +231,17 @@ export default function FirstStep({
 						type="email"
 						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 						placeholder="Email Address"
-						onChange={(e) => setEmail(e.target.value)}
+						onChange={handleEmailChange}
 						required
 					/>
 				</div>
 				{attemptedNextStep && emailError && (
 					<p className="text-bold mt-1 text-left text-red-500">{emailError}</p>
+				)}
+				{attemptedNextStep && emailExistsError && (
+					<p className="text-bold mt-1 text-left text-red-500">
+						{emailExistsError}
+					</p>
 				)}
 			</div>
 			<div className="mb-4">

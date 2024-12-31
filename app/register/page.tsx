@@ -7,6 +7,7 @@ import SecondStepOptional from '@/components/register/SecondStepOptional'
 import FourthStep from '@/components/register/FourthStep';
 import SixthStep from '@/components/register/SixthStep';
 import Authentication from '@/components/register/Authentication';
+import { checkUserExists } from '@/helpers/Auth';
 import { auth, db } from '@/firebaseConfig';
 import { handleSignOut } from '@/helpers/Auth';
 import { uploadFile } from '@/helpers/firebaseStorage';
@@ -18,7 +19,6 @@ import {
 } from 'firebase/auth';
 import { deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { gsap } from 'gsap';
-
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useRef } from 'react';
 import 'react-phone-number-input/style.css';
@@ -38,6 +38,8 @@ export default function Page() {
 	const [userName, setUserName] = useState('');
 	const [phone, setPhone] = useState('');
 	const [email, setEmail] = useState('');
+	const [emailExistsError, setEmailExistsError] = useState('');
+
 	const [password, setPassword] = useState('');
 	const [confirmPassword, setConfirmPassword] = useState('');
 
@@ -47,6 +49,7 @@ export default function Page() {
 	const [genderError, setGenderError] = useState('');
 	const [birthdayError, setBirthdayError] = useState('');
 	const [userNameError, setUserNameError] = useState('');
+	const [userExistsError, setUserExistsError] = useState('');
 
 	const [selectedCartoonAvatarBlackBoy, setSelectedCartoonAvatarBlackBoy] =
 		useState(false);
@@ -326,6 +329,7 @@ export default function Page() {
 					userName,
 					email: user.email,
 					gender,
+					country,
 					birthday,
 					isAdmin: true,
 					last_loggedIn: new Date(Date.now()),
@@ -366,7 +370,6 @@ export default function Page() {
 				// Save address data to 'addresses' collection
 				await setDoc(doc(db, 'addresses', user.uid), {
 					userId: user.uid,
-					country,
 					postalCode,
 					city,
 					Address,
@@ -576,6 +579,31 @@ export default function Page() {
         }
 	};
 
+	
+	const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const email = e.target.value;
+		setEmail(email);
+		const exists = await checkUserExists(email, ''); // Check for email existence
+		if (exists) {
+			setEmailExistsError('This email is already registered.');
+			console.log(emailExistsError)
+		} else {
+			setEmailExistsError('');
+		}
+	};
+
+	const handleUsernameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const username = e.target.value;
+		setUserName(username);
+		const exists = await checkUserExists('', username); // Check for username existence
+		if (exists) {
+			setUserExistsError('This username is already taken.');
+			console.log(userExistsError)
+		} else {
+			setUserExistsError('');
+		}
+	};
+
 	if (loading) {
 		return <AnimatedLogo />;
 	  }
@@ -612,6 +640,7 @@ export default function Page() {
 							<FirstStep
 								setUserName={setUserName}
 								userNameError={userNameError}
+								userExistsError={userExistsError}
 								setFirstName={setFirstName}
 								firstNameError={firstNameError}
 								setLastName={setLastName}
@@ -620,6 +649,7 @@ export default function Page() {
 								genderError={genderError}
 								setEmail={setEmail}
 								emailError={emailError}
+								emailExistsError={emailExistsError}
 								// phoneError={phoneError}
 								setPassword={setPassword}
 								setConfirmPassword={setConfirmPassword}
@@ -629,6 +659,8 @@ export default function Page() {
 								passwordError={passwordError}
 								setBirthday={setBirthday}
 								birthdayError={birthdayError}
+								handleUsernameChange={handleUsernameChange}
+								handleEmailChange={handleEmailChange}
 							/>
 						) : step === 2 ? (
 							<SecondStep
