@@ -5,11 +5,7 @@ import { Dispatch, SetStateAction, useState } from 'react';
 import Cropper from 'react-easy-crop';
 import Modal from 'react-modal';
 import transparentLogo from 'public/images/transparentLogo.png';
-import Images from 'next/image';
-
-
-
-
+import NextImage from 'next/image';
 
 type SecondStepProps = {
   setStep: Dispatch<SetStateAction<number>>;
@@ -57,13 +53,13 @@ export default function SecondStep({
 
   const createImage = (url: string): Promise<HTMLImageElement> =>
     new Promise((resolve, reject) => {
-      const image = new Image();
+      const image = new window.Image();
       image.addEventListener('load', () => resolve(image));
       image.addEventListener('error', error => reject(error));
       image.src = url;
     });
 
-  const getCroppedImg = async (imageSrc: string, pixelCrop: any) => {
+  const Image = async (imageSrc: string, pixelCrop: any) => {
     const image = await createImage(imageSrc);
     const canvas = document.createElement('canvas');
     canvas.width = pixelCrop.width;
@@ -101,7 +97,7 @@ export default function SecondStep({
 										className="bg-greenTheme h-full relative rounded-full transition-all duration-300"
 										style={{ width: `${progressPercentage}%` }}
 									>
-										<Images
+										<NextImage
 											src={transparentLogo}
 											alt="Logo"
 											className="absolute top-1 right-0 transform translate-x-1/2 -translate-y-1/2"
@@ -133,7 +129,7 @@ export default function SecondStep({
             >
               {selectedImages[index] ? (
                 <>
-                  <img src={selectedImages[index]} alt={`Uploaded ${index + 1}`} className="w-full h-full object-cover rounded-xl" />
+                  <NextImage src={selectedImages[index]} alt={`Uploaded ${index + 1}`} className="w-full h-full object-cover rounded-xl" />
                   <div className="absolute top-0  left-6 md:left-36">
                     <Button onClick={() => handleCropClick(index)} className="bg-greenTheme rounded-full p-2">
                       <Crop className="text-white size-6 lg:size-24"  />
@@ -206,7 +202,7 @@ export default function SecondStep({
               <Button 
                 onClick={async () => {
                   if (croppedAreaPixels && selectedImages[cropperVisible]) {
-                    const croppedImage = await getCroppedImg(
+                    const croppedImage = await Image(
                       selectedImages[cropperVisible],
                       croppedAreaPixels
                     );

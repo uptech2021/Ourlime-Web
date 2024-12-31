@@ -7,7 +7,7 @@ export default function TermsAndConditions() {
         <div className="flex p-5 font-sans">
             <div className="w-1/2 border-r border-gray-300 pr-4">
                 <header className="text-center mb-6">
-                    <img src="/path/to/logo.png" alt="Our Lime Logo" className="w-40 mx-auto" />
+                    <Image src="/path/to/logo.png" alt="Our Lime Logo" className="w-40 mx-auto" />
                 </header>
                 <Image src={termsImage} alt="Terms Illustration" className="w-full" />
             </div>

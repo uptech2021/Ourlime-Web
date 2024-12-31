@@ -130,6 +130,10 @@ export default function Page() {
 	- creates the user.
 	- check if the user is created, if they were created create a function that:
 	- post request => api/verification/aaron@gmail.com/123abc
+
+	/* This route takes in the user email and id
+    When designing the confirm button, attach this url to that href
+    <button href="https://ourlime.vercel.app/verify/123abc">Confirm</button>
 */
 	const animateStepForward = (currentStep: number) => {
 		gsap.fromTo(
@@ -248,12 +252,9 @@ export default function Page() {
 	};
 
 	useEffect(() => {
-		console.log('Face file name:', faceFileName);
-		console.log('Front file name:', frontFileName);
-		console.log('Back file name:', backFileName);
 		const valid = validateStep5();
 		setIsStepValid(valid);
-	}, [faceFileName, frontFileName, backFileName]);
+	});
 
 	const handleAvatarSelection = (avatar: string) => {
 		// Reset all avatar selections
