@@ -20,6 +20,7 @@ import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
 
 export default function Home() {
+	
 	const router = useRouter();
 	const [isPc, setIsPc] = useState<boolean>(false);
 	const [togglePostForm, setTogglePostForm] = useState<boolean>(false);
@@ -114,6 +115,7 @@ export default function Home() {
 		return <div>Loading...</div>;
 	}
 	return (
+		
 		<Navbar>
 			{/* Overlay for post form */}
 			{togglePostForm && (
@@ -209,6 +211,7 @@ export default function Home() {
 					</div>
 				</div>
 			)}
+
 		</Navbar>
 	);
 }

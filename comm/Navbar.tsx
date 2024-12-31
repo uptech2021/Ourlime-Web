@@ -5,6 +5,7 @@ import React from 'react';
 import { useRouter } from 'next/navigation';
 import { handleSignOut } from '@/helpers/Auth';
 
+import MessagingContainer from '@/components/messagingBot/MessagingContainer';
 interface NavbarProps {
 	children: React.ReactNode;
 }
@@ -106,6 +107,8 @@ export default function Navbar({ children }: NavbarProps) {
 					strokeLinejoin="round"
 				/>
 			</svg>
+
+			<MessagingContainer />
 		</div>
 	);
 }
