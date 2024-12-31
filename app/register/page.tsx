@@ -358,16 +358,16 @@ export default function Page() {
 				createdAt: new Date().toISOString(), // Store the creation date
 			});
 
-			// Save user preferences to 'preferences' collection
+			// Save user interests to 'interests' collection
 			if (selectedInterests.length > 0) {
-				const preferencesPromises = selectedInterests.map((interest) =>
-					setDoc(doc(db, 'preferences', `${user.uid}_${interest}`), {
+				const interestsPromises = selectedInterests.map((interest) =>
+					setDoc(doc(db, 'interests', `${user.uid}_${interest}`), {
 						preference: interest,
 						userId: user.uid,
 					})
 				);
 
-				await Promise.all(preferencesPromises);
+				await Promise.all(interestsPromises);
 			}
 
 			// Upload profile picture(s) to Firebase Storage and save to Firestore
