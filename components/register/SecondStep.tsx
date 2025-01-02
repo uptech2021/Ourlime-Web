@@ -6,7 +6,6 @@ import 'react-image-crop/dist/ReactCrop.css';
 import transparentLogo from 'public/images/transparentLogo.png';
 
 
-
 const totalSteps = 5;
 const currentStep = 2;
 const progressPercentage = (currentStep / totalSteps) * 100;
@@ -68,20 +67,22 @@ export default function SecondStep({
 								onClick={() => handleAvatarSelection('cartoonAvatarBlackBoy')}
 								className="relative my-1  sm:w-4/12 lg:w-3/12  cursor-pointer"
 							>
-								<Image
-									width={200}
-									height={200}
-									className="h-full w-full object-cover opacity-100"
-									src="/images/register/cartoonAvatarBlackBoy.svg"
-									alt="avatar"
-								/>
-								<Image
-									width={50}
-									height={50}
-									className={`${selectedCartoonAvatarBlackBoy ? 'block' : 'hidden'} absolute bottom-0 right-0 w-4/12 object-cover opacity-100`}
-									src="/images/register/check.svg"
-									alt="avatar"
-								/>
+							<Image
+							width={200}
+							height={200}
+							className="h-full w-full object-cover opacity-100"
+							src="/images/register/cartoonAvatarBlackBoy.svg"
+							alt="avatar"
+							/>
+
+
+							<Image
+							width={50}
+							height={50}
+							className={`${selectedCartoonAvatarBlackBoy ? 'block' : 'hidden'} absolute bottom-0 right-0 w-4/12 object-cover opacity-100`}
+							src="/images/register/check.svg"
+							alt="avatar"
+							/>
 							</div>
 							<div
 								onClick={() => handleAvatarSelection('cartoonAvatarWhiteBoy')}
