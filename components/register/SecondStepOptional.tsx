@@ -209,7 +209,7 @@ export default function SecondStep({
                 aspect={undefined}
                 className="max-w-full max-h-full"
               >
-                <img
+                <NextImage
                   ref={(img) => setImgRef(img)}
                   src={selectedImages[cropperVisible]}
                   alt="Crop me"
