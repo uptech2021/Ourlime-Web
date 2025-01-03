@@ -251,7 +251,7 @@ export default function Page() {
 			setBackFileError('');
 		}
 
-		console.log('Step 5 validation result:', formValid);
+		console.log('Step 6 validation result:', formValid);
 		return formValid;
 	};
 
@@ -348,6 +348,8 @@ export default function Page() {
 					await Promise.all(interestsPromises);
 				}
 	
+				const profileImageId = user.uid;
+
 				// Upload profile picture(s) to Firebase Storage and save to Firestore
 				await setDoc(doc(db, 'profileImages', user.uid), {
 					imageURL: await uploadFile(
@@ -366,7 +368,13 @@ export default function Page() {
 					createdAt: new Date().toISOString(), // Store the creation date
 					userid: user.uid, // Link to the user
 				});
-	
+
+				await setDoc(doc(db, 'profileImageIsSet', profileImageId), {
+					setAs: 'profile',
+					profileImageId: profileImageId
+				})
+				
+				const addressId = user.uid;
 				// Save address data to 'addresses' collection
 				await setDoc(doc(db, 'addresses', user.uid), {
 					userId: user.uid,
@@ -375,6 +383,12 @@ export default function Page() {
 					Address,
 					zipCode
 				});
+
+				await setDoc(doc(db, 'addressSetAs', addressId), {
+					setAs: 'home',
+					addressId: addressId
+				})
+
 	
 				// Store the uid in localStorage
 				localStorage.setItem('uid', user.uid);
@@ -491,6 +505,8 @@ export default function Page() {
 				await Promise.all(interestsPromises);
 			}
 
+			const profileImageId = user.uid;
+
 			// Upload profile picture(s) to Firebase Storage and save to Firestore
 			await setDoc(doc(db, 'profileImages', user.uid), {
 				imageURL: await uploadFile(
@@ -510,6 +526,13 @@ export default function Page() {
 				userid: user.uid, // Link to the user
 			});
 
+			await setDoc(doc(db, 'profileImageIsSet', profileImageId), {
+				setAs: 'profile',
+				profileImageId: profileImageId
+			})
+
+			const addressId = user.uid;
+
 			// Save address data to 'addresses' collection
 			await setDoc(doc(db, 'addresses', user.uid), {
 				userId: user.uid,
@@ -519,6 +542,12 @@ export default function Page() {
 				Address,
 				zipCode
 			});
+
+			await setDoc(doc(db, 'addressSetAs', addressId), {
+				setAs: 'home',
+				addressId: addressId
+			})
+
 
 			// Store the uid in localStorage
 			localStorage.setItem('uid', user.uid);
