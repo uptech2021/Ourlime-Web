@@ -120,12 +120,19 @@ export default function SixthStep({
         return formValid; 
     };
 
-    const handleFormSubmit = (e: React.FormEvent) => {
-        e.preventDefault();
+    const handleFormSubmit = async (e: React.FormEvent) => {
+        e.preventDefault(); // Prevent default form submission
+
         // Validate files and then set authentication status
         if (validateFiles()) {
             setIsAuthenticated(true); // Set authentication status to true
-            handleSubmit(e); // Call the handleSubmit function
+
+            try {
+                await handleSubmit(e); // Call the handleSubmit function and await it
+                console.log('Registration successful!'); // Log success message
+            } catch (error) {
+                console.error('Error during registration:', error); // Handle any errors
+            }
         }
     };
 
