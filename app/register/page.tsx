@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useRef } from 'react';
 import 'react-phone-number-input/style.css';
 export default function Page() {
-	const [step, setStep] = useState(1);
+	const [step, setStep] = useState(5);
 	const [prevStep, setPrevStep] = useState(1);
 	const router = useRouter();
 
@@ -76,8 +76,8 @@ export default function Page() {
 	
 
 	const [verificationMessage, setVerificationMessage] = useState('');
-	 const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
-
+	const [isAuthenticated, setIsAuthenticated] = useState(false); // Track authentication status
+	const [isVerified, setIsVerified] = useState(false);
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
 
@@ -334,6 +334,8 @@ export default function Page() {
 					isAdmin: true,
 					last_loggedIn: new Date(Date.now()),
 					userTier: 1,
+					createdAt: new Date().toISOString(), // Store the creation date
+
 				});
 	
 				// Save user interests to 'interests' collection
@@ -347,8 +349,9 @@ export default function Page() {
 	
 					await Promise.all(interestsPromises);
 				}
-	
-				const profileImageId = user.uid;
+				
+				const profileImageRef = doc(db, 'profileImages', user.uid);
+				const profileImageId =  profileImageRef.id;
 
 				// Upload profile picture(s) to Firebase Storage and save to Firestore
 				await setDoc(doc(db, 'profileImages', user.uid), {
@@ -373,16 +376,36 @@ export default function Page() {
 					setAs: 'profile',
 					profileImageId: profileImageId
 				})
-				
-				const addressId = user.uid;
-				// Save address data to 'addresses' collection
-				await setDoc(doc(db, 'addresses', user.uid), {
+
+				const contactRef = doc(db, 'contact', user.uid);
+				const contactId = contactRef.id;
+
+				 await setDoc(doc(db, 'contact', user.uid), {
 					userId: user.uid,
-					postalCode,
-					city,
-					Address,
-					zipCode
+					isVerified: isVerified,
+					contactNumber: phone,
+					createdAt: new Date().toISOString(), // Store the creation date
+					updatedAt: new Date().toISOString()
+				})
+	
+				await setDoc(doc(db, 'contactSetAs', contactId), {
+					setAs: 'personal',
+					contactId: contactId
+				})	
+				const addressRef = doc(db, 'addresses', user.uid);
+				const addressId = addressRef.id;
+				// Save address data to 'addresses' collection
+				await setDoc(addressRef, {
+					userId: user.uid,
+					postalCode: postalCode,
+					city: city,
+					Address: Address,
+					zipCode: zipCode,
+					createdAt: new Date().toISOString(),
+					updatedAt: new Date().toISOString()
 				});
+
+				console.log('Address ID:', addressId);
 
 				await setDoc(doc(db, 'addressSetAs', addressId), {
 					setAs: 'home',
@@ -478,6 +501,8 @@ export default function Page() {
 				isAdmin: true,
 				last_loggedIn: new Date(Date.now()),
 				userTier: 1,
+				createdAt: new Date().toISOString(), // Store the creation date
+				updatedAt: new Date().toISOString()
 			});
 			// Upload authentication images to Firebase Storage
 			const faceImageURL = await uploadFile(idFaceRef.current?.files[0], `authentication/${user.uid}/faceID`);
@@ -505,7 +530,8 @@ export default function Page() {
 				await Promise.all(interestsPromises);
 			}
 
-			const profileImageId = user.uid;
+			const profileImageRef = doc(db, 'addresses', user.uid);
+			const profileImageId = profileImageRef;
 
 			// Upload profile picture(s) to Firebase Storage and save to Firestore
 			await setDoc(doc(db, 'profileImages', user.uid), {
@@ -523,25 +549,47 @@ export default function Page() {
 				),
 				typeOfImage: profilePicture, // Assuming this is the type of image
 				createdAt: new Date().toISOString(), // Store the creation date
+				updatedAt: new Date().toISOString(),
 				userid: user.uid, // Link to the user
 			});
 
-			await setDoc(doc(db, 'profileImageIsSet', profileImageId), {
+			await setDoc(doc(db, 'profileImageIsSet', profileImageId.id), {
 				setAs: 'profile',
 				profileImageId: profileImageId
 			})
 
-			const addressId = user.uid;
+			const contactRef = doc(db, 'addresses', user.uid);
+			const contactId = contactRef.id;
+
+			await setDoc(doc(db, 'contact', user.uid), {
+				userId: user.uid,
+				isVerified: isVerified,
+				contactNumber: phone,
+				createdAt: new Date().toISOString(), // Store the creation date
+				updatedAt: new Date().toISOString()
+			})
+
+			await setDoc(doc(db, 'contactSetAs', contactId), {
+				setAs: 'personal',
+				contactId: contactId
+			})
+
+			const addressRef = doc(db, 'addresses', user.uid);
+			const addressId = addressRef.id;
 
 			// Save address data to 'addresses' collection
-			await setDoc(doc(db, 'addresses', user.uid), {
+			await setDoc(addressRef, {
 				userId: user.uid,
 				country,
 				postalCode,
 				city,
 				Address,
-				zipCode
+				zipCode,
+				createdAt: new Date().toISOString(), // Store the creation date
+				updatedAt: new Date().toISOString()
 			});
+
+			console.log('Address ID:', addressId);
 
 			await setDoc(doc(db, 'addressSetAs', addressId), {
 				setAs: 'home',

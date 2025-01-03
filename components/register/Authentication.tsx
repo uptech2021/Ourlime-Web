@@ -27,6 +27,9 @@ export default function Authentication({ setStep, handleSubmit }) {
                 Take a moment to authenticate your account today and join us in building a community rooted in trust, creativity, and collaboration. You can skip authentication for now and complete this process later from the settings on your profile page. Together, we can make Ourlime the vibrant and secure social platform we all deserve.
             </p>
             <div className="flex space-x-4">
+                    <Button onClick={() => setStep(4)} className="px-4 py-2 bg-greenTheme text-white rounded hover:bg-gray-500">
+                        Previous Step
+                    </Button>
                 <Button onClick={handleSkipAuthentication} className="px-4 py-2 bg-greenTheme text-white rounded hover:bg-gray-500">
                     Skip Authentication
                 </Button>
