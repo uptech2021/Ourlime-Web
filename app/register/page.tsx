@@ -23,7 +23,7 @@ import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useRef } from 'react';
 import 'react-phone-number-input/style.css';
 export default function Page() {
-	const [step, setStep] = useState(5);
+	const [step, setStep] = useState(1);
 	const [prevStep, setPrevStep] = useState(1);
 	const router = useRouter();
 
