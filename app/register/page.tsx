@@ -22,8 +22,10 @@ import { gsap } from 'gsap';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState, useRef } from 'react';
 import 'react-phone-number-input/style.css';
+import { isValidPhoneNumber } from 'react-phone-number-input';
+
 export default function Page() {
-	const [step, setStep] = useState(1);
+	const [step, setStep] = useState(3);
 	const [prevStep, setPrevStep] = useState(1);
 	const router = useRouter();
 
@@ -37,6 +39,7 @@ export default function Page() {
 	const [birthday, setBirthday] = useState('');
 	const [userName, setUserName] = useState('');
 	const [phone, setPhone] = useState('');
+	const [phoneError, setPhoneError] = useState('');
 	const [email, setEmail] = useState('');
 	const [emailExistsError, setEmailExistsError] = useState('');
 
@@ -157,6 +160,18 @@ export default function Page() {
 
 	const validateStep1 = () => {
 		let formValid = true;
+		if (firstName.trim() === '') {
+			setFirstNameError('Please enter your first name.');
+			formValid = false;
+		} else {
+			setFirstNameError('');
+		}
+		if (lastName.trim() === '') {
+			setLastNameError('Please enter your last name.');
+			formValid = false;
+		} else {
+			setLastNameError('');
+		}
 		if (userName.trim() === '') {
 			setUserNameError('Please enter your username.');
 			formValid = false;
@@ -168,6 +183,18 @@ export default function Page() {
 			formValid = false;
 		} else {
 			setEmailError('');
+		}
+		if (gender.trim() === '') {
+			setGenderError('Please select a gender.');
+			formValid = false;
+		} else {
+			setGenderError('');
+		}
+		if (birthday.trim() === '') {
+			setBirthdayError('Please select your date of birth.');
+			formValid = false;
+		} else {
+			setBirthdayError('');
 		}
 		if (password.length < 6) {
 			setPasswordError('Password should be at least 6 characters.');
@@ -186,18 +213,6 @@ export default function Page() {
 
 	const validateStep3 = () => {
 		let formValid = true;
-		if (firstName.trim() === '') {
-			setFirstNameError('Please enter your first name.');
-			formValid = false;
-		} else {
-			setFirstNameError('');
-		}
-		if (lastName.trim() === '') {
-			setLastNameError('Please enter your last name.');
-			formValid = false;
-		} else {
-			setLastNameError('');
-		}
 		if (country.trim() === '') {
 			setCountryError('Please enter your country.');
 			formValid = false;
@@ -219,6 +234,15 @@ export default function Page() {
 			setZipCodeError('');
 		}
 
+		if (phone.trim() === '') {
+			setPhoneError('Please enter your phone number.');
+			formValid = false;
+		} else if (!isValidPhoneNumber(phone)) {
+			setPhoneError('Please enter a valid phone number.');
+			formValid = false;
+		} else {
+			setPhoneError('');
+		}
 
 		setIsStep3Valid(formValid);
 		return formValid;
@@ -768,16 +792,14 @@ export default function Page() {
 						)
 						: step === 3 ? (
 							<ThirdStep
-								verificationMessage={verificationMessage}
 								setStep={setStep}
 								setCountry={setCountry}
 								validateStep={validateStep3}
 								isStepValid={isStep3Valid}
-								handleSubmit={handleRegister}
 								countryError={countryError}
 								setPhone={setPhone}
 								phone={phone}
-								// phoneError={phoneError}
+								phoneError={phoneError}
 								error={error}
 								setCity={setCity}
 								cityError={cityError}
