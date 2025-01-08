@@ -131,7 +131,7 @@ export default function PostFilter({
 						style={{ display: 'none' }} // Initially hidden
 					>
 						<li><Link href="/jobs">Jobs</Link></li>
-						<li><Link href="/blogs">Blogs</Link></li>
+						<li><Link href="/articles">Articles</Link></li>
 						<li><Link href="/market">Market</Link></li>
 
 						{/* <li><Link href="/people">Find Friends</Link></li> */}

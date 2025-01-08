@@ -43,6 +43,8 @@ export default function TargetingSection({
 	setIsFormValid,
 }: TargetingSectionProps) {
 	const [gender, setGender] = useState('');
+	const [isPublishing, setIsPublishing] = useState(false);
+
 
 	//TODO aaron review
 	const checkFormValidity = useCallback(() => {
@@ -67,40 +69,93 @@ export default function TargetingSection({
 		endDateRef,
 		websiteUrlRef
 	);
+
+
+	const handlePublish = () => {
+		setIsPublishing(true);
+		setTimeout(() => {
+			console.log('Media Session Data:', {
+				companyName: sessionStorage.getItem('companyName'),
+				fileName: sessionStorage.getItem('fileName')
+			});
+			console.log('Details Session Data:', {
+				campaignTitle: sessionStorage.getItem('campaignTitle'),
+				campaignDescription: sessionStorage.getItem('campaignDescription'),
+				startDate: sessionStorage.getItem('startDate'),
+				endDate: sessionStorage.getItem('endDate'),
+				websiteUrl: sessionStorage.getItem('websiteUrl')
+			});
+			console.log('Targeting Session Data:', {
+				placement: placementRef.current?.value,
+				bidding: biddingRef.current?.value,
+				location: locationRef.current?.value,
+				gender: gender
+			});
+			setIsPublishing(false);
+			changeForm();
+		}, 2000);
+	};
+
 	return (
 		<section className="my-1 flex flex-col gap-3">
+
 			<Input
-				label="Placement"
+				label="Placement Entire Site (File Format Image)"
+				placeholder="Enter placement details"
 				type="text"
 				size="lg"
 				radius="sm"
 				name="placement"
-				placeholder="Entire Site (File Format Image)"
 				ref={placementRef}
 				onChange={checkFormValidity}
+				variant="flat"
+				labelPlacement="outside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: "text-sm font-medium"
+				}}
+				data-focus="true"
 			/>
 
 			<Input
-				label="Bidding"
+				label="Bidding  Pay Per click ($0.075)"
+				placeholder="Enter bidding details"
 				type="text"
 				size="lg"
 				radius="sm"
 				name="bidding"
-				placeholder="Pay Per click ($0.075)"
 				ref={biddingRef}
 				onChange={checkFormValidity}
+				variant="flat"
+				labelPlacement="outside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: "text-sm font-medium"
+				}}
+				data-focus="true"
 			/>
 
 			<Input
 				type="text"
+				label="Location"
+				placeholder='Enter location'
 				size="lg"
 				radius="sm"
 				name="location"
-				placeholder="Location"
 				ref={locationRef}
 				onChange={checkFormValidity}
+				variant="flat"
+				labelPlacement="outside"
+				classNames={{
+					input: "border-0",
+					inputWrapper: "border-0",
+					label: "text-sm font-medium"
+				}}
+				data-focus="true"
 			/>
-		
+
 			<Select
 				ref={genderRef}
 				label="Gender"
@@ -108,21 +163,30 @@ export default function TargetingSection({
 				size="lg"
 				radius="sm"
 				className="selectTag bg-none text-white"
-				onSelectionChange={(value) => {
-					setGender(value as string);
+				onSelectionChange={(keys) => {
+					const selectedValue = Array.from(keys)[0] as string;
+					setGender(selectedValue);
 					checkFormValidity();
 				}}
-			>
-				<SelectItem className="text-white" key="male" value="male">
+				classNames={{
+					popoverContent: "bg-gray-200",
+					trigger: "text-white",
+				}}
+				variant="flat"
+				labelPlacement="outside"
+				data-focus="true"
+				>
+				<SelectItem key="male" value="male" className="text-black hover:bg-gray-200">
 					Male
 				</SelectItem>
-				<SelectItem className="text-white" key="female" value="female">
+				<SelectItem key="female" value="female" className="text-black hover:bg-gray-200">
 					Female
 				</SelectItem>
-				<SelectItem className="text-white" key="other" value="other">
+				<SelectItem key="other" value="other" className="text-black hover:bg-gray-200">
 					Other
 				</SelectItem>
 			</Select>
+
 
 			<div className="flex flex-row gap-3 px-4">
 				<Button
@@ -133,11 +197,14 @@ export default function TargetingSection({
 				</Button>
 
 				<Button
-					onClick={() => changeForm()}
+					onClick={() => {
+						handlePublish();
+						changeForm()
+					}}
 					className="mx-auto w-1/2 cursor-pointer"
-					isDisabled={!isFormValid}
+					isDisabled={!isFormValid || isPublishing}
 				>
-					Publish
+					{isPublishing ? 'Publishing...' : 'Publish'}
 				</Button>
 			</div>
 		</section>

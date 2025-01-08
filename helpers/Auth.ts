@@ -1,6 +1,6 @@
 import { signOut, onAuthStateChanged, User } from 'firebase/auth';
 import { auth, db } from '@/firebaseConfig';
-import { doc, getDoc } from 'firebase/firestore';
+import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
 // Check if user is logged in and email is verified on page load
@@ -87,6 +87,30 @@ export const fetchUser = async (uid: string) => {
 		console.error('Error fetching user:', error);
 		return null;
 	}
+};
+
+// Function to check if a user exists
+export const checkUserExists = async (email: string, username: string) => {
+	const usersRef = collection(db, 'users');
+
+	const promises = [];
+
+	if (email) {
+		const emailQuery = query(usersRef, where('email', '==', email));
+		promises.push(getDocs(emailQuery));
+	}
+
+	if (username) {
+		const usernameQuery = query(usersRef, where('userName', '==', username));
+		promises.push(getDocs(usernameQuery));
+	}
+
+	const results = await Promise.all(promises);
+	const exists = results.some(snapshot => !snapshot.empty);
+	console.log('User exists:', exists); // Log the result
+	console.log('Checking email:', email);
+	console.log('Checking username:', username);
+	return exists;
 };
 
 // export const sendOtp = async (phone: string) => {

@@ -5,7 +5,7 @@ import Providers from './providers';
 import React from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
-//TODO aaron statistics on dashboard, communities, posts, jobs, blogs, events, users
+//TODO aaron statistics on dashboard, communities, posts, jobs, articles, events, users
 //TODO aaron Manage features wont be created, but a statistics page would be to display everything
 //TODO SEO aaron metadata customized for "ourlime.com" (hypothetical content)
 
@@ -55,6 +55,8 @@ export default function RootLayout({
 						{children}
 					<Analytics />
 				</Providers>
+				{/* <script src="../path/to/flowbite/dist/flowbite.min.js"></script> */}
+				<script src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"></script>
 			</body>
 		</html>
 	);

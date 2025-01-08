@@ -3,7 +3,12 @@ import { Button } from '@nextui-org/react';
 import Image from 'next/image';
 import { Dispatch, SetStateAction, useState, useCallback } from 'react';
 import 'react-image-crop/dist/ReactCrop.css';
-import ImageCropper from '../ImageCropper';
+import transparentLogo from 'public/images/transparentLogo.png';
+
+
+const totalSteps = 5;
+const currentStep = 2;
+const progressPercentage = (currentStep / totalSteps) * 100;
 
 type SecondStepProps = {
   setStep: Dispatch<SetStateAction<number>>;
@@ -34,40 +39,58 @@ export default function SecondStep({
 
   	return (
 			<div className="step-2 gap- flex flex-col justify-center">
-				<h1 className="text-xl font-bold text-white">Select your avatar</h1>
-
-				<div className="flex flex-col justify-center gap-3 border-2 border-x-0 border-greenTheme bg-black bg-opacity-[50%] px-5 py-4 font-bold text-white sm:border-x-2 md:px-40">
+				
+				<div className="relative w-full px-4 mb-4 mt-6">
+								<div className="w-full bg-gray-300 h-4 rounded-full">
+									<div
+										className="bg-greenTheme h-full relative rounded-full transition-all duration-300"
+										style={{ width: `${progressPercentage}%` }}
+									>
+										<Image
+											src={transparentLogo}
+											alt="Logo"
+											className="absolute top-1 right-0 transform translate-x-1/2 -translate-y-1/2"
+											width={40}
+											height={40}
+										/>
+									</div>
+								</div>
+							</div>
+				<div className="flex flex-col justify-center gap-3 border-1 border-x-0 border-greenTheme bg-black bg-opacity-[50%] px-5 py-4 font-bold text-white sm:border-x-2 lg:px-0  ">
+				<h1 className="text-xl text-center font-bold text-white">Select your avatar</h1>
 					{/* Avatars & Image Upload*/}
 					<div
 						className={`${imageUpload ? 'hidden' : 'block'} mx-auto flex flex-wrap justify-center`}
 					>
-						<div className="relative flex justify-center gap-4">
+						<div className="relative flex flex-wrap justify-center gap-4 lg:gap-12">
 							<div
 								onClick={() => handleAvatarSelection('cartoonAvatarBlackBoy')}
-								className="relative my-2 w-5/12 cursor-pointer"
+								className="relative my-1  sm:w-4/12 lg:w-3/12  cursor-pointer"
 							>
-								<Image
-									width={150}
-									height={150}
-									className="h-full w-full object-cover opacity-100"
-									src="/images/register/cartoonAvatarBlackBoy.svg"
-									alt="avatar"
-								/>
-								<Image
-									width={50}
-									height={50}
-									className={`${selectedCartoonAvatarBlackBoy ? 'block' : 'hidden'} absolute bottom-0 right-0 w-4/12 object-cover opacity-100`}
-									src="/images/register/check.svg"
-									alt="avatar"
-								/>
+							<Image
+							width={200}
+							height={200}
+							className="h-full w-full object-cover opacity-100"
+							src="/images/register/cartoonAvatarBlackBoy.svg"
+							alt="avatar"
+							/>
+
+
+							<Image
+							width={50}
+							height={50}
+							className={`${selectedCartoonAvatarBlackBoy ? 'block' : 'hidden'} absolute bottom-0 right-0 w-4/12 object-cover opacity-100`}
+							src="/images/register/check.svg"
+							alt="avatar"
+							/>
 							</div>
 							<div
 								onClick={() => handleAvatarSelection('cartoonAvatarWhiteBoy')}
-								className="relative my-2 w-5/12 cursor-pointer"
+								className="relative my-1  sm:w-4/12  lg:w-3/12 cursor-pointer"
 							>
 								<Image
-									width={150}
-									height={150}
+									width={200}
+									height={200}
 									className="h-full w-full object-cover opacity-100"
 									src="/images/register/cartoonAvatarWhiteBoy.svg"
 									alt="avatar"
@@ -80,16 +103,13 @@ export default function SecondStep({
 									alt="avatar"
 								/>
 							</div>
-						</div>
-
-						<div className="flex justify-center gap-4">
 							<div
 								onClick={() => handleAvatarSelection('cartoonAvatarBlackGirl')}
-								className="relative my-2 w-5/12 cursor-pointer"
+								className="relative my-1 sm:w-4/12 lg:w-3/12 cursor-pointer"
 							>
 								<Image
-									width={150}
-									height={150}
+									width={200}
+									height={200}
 									className="h-full w-full object-cover opacity-100"
 									src="/images/register/cartoonAvatarBlackGirl.svg"
 									alt="avatar"
@@ -102,13 +122,14 @@ export default function SecondStep({
 									alt="avatar"
 								/>
 							</div>
-							<div
+						
+						<div
 								onClick={() => handleAvatarSelection('cartoonAvatarWhiteGirl')}
-								className="relative my-2 w-5/12 cursor-pointer"
+								className="relative my-1 sm:w-4/12 lg:w-3/12 cursor-pointer"
 							>
 								<Image
-									width={150}
-									height={150}
+									width={200}
+									height={200}
 									className="h-full w-full object-cover opacity-100"
 									src="/images/register/cartoonAvatarWhiteGirl.svg"
 									alt="avatar"
@@ -121,16 +142,13 @@ export default function SecondStep({
 									alt="avatar"
 								/>
 							</div>
-						</div>
-
-						<div className="flex justify-center gap-4">
 							<div
 								onClick={() => handleAvatarSelection('realisticAvatarWhiteMan')}
-								className="relative my-2 w-5/12 cursor-pointer"
+								className="relative my-1 sm:w-4/12 lg:w-3/12 cursor-pointer"
 							>
 								<Image
-									width={150}
-									height={150}
+									width={200}
+									height={200}
 									className="h-full w-full object-cover opacity-100"
 									src="/images/register/realisticAvatarWhiteMan.svg"
 									alt="avatar"
@@ -147,11 +165,11 @@ export default function SecondStep({
 								onClick={() =>
 									handleAvatarSelection('realisticAvatarBlackWoman')
 								}
-								className="relative my-2 w-5/12 cursor-pointer"
+								className="relative my-1 sm:w-4/12 lg:w-3/12 cursor-pointer"
 							>
 								<Image
-									width={150}
-									height={150}
+									width={200}
+									height={200}
 									className="h-full w-full object-cover opacity-100"
 									src="/images/register/realisticAvatarBlackWoman.svg"
 									alt="avatar"
@@ -170,11 +188,11 @@ export default function SecondStep({
 					{/* <ImageCropper /> */}
 
 					<h3
-						// onClick={() => setImageUpload((prev) => !prev)}
+						onClick={() => setStep(2.1)}
 						className="text-bold cursor-pointer text-center text-lg text-greenTheme underline"
 					>
 						{/* {imageUpload ? 'Select your own avatar' : 'Use your own picture.'} */}
-						Select your own avatar
+						Use your own picture
 					</h3>
 				</div>
 

@@ -1,5 +1,22 @@
 import { StaticImageData } from "next/image";
 
+
+export type Articles = {
+  id: string;
+  title: string;
+  image: string;
+  date: { seconds: number; nanoseconds: number };
+  author: string;
+  category: string;
+};
+
+export type Categories = {
+  id: string;
+  name: string;
+};
+
+
+
 export type Metadata = {
   metadataBase: string;
   title: string;
