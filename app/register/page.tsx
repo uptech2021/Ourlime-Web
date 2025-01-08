@@ -25,7 +25,7 @@ import 'react-phone-number-input/style.css';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 
 export default function Page() {
-	const [step, setStep] = useState(3);
+	const [step, setStep] = useState(1);
 	const [prevStep, setPrevStep] = useState(1);
 	const router = useRouter();
 
