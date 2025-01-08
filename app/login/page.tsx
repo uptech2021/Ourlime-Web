@@ -4,7 +4,7 @@ import AnimatedLogo from '@/components/AnimatedLoader';
 import { auth } from '@/firebaseConfig';
 import { homeRedirect } from '@/helpers/Auth';
 import { Button } from '@nextui-org/react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
+import { signInWithEmailAndPassword, sendEmailVerification } from 'firebase/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -33,40 +33,41 @@ export default function LoginPage() {
 
 	async function handleLogin(e: React.FormEvent) {
 		e.preventDefault();
-		setError('');
+		setError(''); // Clear previous errors
+	
 		let formValid = true;
-
+	
+		// Validate email
 		if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
 			setEmailError('Please enter a valid email address.');
 			formValid = false;
 		} else setEmailError('');
-
+	
+		// Validate password
 		if (password.length < 6) {
 			setPasswordError('Password should be at least 6 characters.');
 			formValid = false;
 		} else setPasswordError('');
-
+	
 		// Stop form submission if validation fails
 		if (!formValid) return;
-
+	
 		try {
-			const userCredential = await signInWithEmailAndPassword(
-				auth,
-				email,
-				password
-			);
+			// Attempt to sign in the user
+			const userCredential = await signInWithEmailAndPassword(auth, email, password);
 			const user = userCredential.user;
-
+	
 			if (!user.emailVerified) {
-				// console.log('Email not verified');
-				setError('Please verify your email before logging in.');
+				// Email not verified
+				await sendEmailVerification(user);
+				setError('Your email is not verified. A new verification email has been sent to your inbox.');
 				return;
 			}
-
-			// console.log(user.emailVerified, ' is verified');
-    		window.location.replace('/');
+	
+			// Redirect to the home page
+			window.location.replace('/');
 		} catch (error: any) {
-			// console.error('Login error', error.code);
+			// Handle errors
 			switch (error.code) {
 				case 'auth/user-not-found':
 					setError('No user found with this email.');
@@ -82,9 +83,6 @@ export default function LoginPage() {
 					break;
 				case 'auth/too-many-requests':
 					setError('Too many login attempts. Please try again later.');
-					break;
-				case 'auth/invalid-credential':
-					setError('Invalid credentials provided.');
 					break;
 				default:
 					setError('Something went wrong. Please try again.');
