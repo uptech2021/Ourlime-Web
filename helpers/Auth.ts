@@ -67,16 +67,28 @@ export const handleSignOut = async (router: AppRouterInstance) => {
 	}
 };
 
+// export const fetchProfile = async(uid: string) => {
+// 	try {
+// 		const profileRef = doc(db, 'profiles', uid);
+// 		const profileSnap = await getDoc(profileRef);
+// 		return profileSnap;
+// 	} catch (error) {
+// 		console.error('Error fetching profile:', error);
+// 		return null;
+// 	}
+// };
+
 export const fetchProfile = async(uid: string) => {
-	try {
-		const profileRef = doc(db, 'profiles', uid);
-		const profileSnap = await getDoc(profileRef);
-		return profileSnap;
-	} catch (error) {
-		console.error('Error fetching profile:', error);
-		return null;
-	}
+    try {
+        const profileRef = doc(db, 'users', uid);
+        const profileSnap = await getDoc(profileRef);
+        return profileSnap;
+    } catch (error) {
+        console.error('Error fetching profile:', error);
+        return null;
+    }
 };
+
 
 export const fetchUser = async (uid: string) => {
 	try {
