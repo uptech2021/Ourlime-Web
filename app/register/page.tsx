@@ -114,11 +114,18 @@ export default function Page() {
 	}, []);
 
 	// Verified User Redirect Effect
+	// useEffect(() => {
+	// 	if (user && user.emailVerified) {
+	// 		router.push('/');
+	// 	}
+	// }, [user, router]);
+
 	useEffect(() => {
-		if (user && user.emailVerified) {
-			router.push('/');
+		if (user) {
+			router.push('/'); 
 		}
 	}, [user, router]);
+	
 
 	// Step Animation Effect
 	useEffect(() => {
@@ -136,11 +143,18 @@ export default function Page() {
 		setIsStepValid(valid);
 	});
 
+	// useEffect(() => {
+	// 	if (user && user.emailVerified) {
+	// 		router.push('/');
+	// 	}
+	// }, [user, router]);
+
 	useEffect(() => {
-		if (user && user.emailVerified) {
-			router.push('/');
+		if (user) {
+			router.push('/'); 
 		}
 	}, [user, router]);
+	
 
 
 	// Animation Functions
@@ -381,12 +395,15 @@ export default function Page() {
 			const profileImageRef = doc(collection(db, 'profileImages'));
 			const imageURL = await uploadFile(
 				new File(
-					[await fetch(`/images/register/${profilePicture}`).then(res => res.blob())],
+					[await fetch(`/images/profiles/${profilePicture}`).then(res => res.blob())],
 					profilePicture,
 					{ type: 'image/svg+xml' }
 				),
 				`images/profilePictures/${profilePicture}`
 			);
+			
+
+			
 
 			await setDoc(profileImageRef, {
 				imageURL,
@@ -452,46 +469,104 @@ export default function Page() {
 		};
 
 
+		// try {
+		// 	console.log('Creating user authentication...');
+		// 	const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
+		// 	const user = userCredentials.user;
+
+		// 	console.log('User created successfully:', user.uid);
+
+		// 	const actionCodeSettings = {
+		// 		url: 'http://localhost:3000/login',
+		// 		handleCodeInApp: true, // Ensures the link is opened within your app
+		// 	};
+
+
+
+		// 	console.log('Attempting to send verification email...');
+		// 	await sendEmailVerification(user, actionCodeSettings);
+		// 	console.log('Verification email sent successfully');
+		// 	console.log('Email sent to:', user.email);
+		// 	console.log('Verification URL:', actionCodeSettings.url);
+
+		// 	console.log('Creating documents...');
+		// 	await Promise.all([
+		// 		createUserDocument(user),
+		// 		createAddressDocument(user),
+		// 		createProfileImageDocument(user),
+		// 		createContactDocument(user),
+		// 		createInterestsDocuments(user)
+		// 	]);
+
+		// 	setVerificationMessage('Check your email to verify your account');
+		// 	setTimeout(() => {
+		// 		router.push('/login');
+		// 	}, 5000); // 5 second delay
+
+
+		// } catch (error) {
+		// 	console.error('Registration error:', error);
+		// 	if (newUser) {
+		// 		try {
+		// 			await deleteDoc(doc(db, 'users', newUser.uid));
+		// 			await newUser.delete();
+		// 		} catch (deleteError) {
+		// 			console.error('Error cleaning up failed registration:', deleteError);
+		// 		}
+		// 	}
+
+		// 	switch (error.code) {
+		// 		case 'auth/email-already-in-use':
+		// 			setError('Email already in use.');
+		// 			break;
+		// 		case 'auth/invalid-email':
+		// 			setError('Invalid email.');
+		// 			break;
+		// 		case 'auth/operation-not-allowed':
+		// 			setError('Operation not allowed.');
+		// 			break;
+		// 		case 'auth/weak-password':
+		// 			setError('Weak password.');
+		// 			break;
+		// 		case 'auth/too-many-requests':
+		// 			setError('Too many attempts. Please try again later.');
+		// 			break;
+		// 		default:
+		// 			setError('Something went wrong.');
+		// 			break;
+		// 	}
+		// 	setValidationError('An error occurred during registration. Please try again.');
+		// }
+
 		try {
+
 			console.log('Creating user authentication...');
 			const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
 			const user = userCredentials.user;
-			
+
 			console.log('User created successfully:', user.uid);
-			
-			const actionCodeSettings = {
-				url: process.env.NODE_ENV === 'development' 
-					? 'http://localhost:3000/login'
-					: 'https://ourlime.vercel.app/login',
-				handleCodeInApp: true
-			};
-			
-			
-			console.log('Attempting to send verification email...');
-			await sendEmailVerification(user, actionCodeSettings);
-			console.log('Verification email sent successfully');
-			console.log('Email sent to:', user.email);
-			console.log('Verification URL:', actionCodeSettings.url);
-		
-			console.log('Creating documents...');
+			console.log('Creating Documents ....');
 			await Promise.all([
 				createUserDocument(user),
 				createAddressDocument(user),
 				createProfileImageDocument(user),
 				createContactDocument(user),
-				createInterestsDocuments(user)
+				createInterestsDocuments(user),
+				createAuthenticationDocument(user)
 			]);
 
-			setVerificationMessage('Check your email to verify your account');
+			// Step 6: Redirect to login page after a delay
 			setTimeout(() => {
 				router.push('/login');
-			}, 5000); // 5 second delay
-			
+			}, 5000); // 5-second delay
 
 		} catch (error) {
 			console.error('Registration error:', error);
+
+			// Step 7: Rollback created user if registration fails
 			if (newUser) {
 				try {
+					console.log('Cleaning up failed registration...');
 					await deleteDoc(doc(db, 'users', newUser.uid));
 					await newUser.delete();
 				} catch (deleteError) {
@@ -499,6 +574,7 @@ export default function Page() {
 				}
 			}
 
+			// Step 8: Handle known Firebase error codes
 			switch (error.code) {
 				case 'auth/email-already-in-use':
 					setError('Email already in use.');
@@ -519,9 +595,10 @@ export default function Page() {
 					setError('Something went wrong.');
 					break;
 			}
+
+			// Step 9: Notify user of registration error
 			setValidationError('An error occurred during registration. Please try again.');
 		}
-
 
 
 
