@@ -11,7 +11,7 @@ import StoriesSlider from '@/components/home/StoriesSlider';
 import PostFilter from '@/components/home/posts/PostFilter';
 import PostForm from '@/components/home/posts/PostForm';
 import Posts from '@/components/home/posts/Posts';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { ResizeListener } from '@/helpers/Resize';
 import { ProfileData, SocialPosts, Stories, UserData } from '@/types/global';

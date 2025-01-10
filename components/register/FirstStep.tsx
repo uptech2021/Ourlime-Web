@@ -2,7 +2,7 @@
 
 import { Button, Checkbox, DatePicker, Select, SelectItem } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Dispatch, SetStateAction } from 'react';
 import styles from "./register.module.css"

@@ -16,7 +16,7 @@ import { useSearchParams } from 'next/navigation';
 import { fetchArticles } from '@/helpers/fetchArticles';
 import type { Articles, Categories as CategoryType } from '@/types/global';
 import { collection, getDocs } from 'firebase/firestore';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 
 export const dynamic = 'force-dynamic'
 

@@ -1,7 +1,7 @@
 'use client';
 
 import AnimatedLogo from '@/components/AnimatedLoader';
-import { auth } from '@/firebaseConfig';
+import { auth } from '@/lib/firebaseConfig';
 import { homeRedirect } from '@/helpers/Auth';
 import { Button } from '@nextui-org/react';
 import { signInWithEmailAndPassword } from 'firebase/auth';

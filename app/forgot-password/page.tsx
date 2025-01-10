@@ -1,7 +1,7 @@
 "use client";
 
 import Navbar from "@/comm/Navbar";
-import { auth } from "@/firebaseConfig";
+import { auth } from "@/lib/firebaseConfig";
 import { Input } from "@nextui-org/react";
 import { sendPasswordResetEmail } from "firebase/auth";
 import Link from "next/link";

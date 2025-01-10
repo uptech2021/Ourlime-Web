@@ -1,6 +1,6 @@
 'use client'
 import { Button, Input, Select, SelectItem } from '@nextui-org/react';
-import { auth, db } from '@/firebaseConfig'
+import { auth, db } from '@/lib/firebaseConfig'
 import { doc, setDoc, getDoc } from 'firebase/firestore'
 import { ResizeListener } from '@/helpers/Resize'
 import { collection, query, where, getDocs } from 'firebase/firestore';
