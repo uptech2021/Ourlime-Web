@@ -1,31 +1,30 @@
 'use client';
 
 // Imports
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { gsap } from 'gsap';
+import { checkUserExists } from '@/helpers/Auth';
+import { uploadFile } from '@/helpers/firebaseStorage';
+import { auth, db } from '@/lib/firebaseConfig';
 import {
 	createUserWithEmailAndPassword,
 	onAuthStateChanged,
-	sendEmailVerification,
-	User,
+	User
 } from 'firebase/auth';
-import { deleteDoc, doc, setDoc, collection } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebaseConfig';
-import { checkUserExists, handleSignOut } from '@/helpers/Auth';
-import { uploadFile } from '@/helpers/firebaseStorage';
+import { collection, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { gsap } from 'gsap';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
 // Component imports
 import AnimatedLogo from '@/components/AnimatedLoader';
-import FirstStep from '@/components/register/FirstStep';
-import SecondStep from '@/components/register/SecondStep';
-import ThirdStep from '@/components/register/ThirdStep';
-import SecondStepOptional from '@/components/register/SecondStepOptional';
-import FourthStep from '@/components/register/FourthStep';
-import SixthStep from '@/components/register/SixthStep';
 import Authentication from '@/components/register/Authentication';
+import FirstStep from '@/components/register/FirstStep';
+import FourthStep from '@/components/register/FourthStep';
+import SecondStep from '@/components/register/SecondStep';
+import SecondStepOptional from '@/components/register/SecondStepOptional';
+import SixthStep from '@/components/register/SixthStep';
+import ThirdStep from '@/components/register/ThirdStep';
 
 
 
@@ -105,42 +104,43 @@ export default function Page() {
 	const [frontFileError, setFrontFileError] = useState('');
 	const [backFileError, setBackFileError] = useState('');
 
-	// Validation Functions
-	const validateStep6 = () => {
-		let formValid = true;
-
-		if (!faceFileName) {
-			console.log('Face file is missing.');
-			setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
-			formValid = false;
-		} else {
-			setFaceFileError('');
-		}
-
-		if (!frontFileName) {
-			console.log('Front file is missing.');
-			setFrontFileError('Please upload a photo of the front of your ID.');
-			formValid = false;
-		} else {
-			setFrontFileError('');
-		}
-
-		if (!backFileName) {
-			console.log('Back file is missing.');
-			setBackFileError('Please upload a photo of the back of your ID.');
-			formValid = false;
-		} else {
-			setBackFileError('');
-		}
-
-		return formValid;
-	};
+	
 
 	// Step 6 Validation Effect
 	useEffect(() => {
+		const validateStep6 = () => { 
+			let formValid = true;
+
+			if (!faceFileName) {
+				console.log('Face file is missing.');
+				setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
+				formValid = false;
+			} else {
+				setFaceFileError('');
+			}
+
+			if (!frontFileName) {
+				console.log('Front file is missing.');
+				setFrontFileError('Please upload a photo of the front of your ID.');
+				formValid = false;
+			} else {
+				setFrontFileError('');
+			}
+
+			if (!backFileName) {
+				console.log('Back file is missing.');
+				setBackFileError('Please upload a photo of the back of your ID.');
+				formValid = false;
+			} else {
+				setBackFileError('');
+			}
+
+			return formValid;
+		};
+
 		const valid = validateStep6();
 		setIsStepValid(valid);
-	}, [validateStep6]);
+	}, [faceFileName, frontFileName, backFileName]);
 
 	// Authentication Check Effect
 	useEffect(() => {
