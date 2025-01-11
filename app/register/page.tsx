@@ -28,6 +28,8 @@ import SixthStep from '@/components/register/SixthStep';
 import Authentication from '@/components/register/Authentication';
 
 
+
+
 export default function Page() {
 	// Navigation and Step Control
 	const [step, setStep] = useState(1);
@@ -370,33 +372,38 @@ export default function Page() {
 			console.log('Creating profile image documents...');
 			// Create profile image with auto-generated ID
 			const profileImageRef = doc(collection(db, 'profileImages'));
+			
+			// First upload the image and get URL
 			const imageURL = await uploadFile(
 				new File(
-					[await fetch(`/images/profiles/${profilePicture}`).then(res => res.blob())],
+					[await fetch(`/images/register/${profilePicture}`).then(res => res.blob())],
 					profilePicture,
 					{ type: 'image/svg+xml' }
 				),
-				`images/profilePictures/${profilePicture}`
+				`profiles/${user.uid}/${profilePicture}`
 			);
-			
-
-			
-
+		
+			// Then create the document with the URL
 			await setDoc(profileImageRef, {
-				imageURL,
+				imageURL, // Add this field
 				typeOfImage: 'image',
 				userId: user.uid,
 				createdAt: new Date(),
 				updatedAt: new Date()
 			});
-
+		
 			// Create profileImageSetAs with its own auto-generated ID
 			const profileImageSetAsRef = doc(collection(db, 'profileImageSetAs'));
 			await setDoc(profileImageSetAsRef, {
 				setAs: 'profile',
-				profileImageId: profileImageRef.id
+				profileImageId: profileImageRef.id,
+				userId: user.uid // Add userId for security
 			});
 		};
+		
+
+
+		
 
 		const createContactDocument = async (user: User) => {
 			console.log('Creating contact documents...');
