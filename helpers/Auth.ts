@@ -1,5 +1,5 @@
 import { signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '@/lib/firebaseConfig';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 

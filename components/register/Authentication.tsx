@@ -41,7 +41,7 @@ export default function Authentication({ setStep, handleSubmit }) {
                 <div className="w-3/4 mx-auto">
                     <h1 className="text-3xl font-bold text-white text-center mt-8">Welcome to Ourlime Communities Network!</h1>
                     <p className="text-center mb-6 text-white">
-                        At Ourlime, your safety and experience are our top priorities. To ensure a secure and vibrant community, we require all users to authenticate their identity. Here's why this step is important:
+                        At Ourlime, your safety and experience are our top priorities. To ensure a secure and vibrant community, we require all users to authenticate their identity. Here&apos;s why this step is important:
                     </p>
 
                     <ol className="list-decimal space-y-6 mb-6 text-left max-w-lg text-white">

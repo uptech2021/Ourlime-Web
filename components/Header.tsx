@@ -1,5 +1,5 @@
 'use client';
-import { auth } from '@/firebaseConfig';
+import { auth } from '@/lib/firebaseConfig';
 import { Avatar, Badge, Skeleton } from '@nextui-org/react';
 import { onAuthStateChanged } from 'firebase/auth';
 import { Bell, MessageSquareMore, Search, Settings, UserPlus } from 'lucide-react';

@@ -1,6 +1,6 @@
 'use client';
 import SettingsSidebar from "@/components/settings/nav/page";
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '@/lib/firebaseConfig';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';

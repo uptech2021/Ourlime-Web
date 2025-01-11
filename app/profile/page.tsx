@@ -7,7 +7,7 @@ import EditProfileModal from '@/components/profile/EditProfileModal';
 import About from '@/components/profile/filters/About';
 import FollowModal from '@/components/profile/FollowModal';
 import ProfilePosts from '@/components/profile/profilePosts';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { loginRedirect } from '@/helpers/Auth';
 import communityImage2 from '@/public/images/home/computer.webp';
 import { Communities, Follower, Following, ProfileData, SocialPosts, UserData } from '@/types/global';

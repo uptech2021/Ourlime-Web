@@ -11,7 +11,7 @@ import {
 	User,
 } from 'firebase/auth';
 import { deleteDoc, doc, setDoc, collection } from 'firebase/firestore';
-import { auth, db } from '@/firebaseConfig';
+import { auth, db } from '@/lib/firebaseConfig';
 import { checkUserExists, handleSignOut } from '@/helpers/Auth';
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { isValidPhoneNumber } from 'react-phone-number-input';
@@ -105,6 +105,42 @@ export default function Page() {
 	const [frontFileError, setFrontFileError] = useState('');
 	const [backFileError, setBackFileError] = useState('');
 
+	// Validation Functions
+	const validateStep6 = () => {
+		let formValid = true;
+
+		if (!faceFileName) {
+			console.log('Face file is missing.');
+			setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
+			formValid = false;
+		} else {
+			setFaceFileError('');
+		}
+
+		if (!frontFileName) {
+			console.log('Front file is missing.');
+			setFrontFileError('Please upload a photo of the front of your ID.');
+			formValid = false;
+		} else {
+			setFrontFileError('');
+		}
+
+		if (!backFileName) {
+			console.log('Back file is missing.');
+			setBackFileError('Please upload a photo of the back of your ID.');
+			formValid = false;
+		} else {
+			setBackFileError('');
+		}
+
+		return formValid;
+	};
+
+	// Step 6 Validation Effect
+	useEffect(() => {
+		const valid = validateStep6();
+		setIsStepValid(valid);
+	}, [validateStep6]);
 
 	// Authentication Check Effect
 	useEffect(() => {
@@ -115,19 +151,11 @@ export default function Page() {
 		return () => unsubscribe();
 	}, []);
 
-	// Verified User Redirect Effect
-	// useEffect(() => {
-	// 	if (user && user.emailVerified) {
-	// 		router.push('/');
-	// 	}
-	// }, [user, router]);
-
 	useEffect(() => {
 		if (user) {
 			router.push('/'); 
 		}
 	}, [user, router]);
-	
 
 	// Step Animation Effect
 	useEffect(() => {
@@ -138,26 +166,6 @@ export default function Page() {
 		}
 		setPrevStep(step);
 	}, [step, prevStep]);
-
-	// Step 6 Validation Effect
-	useEffect(() => {
-		const valid = validateStep6();
-		setIsStepValid(valid);
-	});
-
-	// useEffect(() => {
-	// 	if (user && user.emailVerified) {
-	// 		router.push('/');
-	// 	}
-	// }, [user, router]);
-
-	useEffect(() => {
-		if (user) {
-			router.push('/'); 
-		}
-	}, [user, router]);
-	
-
 
 	// Animation Functions
 	const animateStepForward = (currentStep: number) => {
@@ -274,37 +282,6 @@ export default function Page() {
 		}
 
 		setIsStep3Valid(formValid);
-		return formValid;
-	};
-
-	const validateStep6 = () => {
-		let formValid = true;
-
-		if (!faceFileName) {
-			console.log('Face file is missing.');
-			setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
-			formValid = false;
-		} else {
-			setFaceFileError('');
-		}
-
-		if (!frontFileName) {
-			console.log('Front file is missing.');
-			setFrontFileError('Please upload a photo of the front of your ID.');
-			formValid = false;
-		} else {
-			setFrontFileError('');
-		}
-
-		if (!backFileName) {
-			console.log('Back file is missing.');
-			setBackFileError('Please upload a photo of the back of your ID.');
-			formValid = false;
-		} else {
-			setBackFileError('');
-		}
-
-		console.log('Step 6 validation result:', formValid);
 		return formValid;
 	};
 
@@ -611,8 +588,6 @@ export default function Page() {
 
 	};
 
-
-
 	const handleRegistrationError = (error: any) => {
 		if (newUser) {
 			try {
@@ -822,4 +797,3 @@ export default function Page() {
 		</div>
 	);
 }
-

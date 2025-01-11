@@ -1,7 +1,7 @@
 "use client"
 
 import { usePathname } from 'next/navigation';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { doc, updateDoc } from 'firebase/firestore';
 import { useEffect } from 'react';
 

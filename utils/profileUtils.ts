@@ -1,6 +1,6 @@
 import { collection, getDocs, doc, getDoc, query, where, documentId, updateDoc } from 'firebase/firestore';
 import { User, updateProfile } from 'firebase/auth';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { ProfileData, UserData, SocialPosts, Communities, Follower, Following } from '@/types/global';
 
 export const fetchUserData = async (currentUser: User): Promise<{ profileData: ProfileData; userData: UserData } | null> => {
