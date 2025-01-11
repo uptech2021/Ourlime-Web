@@ -140,7 +140,7 @@ export default function Page() {
 	useEffect(() => {
 		const valid = validateStep6();
 		setIsStepValid(valid);
-	}, [validateStep6]);
+	}, []);
 
 	// Authentication Check Effect
 	useEffect(() => {
