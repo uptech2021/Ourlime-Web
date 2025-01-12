@@ -1,31 +1,19 @@
-
-
-
 'use client';
 
 import { auth, db, storage } from '@/lib/firebaseConfig';
-import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
-import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
-import { useEffect, useState, useRef, MouseEvent, TouchEvent } from 'react';
-import { handleSignOut } from '@/helpers/Auth';
+import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
-import { AtSign, Bell, ChevronLeft, ChevronRight, Compass, Globe, Hash, Heart, HelpCircle, LogOut, MessageCircle, MessageSquare, Plus, Search, Settings, Share, Smile, Upload, User, UserPlus, Wallet, X } from 'lucide-react';
+import { AtSign, Bell, Compass, Globe, Hash, Heart, HelpCircle, LogOut, MessageCircle, MessageSquare, Plus, Search, Settings, Share, Smile, Upload, User, UserPlus, Wallet, X } from 'lucide-react';
 import {
 	Menu, Grid, Image as ImageIcon, Video,
 	Music, FileText, Link2, Calendar, BarChart,
 	BookOpen, Users, Newspaper, TrendingUp, Star,
 	Bookmark
 } from 'lucide-react';
-
-
-import { useEditor, EditorContent } from '@tiptap/react';
-import StarterKit from '@tiptap/starter-kit';
-import BulletList from '@tiptap/extension-bullet-list';
-import OrderedList from '@tiptap/extension-ordered-list';
-import ListItem from '@tiptap/extension-list-item';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 
@@ -62,21 +50,21 @@ type SearchUser = {
 }
 
 type Post = {
-    id: string;
-    caption: string;
-    description: string;
-    visibility: string;
-    createdAt: Date;
-    userId: string;
-    hashtags: Array<string>;
-    media: string;
-    userReferences: Array<string>;
-    user: {
-        firstName: string;
-        lastName: string;
-        userName: string;
-        profileImage?: string;
-    };
+	id: string;
+	caption: string;
+	description: string;
+	visibility: string;
+	createdAt: Date;
+	userId: string;
+	hashtags: Array<string>;
+	media: string;
+	userReferences: Array<string>;
+	user: {
+		firstName: string;
+		lastName: string;
+		userName: string;
+		profileImage?: string;
+	};
 }
 
 type PostData = {
@@ -105,6 +93,23 @@ export default function Page() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [allUsers, setAllUsers] = useState<SearchUser[]>([]);
 	const [filteredUsers, setFilteredUsers] = useState<SearchUser[]>([]);
+	const sliderRef = useRef<HTMLDivElement>(null);
+	const [isDown, setIsDown] = useState(false);
+	const [startX, setStartX] = useState(0);
+	const [scrollLeft, setScrollLeft] = useState(0);
+	const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+	const [caption, setCaption] = useState('');
+	const [description, setDescription] = useState('');
+	const [visibility, setVisibility] = useState('public');
+	const [posts, setPosts] = useState<Post[]>([]);
+	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
+	const [previews, setPreviews] = useState<string[]>([]);
+	const [selectedShort, setSelectedShort] = useState<File | null>(null);
+	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
+	const dropdownRef = useRef(null);
+	const [selectedUser, setSelectedUser] = useState(null);
+	const [showUserModal, setShowUserModal] = useState(false);
+
 
 	const navLinks = [
 		{ name: 'Home', href: '/' },
@@ -283,13 +288,6 @@ export default function Page() {
 		setFilteredUsers(filtered);
 	};
 
-
-	// Slider states and refs
-	const sliderRef = useRef<HTMLDivElement>(null);
-	const [isDown, setIsDown] = useState(false);
-	const [startX, setStartX] = useState(0);
-	const [scrollLeft, setScrollLeft] = useState(0);
-
 	// Mouse event handlers
 	const mouseDown = (e: React.MouseEvent) => {
 		setIsDown(true);
@@ -349,15 +347,6 @@ export default function Page() {
 		MozUserSelect: 'none',
 		msUserSelect: 'none'
 	} as const;
-
-
-	const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-
-
-	// Add these states for form handling
-	const [caption, setCaption] = useState('');
-	const [description, setDescription] = useState('');
-	const [visibility, setVisibility] = useState('public');
 
 
 	const handleCreatePost = async () => {
@@ -630,12 +619,6 @@ export default function Page() {
 		);
 	};
 
-	// Add this state at the top with other states
-	const [posts, setPosts] = useState<Post[]>([]);
-	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-	const [previews, setPreviews] = useState<string[]>([]);
-
-
 	const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const captionInput = document.getElementById('caption-input') as HTMLInputElement;
 		const descriptionInput = document.getElementById('description-input') as HTMLTextAreaElement;
@@ -665,16 +648,11 @@ export default function Page() {
 		}, 0);
 	};
 
-
-	// Handle file removal
 	const removeFile = (index: number) => {
 		setSelectedFiles(prev => prev.filter((_, i) => i !== index));
 		setPreviews(prev => prev.filter((_, i) => i !== index));
 	};
 
-
-
-	// Add this useEffect to fetch posts
 	useEffect(() => {
 		const fetchPosts = async () => {
 			const postsRef = collection(db, 'feedPosts');
@@ -725,19 +703,19 @@ export default function Page() {
 					}));
 
 					return {
-                        id: postDoc.id,
-                        caption: postData.caption,
-                        description: postData.description,
-                        visibility: postData.visibility,
-                        createdAt: postData.createdAt.toDate(),
-                        userId: postData.userId,
-                        hashtags: postData.hashtags || [],
-                        media,
-                        user: {
-                            ...userData,
-                            profileImage: profileImage?.imageURL,
-                        },
-                    } as unknown as Post;
+						id: postDoc.id,
+						caption: postData.caption,
+						description: postData.description,
+						visibility: postData.visibility,
+						createdAt: postData.createdAt.toDate(),
+						userId: postData.userId,
+						hashtags: postData.hashtags || [],
+						media,
+						user: {
+							...userData,
+							profileImage: profileImage?.imageURL,
+						},
+					} as unknown as Post;
 				})
 			);
 
@@ -746,8 +724,6 @@ export default function Page() {
 
 		fetchPosts();
 	}, []);
-
-
 
 	const PostMedia = ({ media }) => {
 		const [activeIndex, setActiveIndex] = useState(0);
@@ -886,9 +862,6 @@ export default function Page() {
 			</div>
 		);
 	};
-
-	const [selectedShort, setSelectedShort] = useState<File | null>(null);
-
 
 
 	const ShortsSection = () => {
@@ -1087,14 +1060,6 @@ export default function Page() {
 		);
 	};
 
-
-
-	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
-
-
-	// Add this at the top level of your component
-	const dropdownRef = useRef(null);
-
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -1185,9 +1150,6 @@ export default function Page() {
 	);
 
 
-	const [selectedUser, setSelectedUser] = useState(null);
-	const [showUserModal, setShowUserModal] = useState(false);
-
 	const handleUserClick = (user) => {
 		setSelectedUser(user);
 		setShowUserModal(true);
@@ -1271,7 +1233,6 @@ export default function Page() {
 
 		</>
 	);
-
 
 	return (
 		<div className="min-h-screen bg-gray-100">
