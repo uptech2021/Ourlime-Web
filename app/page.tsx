@@ -1,8 +1,9 @@
 
 
+
 'use client';
 
-import { auth, db, storage } from '@/firebaseConfig';
+import { auth, db, storage } from '@/lib/firebaseConfig';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, getDocs, limit, orderBy, query, where } from 'firebase/firestore';
@@ -28,8 +29,7 @@ import ListItem from '@tiptap/extension-list-item';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 
 
-
-interface UserData {
+type UserData = {
 	id: string;
 	firstName: string;
 	lastName: string;
@@ -44,7 +44,7 @@ interface UserData {
 	createdAt: Date;
 }
 
-interface ProfileImage {
+type ProfileImage = {
 	id: string;
 	imageURL: string;
 	userId: string;
@@ -53,7 +53,7 @@ interface ProfileImage {
 	updatedAt: Date;
 }
 
-interface SearchUser {
+type SearchUser = {
 	id: string;
 	userName: string;
 	firstName: string;
@@ -61,22 +61,25 @@ interface SearchUser {
 	profileImage?: string;
 }
 
-interface Post {
-	id: string;
-	caption: string;
-	description: string;
-	visibility: string;
-	createdAt: Date;
-	userId: string;
-	user: {
-		firstName: string;
-		lastName: string;
-		userName: string;
-		profileImage?: string;
-	};
+type Post = {
+    id: string;
+    caption: string;
+    description: string;
+    visibility: string;
+    createdAt: Date;
+    userId: string;
+    hashtags: Array<string>;
+    media: string;
+    userReferences: Array<string>;
+    user: {
+        firstName: string;
+        lastName: string;
+        userName: string;
+        profileImage?: string;
+    };
 }
 
-interface PostData {
+type PostData = {
 	userId: string;
 	caption: string;
 	description: string;
@@ -85,7 +88,7 @@ interface PostData {
 }
 
 
-interface User {
+type User = {
 	id: string;
 	firstName: string;
 	lastName: string;
@@ -722,14 +725,19 @@ export default function Page() {
 					}));
 
 					return {
-						id: postDoc.id,
-						...postData,
-						media,
-						user: {
-							...userData,
-							profileImage: profileImage?.imageURL
-						}
-					};
+                        id: postDoc.id,
+                        caption: postData.caption,
+                        description: postData.description,
+                        visibility: postData.visibility,
+                        createdAt: postData.createdAt.toDate(),
+                        userId: postData.userId,
+                        hashtags: postData.hashtags || [],
+                        media,
+                        user: {
+                            ...userData,
+                            profileImage: profileImage?.imageURL,
+                        },
+                    } as unknown as Post;
 				})
 			);
 
@@ -1490,7 +1498,7 @@ export default function Page() {
 
 							<div className="text-left pb-2 mb-4">
 								<div className="border-b border-gray-300 py-2">
-									<span className="text-gray-500">Tell us what's on your mind</span>
+									<span className="text-gray-500">Tell us what&apos;s on your mind</span>
 								</div>
 							</div>
 
