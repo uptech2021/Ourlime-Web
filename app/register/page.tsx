@@ -11,7 +11,7 @@ import {
 import { collection, deleteDoc, doc, setDoc } from 'firebase/firestore';
 import { gsap } from 'gsap';
 import { useRouter } from 'next/navigation';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
@@ -189,9 +189,9 @@ export default function Page() {
 
 		return formValid;
 	};
-	const validateStep6 = () => {
+	const validateStep6 = useCallback(() => {
 		let formValid = true;
-
+	
 		switch (true) {
 			case !faceFileName:
 			case !frontFileName:
@@ -201,9 +201,9 @@ export default function Page() {
 			default:
 				break;
 		}
-
+	
 		return formValid;
-	};
+	}, [faceFileName, frontFileName, backFileName]);
 	const checkIfEmailAlreadyExist = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const _email = e.target.value
 		setEmail(_email);
@@ -361,11 +361,14 @@ export default function Page() {
 			setLoading(false);
 		});
 
-		const valid = validateStep6();
-
-		setIsStepValid(valid);
+		
 		return () => unsubscribe();
 	}, []);
+
+	useEffect(() => {
+		const valid = validateStep6();
+		setIsStepValid(valid);
+	}, [validateStep6]);  
 
 	// Redirect User to home page if logged in
 	useEffect(() => {
