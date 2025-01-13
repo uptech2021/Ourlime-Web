@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import 'react-image-crop/dist/ReactCrop.css';
 import { uploadFile } from '@/helpers/firebaseStorage';
-import { db, auth } from '@/lib/firebaseConfig';
+import { db, auth } from '@/config/firebase';
 import { updateDoc, doc } from 'firebase/firestore';
 import { updateProfile } from 'firebase/auth';
 import { Button, Input } from '@nextui-org/react';

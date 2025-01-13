@@ -2,7 +2,7 @@
 import React, { useEffect, useState } from 'react';
 import { Button, Image } from '@nextui-org/react';
 import { getDocs, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import { Communities } from '@/types/global';
 import CreateCommunities from '@/components/communities/CreateCommunities';
 import { toast, ToastContainer } from 'react-toastify';

@@ -2,7 +2,7 @@
 import React, { useState, useEffect } from 'react';
 import { Input, Select, SelectItem, Button, Checkbox } from "@nextui-org/react";
 import SettingsSidebar from '@/components/settings/nav/page';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import { doc, updateDoc } from 'firebase/firestore';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';

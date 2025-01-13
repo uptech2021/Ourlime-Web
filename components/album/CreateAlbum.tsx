@@ -7,7 +7,7 @@ import { FaTrash, FaImage } from 'react-icons/fa';
 
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { Timestamp } from 'firebase/firestore';
-import { db, auth } from '@/lib/firebaseConfig';
+import { db, auth } from '@/config/firebase';
 import { collection, addDoc, updateDoc } from 'firebase/firestore';
 
 import { ToastContainer, toast } from 'react-toastify';

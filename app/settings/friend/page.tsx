@@ -4,7 +4,7 @@ import { Input } from '@nextui-org/react';
 import { LatLngLiteral, Map as LeafletMap } from 'leaflet';
 import 'leaflet/dist/leaflet.css';
 import FilterBox from '@/components/settings/friend/filterBox';
-import { db, auth } from '@/lib/firebaseConfig';
+import { db, auth } from '@/config/firebase';
 import { collection, query, where, getDocs, doc, getDoc } from 'firebase/firestore';
 import { useEffect, useState, useRef } from 'react';
 

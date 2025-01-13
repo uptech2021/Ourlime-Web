@@ -7,7 +7,7 @@ import { useRouter } from 'next/navigation';
 import { loginRedirect } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
 import { doc, getDoc } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import AnimatedLogo from '@/components/AnimatedLoader';
 
 export default function Authentication() {

@@ -1,6 +1,6 @@
 'use client';
 import { Button } from '@nextui-org/react';
-import { Dispatch, SetStateAction, useRef, useState, RefObject } from 'react';
+import { Dispatch, RefObject, SetStateAction, useState } from 'react';
 
 type SixthStepProps = {
     setStep: Dispatch<SetStateAction<number>>;
@@ -10,14 +10,12 @@ type SixthStepProps = {
     handleSubmit: (e: React.FormEvent) => void;
     isStepValid: boolean;
     validationError: string;
-    successMessage: string;
     faceFileName: string | null;
     frontFileName: string | null;
     backFileName: string | null;
     setFaceFileName: Dispatch<SetStateAction<string | null>>;
     setFrontFileName: Dispatch<SetStateAction<string | null>>;
     setBackFileName: Dispatch<SetStateAction<string | null>>;
-    setIsAuthenticated: Dispatch<SetStateAction<boolean>>;
 };
 
 export default function SixthStep({ 
@@ -26,16 +24,12 @@ export default function SixthStep({
     idFrontRef, 
     idBackRef,
     handleSubmit, 
-    isStepValid, 
-    validationError, 
-    successMessage,
     faceFileName,
     frontFileName,
     backFileName,
     setFaceFileName,
     setFrontFileName,
     setBackFileName,
-    setIsAuthenticated,
     }: SixthStepProps) {
         
     // Separate error states for each file
@@ -125,8 +119,6 @@ export default function SixthStep({
 
         // Validate files and then set authentication status
         if (validateFiles()) {
-            setIsAuthenticated(true); // Set authentication status to true
-
             try {
                 await handleSubmit(e); // Call the handleSubmit function and await it
                 console.log('Registration successful!'); // Log success message
@@ -142,7 +134,6 @@ export default function SixthStep({
             <p className="text-center mb-6 text-white">
                 Please upload the required photos for verification:
             </p>
-            {successMessage && <p className="text-green-500">{successMessage}</p>}
             <form onSubmit={handleFormSubmit} className="flex flex-col w-full max-w-md space-y-4">
                 <div className="flex flex-col rounded-md p-4">
                     <label className="mb-2 text-white">1.) Please upload a photo of yourself holding your ID next to your face:</label>

@@ -3,7 +3,7 @@ import { Button, Input } from '@nextui-org/react';
 import SettingsSidebar from '@/components/settings/nav/page';
 import { ChangeEvent, useState, useEffect } from 'react';
 import { updatePassword, reauthenticateWithCredential, EmailAuthProvider } from 'firebase/auth';
-import { auth } from '@/lib/firebaseConfig';
+import { auth } from '@/config/firebase';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';

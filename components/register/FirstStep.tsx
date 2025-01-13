@@ -2,7 +2,7 @@
 
 import { Button, Checkbox, DatePicker, Select, SelectItem } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Dispatch, SetStateAction } from 'react';
 import styles from "./register.module.css"
@@ -53,8 +53,8 @@ type FirstStepProps = {
 	setGender: Dispatch<SetStateAction<string>>;
 	setFirstName: Dispatch<SetStateAction<string>>;
 	setLastName: Dispatch<SetStateAction<string>>;
-	handleUsernameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
-	handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	checkIfUsernameAlreadyExist: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	checkIfEmailAlreadyExist: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export default function FirstStep({
@@ -78,8 +78,8 @@ export default function FirstStep({
 	setGender,
 	setFirstName,
 	setLastName,
-	handleUsernameChange,
-	handleEmailChange
+	checkIfUsernameAlreadyExist,
+	checkIfEmailAlreadyExist
 }: FirstStepProps) {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
 	const [isTermsOpen, setIsTermsOpen] = useState(false);
@@ -89,6 +89,7 @@ export default function FirstStep({
 	const [termsError, setTermsError] = useState('');
 	const [privacyError, setPrivacyError] = useState('');
 	const [isFormValid, setIsFormValid] = useState(false);
+	const [errorMessage, setErrorMessage] = useState('');
 
 	const [formData, setFormData] = useState({
 		firstName: '',
@@ -110,13 +111,11 @@ export default function FirstStep({
 			formData.gender !== '' &&
 			formData.birthday !== '' &&
 			formData.password.length >= 6 &&
-			formData.password === formData.confirmPassword &&
 			isTermsAccepted &&
 			isPrivacyAccepted;
 
 		setIsFormValid(isValid);
 	}, [formData, isTermsAccepted, isPrivacyAccepted]);
-
 
 	const handleNextStep = () => {
 		if (validateStep() && isFormValid) {
@@ -148,13 +147,20 @@ export default function FirstStep({
 			});
 		}
 	};
-	
-	
+
+	const handleSubmit = (event: React.FormEvent) => {
+		event.preventDefault();
+		if (formData.password !== formData.confirmPassword) {
+			setErrorMessage('Passwords do not match.');
+			return;
+		}
+		setErrorMessage(''); // Clear error message if passwords match
+		handleNextStep();
+	};
 
 	const totalSteps = 5;
 	const currentStep = 1;
 	const progressPercentage = (currentStep / totalSteps) * 100;
-
 
 	return (
 		<div className='step-1 border-none bg-black bg-opacity-[50%] px-5 py-4 mt-5 h-screen relative'>
@@ -177,7 +183,7 @@ export default function FirstStep({
 			<div className="md:text-center mb-4 mt-6">
 				<p className="text-2xl font-bold text-white xl:text-2xl">
 					Welcome to{' '}
-					<p className="text-4xl md:inline md:text-2xl">Ourlime</p>
+					<span className="text-4xl block md:inline md:text-2xl">Ourlime</span>
 				</p>
 				<h2 className="text-2xl font-bold text-white md:text-4xl xl:text-5xl">
 					Create your new account
@@ -190,214 +196,224 @@ export default function FirstStep({
 				</p>
 			</div>
 
-			<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
-				<div className="w-full md:w-1/2">
+			<form onSubmit={handleSubmit}>
+				<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
+					<div className="w-full md:w-1/2">
+						<div className="relative">
+							<input
+								aria-label="First Name"
+								type="text"
+								className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+								placeholder="First Name"
+								onChange={(e) => {
+									setFormData({ ...formData, firstName: e.target.value });
+									setFirstName(e.target.value);
+								}}
+							/>
+							{attemptedNextStep && firstNameError && (
+								<p className="text-bold mt-1 text-left text-red-500">{firstNameError}</p>
+							)}
+						</div>
+					</div>
+					<div className="w-full md:w-1/2">
+						<div className="relative">
+							<input
+								aria-label="Last Name"
+								type="text"
+								className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+								placeholder="Last Name"
+								onChange={(e) => {
+									setFormData({ ...formData, lastName: e.target.value });
+									setLastName(e.target.value);
+								}}
+							/>
+							{attemptedNextStep && lastNameError && (
+								<p className="text-bold mt-1 text-left text-red-500">{lastNameError}</p>
+							)}
+						</div>
+					</div>
+				</div>
+
+				<div className="mb-4">
 					<div className="relative">
 						<input
+							aria-label="Username"
 							type="text"
 							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
-							placeholder="First Name"
+							placeholder="Username"
 							onChange={(e) => {
-								setFormData({ ...formData, firstName: e.target.value });
-								setFirstName(e.target.value);
+								setFormData({ ...formData, userName: e.target.value });
+								checkIfUsernameAlreadyExist(e);
 							}}
+							required
 						/>
-						{attemptedNextStep && firstNameError && (
-							<p className="text-bold mt-1 text-left text-red-500">{firstNameError}</p>
+						{userExistsError && (
+							<p className="text-bold mt-1 text-left text-red-500">{userExistsError}</p>
 						)}
 					</div>
 				</div>
-				<div className="w-full md:w-1/2">
+
+				<div className="mb-4">
 					<div className="relative">
 						<input
-							type="text"
+							aria-label="Email Address"
+							type="email"
 							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
-							placeholder="Last Name"
+							placeholder="Email Address"
 							onChange={(e) => {
-								setFormData({ ...formData, lastName: e.target.value });
-								setLastName(e.target.value);
+								setFormData({ ...formData, email: e.target.value });
+								checkIfEmailAlreadyExist(e);
 							}}
+							required
 						/>
-						{attemptedNextStep && lastNameError && (
-							<p className="text-bold mt-1 text-left text-red-500">{lastNameError}</p>
+						{emailExistsError && (
+							<p className="text-bold mt-1 text-left text-red-500">{emailExistsError}</p>
 						)}
 					</div>
 				</div>
-			</div>
 
-			<div className="mb-4">
-				<div className="relative">
-					<input
-						type="text"
-						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="Username"
+				<div className="mb-4">
+					<Select
+						aria-label="Gender"
+						placeholder="Gender"
 						onChange={(e) => {
-							setFormData({ ...formData, userName: e.target.value });
-							handleUsernameChange(e);
+							setFormData({ ...formData, gender: e.target.value });
+							setGender(e.target.value);
 						}}
-						required
-					/>
-					{userExistsError && (
-						<p className="text-bold mt-1 text-left text-red-500">{userExistsError}</p>
+						className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-white px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500`}
+						classNames={{
+							base: "text-black",
+							trigger: "text-black",
+							value: "text-black"
+						}}
+					>
+						<SelectItem className="greenForm" key="male" value="male">Male</SelectItem>
+						<SelectItem className="greenForm" key="female" value="female">Female</SelectItem>
+						<SelectItem className="greenForm" key="other" value="other">Other</SelectItem>
+					</Select>
+					{attemptedNextStep && genderError && (
+						<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
 					)}
 				</div>
-			</div>
 
-			<div className="mb-4">
-				<div className="relative">
-					<input
-						type="email"
-						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="Email Address"
-						onChange={(e) => {
-							setFormData({ ...formData, email: e.target.value });
-							handleEmailChange(e);
+				<div className="mb-4">
+					<DatePicker
+						aria-label="Birthday"
+						variant='underlined'
+						onChange={(date) => {
+							setFormData({ ...formData, birthday: date.toString() });
+							setBirthday(date.toString());
 						}}
-						required
+						className={`${styles.nextuiInput} w-full rounded-md border bg-white text-black border-none border-gray-300 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
+						showMonthAndYearPickers
+						classNames={{
+							base: "text-black",
+							selectorIcon: "text-black",
+							input: "text-black"
+						}}
 					/>
-					{emailExistsError && (
-						<p className="text-bold mt-1 text-left text-red-500">{emailExistsError}</p>
+					{attemptedNextStep && birthdayError && (
+						<p className="text-bold mt-1 text-left text-red-500">{birthdayError}</p>
 					)}
 				</div>
-			</div>
 
-			<div className="mb-4">
-				<Select
-					placeholder="Gender"
-					onChange={(e) => {
-						setFormData({ ...formData, gender: e.target.value });
-						setGender(e.target.value);
-					}}
-					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-white px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500`}
-					classNames={{
-						base: "text-black",
-						trigger: "text-black",
-						value: "text-black"
-					}}
+				<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
+					<div className="w-full md:w-1/2">
+						<div className="relative">
+							<input
+								aria-label="Password"
+								type="password"
+								className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+								placeholder="Password"
+								onChange={(e) => {
+									const newPassword = e.target.value;
+									setFormData({ ...formData, password: newPassword });
+									setPassword(newPassword);
+								}}
+								required
+							/>
+							{attemptedNextStep && passwordError && (
+								<p className="text-bold mt-1 text-left text-red-500">{passwordError}</p>
+							)}
+						</div>
+					</div>
+					<div className="w-full md:w-1/2">
+						<div className="relative">
+							<input
+								aria-label="Confirm Password"
+								type="password"
+								className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+								placeholder="Confirm Password"
+								onChange={(e) => {
+									const confirmPwd = e.target.value;
+									setFormData({ ...formData, confirmPassword: confirmPwd });
+									setConfirmPassword(confirmPwd);
+								}}
+								required
+							/>
+							{attemptedNextStep && confirmPasswordError && (
+								<p className="text-bold mt-1 text-left text-red-500">{confirmPasswordError}</p>
+							)}
+						</div>
+					</div>
+				</div>
+
+				{errorMessage && <div className="text-red-500">{errorMessage}</div>}
+
+				<div className="justify-center items-center md:flex flex-col w-full">
+					<div className="flex items-center justify-between mb-2">
+						<p className="text-sm font-bold text-white flex-grow">
+							I accept Ourlime
+							<span className="font-bold text-greenTheme">
+								<button
+									onClick={() => setIsTermsOpen(true)}
+									className="text-greenTheme underline ml-1"
+								>
+									Terms and Conditions
+								</button>
+							</span>
+						</p>
+						<Checkbox
+							isSelected={isTermsAccepted}
+							onChange={() => setIsTermsAccepted(!isTermsAccepted)}
+							color="success"
+							className="ml-2"
+						/>
+					</div>
+
+					<div className="flex items-center justify-between">
+						<p className="text-sm font-bold text-white flex-grow">
+							I accept Ourlime
+							<span className="font-bold text-greenTheme">
+								<button
+									onClick={() => setIsPrivacyOpen(true)}
+									className="text-greenTheme underline ml-1"
+								>
+									Privacy Policy
+								</button>
+							</span>
+						</p>
+						<Checkbox
+							isSelected={isPrivacyAccepted}
+							onChange={() => setIsPrivacyAccepted(!isPrivacyAccepted)}
+							color="success"
+							className="ml-2"
+						/>
+					</div>
+				</div>
+
+				{termsError && <p className="text-red-500">{termsError}</p>}
+				{privacyError && <p className="text-red-500">{privacyError}</p>}
+
+				<Button
+					type="submit"
+					disabled={!isFormValid}
+					className={`submit mt-6 mb-8 w-full rounded-full px-4 py-2 text-white ${isFormValid ? 'bg-greenTheme hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'
+						}`}
 				>
-					<SelectItem className="greenForm" key="male" value="male">Male</SelectItem>
-					<SelectItem className="greenForm" key="female" value="female">Female</SelectItem>
-					<SelectItem className="greenForm" key="other" value="other">Other</SelectItem>
-				</Select>
-				{attemptedNextStep && genderError && (
-					<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
-				)}
-			</div>
-
-			<div className="mb-4">
-				<DatePicker
-					variant='underlined'
-					onChange={(date) => {
-						setFormData({ ...formData, birthday: date.toString() });
-						setBirthday(date.toString());
-					}}
-					className={`${styles.nextuiInput} w-full rounded-md border bg-white text-black border-none border-gray-300 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
-					showMonthAndYearPickers
-					classNames={{
-						base: "text-black",
-						selectorIcon: "text-black",
-						input: "text-black"
-					}}
-				/>
-				{attemptedNextStep && birthdayError && (
-					<p className="text-bold mt-1 text-left text-red-500">{birthdayError}</p>
-				)}
-			</div>
-
-			<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
-				<div className="w-full md:w-1/2">
-					<div className="relative">
-						<input
-							type="password"
-							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
-							placeholder="Password"
-							onChange={(e) => {
-								const newPassword = e.target.value;
-								setFormData({ ...formData, password: newPassword });
-								setPassword(newPassword);
-							}}
-							required
-						/>
-						{attemptedNextStep && passwordError && (
-							<p className="text-bold mt-1 text-left text-red-500">{passwordError}</p>
-						)}
-					</div>
-				</div>
-				<div className="w-full md:w-1/2">
-					<div className="relative">
-						<input
-							type="password"
-							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
-							placeholder="Confirm Password"
-							onChange={(e) => {
-								const confirmPwd = e.target.value;
-								setFormData({ ...formData, confirmPassword: confirmPwd });
-								setConfirmPassword(confirmPwd); // Changed this line to pass the actual value
-							}}
-							required
-						/>
-						{attemptedNextStep && confirmPasswordError && (
-							<p className="text-bold mt-1 text-left text-red-500">{confirmPasswordError}</p>
-						)}
-					</div>
-				</div>
-			</div>
-
-			<div className="justify-center items-center md:flex flex-col w-full">
-				<div className="flex items-center justify-between mb-2">
-					<p className="text-sm font-bold text-white flex-grow">
-						I accept Ourlime
-						<span className="font-bold text-greenTheme">
-							<button
-								onClick={() => setIsTermsOpen(true)}
-								className="text-greenTheme underline ml-1"
-							>
-								Terms and Conditions
-							</button>
-						</span>
-					</p>
-					<Checkbox
-						isSelected={isTermsAccepted}
-						onChange={() => setIsTermsAccepted(!isTermsAccepted)}
-						color="success"
-						className="ml-2"
-					/>
-				</div>
-
-				<div className="flex items-center justify-between">
-					<p className="text-sm font-bold text-white flex-grow">
-						I accept Ourlime
-						<span className="font-bold text-greenTheme">
-							<button
-								onClick={() => setIsPrivacyOpen(true)}
-								className="text-greenTheme underline ml-1"
-							>
-								Privacy Policy
-							</button>
-						</span>
-					</p>
-					<Checkbox
-						isSelected={isPrivacyAccepted}
-						onChange={() => setIsPrivacyAccepted(!isPrivacyAccepted)}
-						color="success"
-						className="ml-2"
-					/>
-				</div>
-			</div>
-
-			{termsError && <p className="text-red-500">{termsError}</p>}
-			{privacyError && <p className="text-red-500">{privacyError}</p>}
-
-			<Button
-				onClick={handleNextStep}
-				type="button"
-				disabled={!isFormValid}
-				className={`submit mt-6 mb-8 w-full rounded-full px-4 py-2 text-white ${isFormValid ? 'bg-greenTheme hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'
-					}`}
-			>
-				Next Step!
-			</Button>
-
+					Next Step!
+				</Button>
+			</form>
 
 			<TermsModal
 				isOpen={isTermsOpen}
@@ -409,6 +425,4 @@ export default function FirstStep({
 			/>
 		</div>
 	);
-
-
 }

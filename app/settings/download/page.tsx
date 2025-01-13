@@ -4,7 +4,7 @@ import post2 from '@/public/images/articles/post2.jpg';
 import { StaticImageData } from 'next/image';
 import SettingsSidebar from '@/components/settings/nav/page';
 import { Button } from '@nextui-org/react';
-import { auth, db } from '@/lib/firebaseConfig';
+import { auth, db } from '@/config/firebase';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';
 import { fetchProfile, fetchUser, loginRedirect } from '@/helpers/Auth';

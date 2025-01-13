@@ -2,7 +2,7 @@
 import SettingsSidebar from "@/components/settings/nav/page";
 import { Select, SelectItem, Button } from "@nextui-org/react";
 import { useState, useEffect } from 'react';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import { doc, setDoc, getDoc } from 'firebase/firestore';
 import { ResizeListener } from '@/helpers/Resize';
 import { useRouter } from 'next/navigation';

@@ -1,8 +1,14 @@
 import { collection, getDocs, doc, getDoc, query, where, documentId, updateDoc } from 'firebase/firestore';
 import { User, updateProfile } from 'firebase/auth';
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import { ProfileData, UserData, SocialPosts, Communities, Follower, Following } from '@/types/global';
 
+/**
+ * Fetches user data from the Firestore database.
+ * @param {User} currentUser - The user to fetch data for.
+ * @returns {Promise<{ profileData: ProfileData; userData: UserData } | null>} - A promise that resolves to the user's profile
+ * data and user data, or null if the user does not exist.
+ */
 export const fetchUserData = async (currentUser: User): Promise<{ profileData: ProfileData; userData: UserData } | null> => {
   const profileRef = doc(db, 'profiles', currentUser.uid);
   const profileSnap = await getDoc(profileRef);
@@ -15,6 +21,7 @@ export const fetchUserData = async (currentUser: User): Promise<{ profileData: P
     const userData = userSnap.data() as UserData;
 
     if (userData.photoURL && userData.photoURL !== currentUser.photoURL) {
+      // Update the user's photo if it has changed
       await updateProfile(currentUser, { photoURL: userData.photoURL });
     }
 
@@ -24,6 +31,11 @@ export const fetchUserData = async (currentUser: User): Promise<{ profileData: P
   return null;
 };
 
+/**
+ * Fetches all posts from the Firestore database and filters them by the given user's email.
+ * @param {string} userEmail - The email of the user to fetch posts for.
+ * @returns {Promise<SocialPosts[]>} - A promise that resolves to the user's posts.
+ */
 export const fetchUserPosts = async (userEmail: string): Promise<SocialPosts[]> => {
   const getPosts = await getDocs(collection(db, 'posts'));
   const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
@@ -32,6 +44,11 @@ export const fetchUserPosts = async (userEmail: string): Promise<SocialPosts[]> 
     .sort((a, b) => b.time - a.time);
 };
 
+/**
+ * Fetches the communities that the given user is a member of.
+ * @param {string} userId - The id of the user to fetch communities for.
+ * @returns {Promise<Communities[]>} - A promise that resolves to the user's communities.
+ */
 export const fetchUserCommunities = async (userId: string): Promise<Communities[]> => {
   const communitiesCollection = collection(db, 'communities');
   const communitySnapshot = await getDocs(communitiesCollection);
@@ -42,6 +59,12 @@ export const fetchUserCommunities = async (userId: string): Promise<Communities[
   );
 };
 
+/**
+ * Fetches the followers and people the given user is following.
+ * @param {User} currentUser - The user to fetch followers and following for.
+ * @returns {Promise<{ followers: Follower[]; following: Following[] }>} - A promise that resolves to the user's followers and
+ * following.
+ */
 export const fetchFollowersAndFollowing = async (currentUser: User): Promise<{ followers: Follower[]; following: Following[] }> => {
   const followersSnapshot = await getDocs(query(collection(db, 'followers'), where('followedId', '==', currentUser.uid)));
   const followerIds = followersSnapshot.docs.map(doc => doc.data().followerId);
@@ -77,6 +100,12 @@ export const fetchFollowersAndFollowing = async (currentUser: User): Promise<{ f
   return { followers, following };
 };
 
+/**
+ * Updates the user's profile data in the Firestore database.
+ * @param {User} currentUser - The user to update the profile for.
+ * @param {Partial<ProfileData & { photoURL?: string }>} updatedData - The new profile data to update with.
+ * @returns {Promise<void>} - A promise that resolves when the update is complete.
+ */
 export const updateUserProfile = async (currentUser: User, updatedData: Partial<ProfileData & { photoURL?: string }>): Promise<void> => {
   const profileRef = doc(db, 'profiles', currentUser.uid);
   await updateDoc(profileRef, updatedData);

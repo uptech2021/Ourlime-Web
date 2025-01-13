@@ -15,7 +15,6 @@ export default function Navbar({ children }: NavbarProps) {
 
 	const handleToggleNav = () => setIsOpen(!isOpen);
 
-	// Function to handle click events, conditionally triggering handleSignOut
 	const handleClick = (link: string) => {
 		if (link === 'Sign Out') handleSignOut(router);
 	};

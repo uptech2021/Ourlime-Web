@@ -1,32 +1,16 @@
-import { signOut, onAuthStateChanged, User } from 'firebase/auth';
-import { auth, db } from '@/lib/firebaseConfig';
-import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
-import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
+import { auth, db } from "@/config/firebase";
+import { onAuthStateChanged, signOut, User } from "firebase/auth";
+import { collection, doc, getDoc, getDocs, query, QuerySnapshot, where } from "firebase/firestore";
+import { AppRouterInstance } from "next/dist/shared/lib/app-router-context.shared-runtime";
 
-// Check if user is logged in and email is verified on page load
-// export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
-// 	return new Promise((resolve) => {
-// 		onAuthStateChanged(auth, (user) => {
-// 			if (user) {
-// 				if (user.emailVerified) {
-// 					// console.log('Already Logged In and Verified, Redirecting...');
-// 					router.push('/');
-// 					resolve(true);
-// 				} else {
-// 					console.log(
-// 						'Email not verified, Redirecting to login...'
-// 					);
-// 					router.push('/login');
-// 					resolve(false);
-// 				}
-// 			} else {
-// 				// console.log('No user');
-// 				resolve(false);
-// 			}
-// 		});
-// 	});
-// };
-
+/**
+ * Redirects user to the home page if they are logged in, otherwise redirects
+ * them to the login page.
+ *
+ * @param {AppRouterInstance} router - The Next.js router instance.
+ * @returns {Promise<boolean>} - A promise that resolves to true if the user was
+ * redirected to the home page, false otherwise.
+ */
 export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
     return new Promise((resolve) => {
         onAuthStateChanged(auth, (user) => {
@@ -40,43 +24,16 @@ export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
     });
 };
 
-
-
-
-
-
-// export const loginRedirect = (
-// 	router: AppRouterInstance,
-// 	authorized: boolean = true
-// ): Promise<User | null> => {
-// 	return new Promise((resolve, reject) => {
-// 		onAuthStateChanged(auth, async (user) => {
-// 			if (!user) {
-// 				// console.log('Redirecting to login');
-// 				router.push('/login');
-// 			} else if (!authorized) {
-// 				try {
-// 					const userDoc = await getDoc(doc(db, 'users', user.uid));
-// 					if (!userDoc.exists() || !userDoc.data().isAdmin) {
-// 						console.warn('Unauthorized user');
-// 						router.push('/');
-// 						// console.log('Unauthorized user');
-// 					}
-// 				} catch (error) {
-// 					console.error('Error checking user authorization:', error);
-// 					reject(error);
-// 				}
-// 			} else if (!user.emailVerified) {
-// 				// console.log('Email not verified, Redirecting to verification page...');
-// 				router.push('/login');
-// 			} else {
-// 				resolve(user);
-// 			}
-// 		});
-// 	});
-// };
-
-
+/**
+ * Redirects user to the login page if they are not logged in, or if they are
+ * not authorized to access the page.
+ *
+ * @param {AppRouterInstance} router - The Next.js router instance.
+ * @param {boolean} authorized - Whether the user is authorized to access the
+ * page. Defaults to true.
+ * @returns {Promise<User | null>} - A promise that resolves to the user if they
+ * are logged in and authorized, null otherwise.
+ */
 export const loginRedirect = (
     router: AppRouterInstance,
     authorized: boolean = true
@@ -101,10 +58,11 @@ export const loginRedirect = (
     });
 };
 
-
-
-
-
+/**
+ * Signs the user out and redirects them to the login page.
+ *
+ * @param {AppRouterInstance} router - The Next.js router instance.
+ */
 export const handleSignOut = async (router: AppRouterInstance) => {
 	try {
 		await signOut(auth);
@@ -114,7 +72,14 @@ export const handleSignOut = async (router: AppRouterInstance) => {
 	}
 };
 
-export const fetchProfile = async(uid: string) => {
+/**
+ * Fetches the user's profile data from the Firestore database.
+ *
+ * @param {string} uid - The user's ID.
+ * @returns {Promise<QueryDocumentSnapshot<DocumentData> | null>} - A promise
+ * that resolves to the user's profile data, null if the user does not exist.
+ */
+export const fetchProfile = async (uid: string) => {
     try {
         const profileRef = doc(db, 'users', uid);
         const profileSnap = await getDoc(profileRef);
@@ -125,7 +90,13 @@ export const fetchProfile = async(uid: string) => {
     }
 };
 
-
+/**
+ * Fetches the user data from the Firestore database.
+ *
+ * @param {string} uid - The user's ID.
+ * @returns {Promise<QueryDocumentSnapshot<DocumentData> | null>} - A promise
+ * that resolves to the user's data, null if the user does not exist.
+ */
 export const fetchUser = async (uid: string) => {
 	try {
 		const userRef = doc(db, 'users', uid);
@@ -137,11 +108,18 @@ export const fetchUser = async (uid: string) => {
 	}
 };
 
-// Function to check if a user exists
-export const checkUserExists = async (email: string, username: string) => {
+/**
+ * Checks if a user exists in the Firestore database based on their email or
+ * username.
+ *
+ * @param {string} email - The user's email.
+ * @param {string} username - The user's username.
+ * @returns {Promise<boolean>} - A promise that resolves to true if the user
+ * exists, false otherwise.
+ */
+export const checkIfUserExists = async (email?: string, username?: string) => {
 	const usersRef = collection(db, 'users');
-
-	const promises = [];
+	const promises: Promise<QuerySnapshot>[] = [];
 
 	if (email) {
 		const emailQuery = query(usersRef, where('email', '==', email));
@@ -153,30 +131,8 @@ export const checkUserExists = async (email: string, username: string) => {
 		promises.push(getDocs(usernameQuery));
 	}
 
+
 	const results = await Promise.all(promises);
-	const exists = results.some(snapshot => !snapshot.empty);
-	console.log('User exists:', exists); // Log the result
-	console.log('Checking email:', email);
-	console.log('Checking username:', username);
-	return exists;
+	const userExists = results.some(snapshot => !snapshot.empty);
+	return userExists;
 };
-
-// export const sendOtp = async (phone: string) => {
-// 	try {
-// 		const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha', {
-// 			size: 'invisible',
-// 			callback: (response: any) => {
-// 				console.log('reCAPTCHA solved:', response);
-// 			},
-// 		});
-
-// 		const confirmation = await signInWithPhoneNumber(
-// 			auth,
-// 			phone,
-// 			recaptchaVerifier
-// 		);
-// 		console.log(confirmation);
-// 	} catch (error) {
-// 		console.error('Error sending OTP:', error);
-// 	}
-// };

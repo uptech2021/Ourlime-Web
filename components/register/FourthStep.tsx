@@ -12,7 +12,6 @@ import transparentLogo from 'public/images/transparentLogo.png';
 import Image from 'next/image';
 
 type FourthStepProps = {
-    verificationMessage: string;
     setStep: Dispatch<SetStateAction<number>>;
     setCountry: Dispatch<SetStateAction<string>>;
     setBirthday: Dispatch<SetStateAction<string>>;
@@ -25,9 +24,7 @@ type FourthStepProps = {
     birthdayError: string;
     error: string;
     setCity: Dispatch<SetStateAction<string>>;
-    cityError: string;
     setPostalCode: Dispatch<SetStateAction<string>>;
-    postalCodeError: string;
     setAddress: Dispatch<SetStateAction<string>>;
     AddressError: string;
     phone?: string;

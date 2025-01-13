@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import { doc, updateDoc } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebaseConfig';
+import { auth, db } from '@/config/firebase';
 import { fetchProfile, fetchUser } from '@/helpers/Auth';
 import { ProfileData, UserData } from '@/types/global';
 import { onAuthStateChanged } from 'firebase/auth';

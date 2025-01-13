@@ -1,31 +1,28 @@
 'use client';
 
-// Imports
-import { useEffect, useState, useRef } from 'react';
-import { useRouter } from 'next/navigation';
-import { gsap } from 'gsap';
+import { checkIfUserExists } from '@/helpers/Auth';
+import { uploadFile } from '@/helpers/firebaseStorage';
+import { auth, db } from '@/config/firebase';
 import {
 	createUserWithEmailAndPassword,
 	onAuthStateChanged,
-	sendEmailVerification,
-	User,
+	User
 } from 'firebase/auth';
-import { deleteDoc, doc, setDoc, collection } from 'firebase/firestore';
-import { auth, db } from '@/lib/firebaseConfig';
-import { checkUserExists, handleSignOut } from '@/helpers/Auth';
-import { uploadFile } from '@/helpers/firebaseStorage';
+import { collection, deleteDoc, doc, setDoc } from 'firebase/firestore';
+import { gsap } from 'gsap';
+import { useRouter } from 'next/navigation';
+import { useEffect, useRef, useState } from 'react';
 import { isValidPhoneNumber } from 'react-phone-number-input';
 import 'react-phone-number-input/style.css';
 
-// Component imports
 import AnimatedLogo from '@/components/AnimatedLoader';
-import FirstStep from '@/components/register/FirstStep';
-import SecondStep from '@/components/register/SecondStep';
-import ThirdStep from '@/components/register/ThirdStep';
-import SecondStepOptional from '@/components/register/SecondStepOptional';
-import FourthStep from '@/components/register/FourthStep';
-import SixthStep from '@/components/register/SixthStep';
 import Authentication from '@/components/register/Authentication';
+import FirstStep from '@/components/register/FirstStep';
+import FourthStep from '@/components/register/FourthStep';
+import SecondStep from '@/components/register/SecondStep';
+import SecondStepOptional from '@/components/register/SecondStepOptional';
+import SixthStep from '@/components/register/SixthStep';
+import ThirdStep from '@/components/register/ThirdStep';
 
 
 
@@ -74,8 +71,6 @@ export default function Page() {
 	const [birthdayError, setBirthdayError] = useState('');
 	const [countryError, setCountryError] = useState('');
 	const [phoneError, setPhoneError] = useState('');
-	const [cityError, setCityError] = useState('');
-	const [postalCodeError, setPostalCodeError] = useState('');
 	const [AddressError, setAddressError] = useState('');
 	const [zipCodeError, setZipCodeError] = useState('');
 	const [emailExistsError, setEmailExistsError] = useState('');
@@ -83,16 +78,10 @@ export default function Page() {
 	const [error, setError] = useState('');
 
 	// Authentication and Verification States
-	const [isAuthenticated, setIsAuthenticated] = useState(false);
-	const [isVerified, setIsVerified] = useState(false);
-	const [verificationMessage, setVerificationMessage] = useState('');
 	const [user, setUser] = useState<User | null>(null);
 	const [loading, setLoading] = useState(true);
-	const [isStep3Valid, setIsStep3Valid] = useState(false);
-	const [isStep5Valid, setIsStep5Valid] = useState(false);
 	const [isStepValid, setIsStepValid] = useState(false);
 	const [validationError, setValidationError] = useState('');
-	const [successMessage, setSuccessMessage] = useState('');
 
 	// File Upload States and Refs
 	const [idFaceRef] = useState<React.RefObject<HTMLInputElement>>(useRef(null));
@@ -101,90 +90,8 @@ export default function Page() {
 	const [faceFileName, setFaceFileName] = useState('');
 	const [frontFileName, setFrontFileName] = useState('');
 	const [backFileName, setBackFileName] = useState('');
-	const [faceFileError, setFaceFileError] = useState('');
-	const [frontFileError, setFrontFileError] = useState('');
-	const [backFileError, setBackFileError] = useState('');
 
-	// Validation Functions
-	const validateStep6 = () => {
-		let formValid = true;
-
-		if (!faceFileName) {
-			console.log('Face file is missing.');
-			setFaceFileError('Please upload a photo of yourself holding your ID next to your face.');
-			formValid = false;
-		} else {
-			setFaceFileError('');
-		}
-
-		if (!frontFileName) {
-			console.log('Front file is missing.');
-			setFrontFileError('Please upload a photo of the front of your ID.');
-			formValid = false;
-		} else {
-			setFrontFileError('');
-		}
-
-		if (!backFileName) {
-			console.log('Back file is missing.');
-			setBackFileError('Please upload a photo of the back of your ID.');
-			formValid = false;
-		} else {
-			setBackFileError('');
-		}
-
-		return formValid;
-	};
-
-	// Step 6 Validation Effect
-	useEffect(() => {
-		const valid = validateStep6();
-		setIsStepValid(valid);
-	}, []);
-
-	// Authentication Check Effect
-	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-			setUser(currentUser);
-			setLoading(false);
-		});
-		return () => unsubscribe();
-	}, []);
-
-	useEffect(() => {
-		if (user) {
-			router.push('/'); 
-		}
-	}, [user, router]);
-
-	// Step Animation Effect
-	useEffect(() => {
-		if (step > prevStep) {
-			animateStepForward(step);
-		} else if (step < prevStep) {
-			animateStepBackward(step);
-		}
-		setPrevStep(step);
-	}, [step, prevStep]);
-
-	// Animation Functions
-	const animateStepForward = (currentStep: number) => {
-		gsap.fromTo(
-			`.step-${currentStep.toString().replace('.', '_')}`,
-			{ opacity: 0, x: 100 },
-			{ opacity: 1, x: 0, duration: 0.5 }
-		);
-	};
-
-	const animateStepBackward = (currentStep: number) => {
-		gsap.fromTo(
-			`.step-${currentStep.toString().replace('.', '_')}`,
-			{ opacity: 0, x: -100 },
-			{ opacity: 1, x: 0, duration: 0.5 }
-		);
-	};
-
-	// Validation Functions
+	// Form Validation Functions
 	const validateStep1 = () => {
 		let formValid = true;
 
@@ -246,7 +153,6 @@ export default function Page() {
 
 		return formValid;
 	};
-
 	const validateStep3 = () => {
 		let formValid = true;
 
@@ -281,8 +187,52 @@ export default function Page() {
 			setPhoneError('');
 		}
 
-		setIsStep3Valid(formValid);
 		return formValid;
+	};
+	const validateStep6 = () => {
+		let formValid = true;
+
+		switch (true) {
+			case !faceFileName:
+			case !frontFileName:
+			case !backFileName:
+				formValid = false;
+				break;
+			default:
+				break;
+		}
+
+		return formValid;
+	};
+	const checkIfEmailAlreadyExist = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const _email = e.target.value
+		setEmail(_email);
+		const userExists = await checkIfUserExists(_email, '');
+		if (userExists) setEmailExistsError('This email is already registered.');
+		else setEmailExistsError('');
+	};
+	const checkIfUsernameAlreadyExist = async (e: React.ChangeEvent<HTMLInputElement>) => {
+		const _username = e.target.value
+		setUserName(_username);
+		const userExists = await checkIfUserExists('', _username);
+		if (userExists) setUserExistsError('This username is already taken.');
+		else setUserExistsError('');
+	};
+
+	// Animation Functions
+	const animateStepForward = (currentStep: number) => {
+		gsap.fromTo(
+			`.step-${currentStep.toString().replace('.', '_')}`,
+			{ opacity: 0, x: 100 },
+			{ opacity: 1, x: 0, duration: 0.5 }
+		);
+	};
+	const animateStepBackward = (currentStep: number) => {
+		gsap.fromTo(
+			`.step-${currentStep.toString().replace('.', '_')}`,
+			{ opacity: 0, x: -100 },
+			{ opacity: 1, x: 0, duration: 0.5 }
+		);
 	};
 
 	const handleAvatarSelection = (avatar: string) => {
@@ -325,269 +275,6 @@ export default function Page() {
 		}
 	};
 
-	const handleRegister = async (e: React.FormEvent) => {
-		e.preventDefault();
-		console.log('Starting registration process...');
-
-		const createUserDocument = async (user: User) => {
-			console.log('Creating user document...');
-			await setDoc(doc(db, 'users', user.uid), {
-				firstName,
-				lastName,
-				userName,
-				email: user.email,
-				gender,
-				birthday,
-				country,
-				isAdmin: false,
-				last_loggedIn: new Date(),
-				userTier: 1,
-				createdAt: new Date()
-			});
-		};
-
-		const createAddressDocument = async (user: User) => {
-			console.log('Creating address documents...');
-			// Create address with auto-generated ID
-			const addressRef = doc(collection(db, 'addresses'));
-			await setDoc(addressRef, {
-				userId: user.uid,
-				Address,
-				city,
-				postalCode,
-				zipCode,
-				createdAt: new Date(),
-				updatedAt: new Date()
-			});
-
-			// Create addressSetAs with its own auto-generated ID
-			const addressSetAsRef = doc(collection(db, 'addressSetAs'));
-			await setDoc(addressSetAsRef, {
-				setAs: 'home',
-				addressId: addressRef.id
-			});
-		};
-
-		const createProfileImageDocument = async (user: User) => {
-			console.log('Creating profile image documents...');
-			// Create profile image with auto-generated ID
-			const profileImageRef = doc(collection(db, 'profileImages'));
-			
-			// First upload the image and get URL
-			const imageURL = await uploadFile(
-				new File(
-					[await fetch(`/images/register/${profilePicture}`).then(res => res.blob())],
-					profilePicture,
-					{ type: 'image/svg+xml' }
-				),
-				`profiles/${user.uid}/${profilePicture}`
-			);
-		
-			// Then create the document with the URL
-			await setDoc(profileImageRef, {
-				imageURL, // Add this field
-				typeOfImage: 'image',
-				userId: user.uid,
-				createdAt: new Date(),
-				updatedAt: new Date()
-			});
-		
-			// Create profileImageSetAs with its own auto-generated ID
-			const profileImageSetAsRef = doc(collection(db, 'profileImageSetAs'));
-			await setDoc(profileImageSetAsRef, {
-				setAs: 'profile',
-				profileImageId: profileImageRef.id,
-				userId: user.uid // Add userId for security
-			});
-		};
-		
-
-
-		
-
-		const createContactDocument = async (user: User) => {
-			console.log('Creating contact documents...');
-			// Create contact with auto-generated ID
-			const contactRef = doc(collection(db, 'contact'));
-			await setDoc(contactRef, {
-				userId: user.uid,
-				contactNumber: phone,
-				isVerified: false,
-				createdAt: new Date(),
-				updatedAt: new Date()
-			});
-
-			// Create contactSetAs with its own auto-generated ID
-			const contactSetAsRef = doc(collection(db, 'contactSetAs'));
-			await setDoc(contactSetAsRef, {
-				setAs: 'personal',
-				contactId: contactRef.id
-			});
-		};
-
-		const createInterestsDocuments = async (user: User) => {
-			console.log('Creating interest documents...');
-			const interestPromises = selectedInterests.map(interest =>
-				setDoc(doc(collection(db, 'interests')), {
-					interest,
-					links: [],
-					userId: user.uid
-				})
-			);
-			await Promise.all(interestPromises);
-		};
-
-		const createAuthenticationDocument = async (user: User) => {
-			console.log('Creating authentication document...');
-			const faceImageURL = await uploadFile(idFaceRef.current?.files[0], `authentication/${user.uid}/faceID`);
-			const frontImageURL = await uploadFile(idFrontRef.current?.files[0], `authentication/${user.uid}/frontID`);
-			const backImageURL = await uploadFile(idBackRef.current?.files[0], `authentication/${user.uid}/backID`);
-
-			await setDoc(doc(db, 'authentication', user.uid), {
-				userId: user.uid,
-				proofOfId: faceImageURL,
-				idFront: frontImageURL,
-				idBack: backImageURL,
-				createdAt: new Date()
-			});
-		};
-
-
-		// try {
-		// 	console.log('Creating user authentication...');
-		// 	const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
-		// 	const user = userCredentials.user;
-
-		// 	console.log('User created successfully:', user.uid);
-
-		// 	const actionCodeSettings = {
-		// 		url: 'http://localhost:3000/login',
-		// 		handleCodeInApp: true, // Ensures the link is opened within your app
-		// 	};
-
-
-
-		// 	console.log('Attempting to send verification email...');
-		// 	await sendEmailVerification(user, actionCodeSettings);
-		// 	console.log('Verification email sent successfully');
-		// 	console.log('Email sent to:', user.email);
-		// 	console.log('Verification URL:', actionCodeSettings.url);
-
-		// 	console.log('Creating documents...');
-		// 	await Promise.all([
-		// 		createUserDocument(user),
-		// 		createAddressDocument(user),
-		// 		createProfileImageDocument(user),
-		// 		createContactDocument(user),
-		// 		createInterestsDocuments(user)
-		// 	]);
-
-		// 	setVerificationMessage('Check your email to verify your account');
-		// 	setTimeout(() => {
-		// 		router.push('/login');
-		// 	}, 5000); // 5 second delay
-
-
-		// } catch (error) {
-		// 	console.error('Registration error:', error);
-		// 	if (newUser) {
-		// 		try {
-		// 			await deleteDoc(doc(db, 'users', newUser.uid));
-		// 			await newUser.delete();
-		// 		} catch (deleteError) {
-		// 			console.error('Error cleaning up failed registration:', deleteError);
-		// 		}
-		// 	}
-
-		// 	switch (error.code) {
-		// 		case 'auth/email-already-in-use':
-		// 			setError('Email already in use.');
-		// 			break;
-		// 		case 'auth/invalid-email':
-		// 			setError('Invalid email.');
-		// 			break;
-		// 		case 'auth/operation-not-allowed':
-		// 			setError('Operation not allowed.');
-		// 			break;
-		// 		case 'auth/weak-password':
-		// 			setError('Weak password.');
-		// 			break;
-		// 		case 'auth/too-many-requests':
-		// 			setError('Too many attempts. Please try again later.');
-		// 			break;
-		// 		default:
-		// 			setError('Something went wrong.');
-		// 			break;
-		// 	}
-		// 	setValidationError('An error occurred during registration. Please try again.');
-		// }
-
-		try {
-
-			console.log('Creating user authentication...');
-			const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
-			const user = userCredentials.user;
-
-			console.log('User created successfully:', user.uid);
-			console.log('Creating Documents ....');
-			await Promise.all([
-				createUserDocument(user),
-				createAddressDocument(user),
-				createProfileImageDocument(user),
-				createContactDocument(user),
-				createInterestsDocuments(user),
-				createAuthenticationDocument(user)
-			]);
-
-			// Step 6: Redirect to login page after a delay
-			setTimeout(() => {
-				router.push('/login');
-			}, 5000); // 5-second delay
-
-		} catch (error) {
-			console.error('Registration error:', error);
-
-			// Step 7: Rollback created user if registration fails
-			if (newUser) {
-				try {
-					console.log('Cleaning up failed registration...');
-					await deleteDoc(doc(db, 'users', newUser.uid));
-					await newUser.delete();
-				} catch (deleteError) {
-					console.error('Error cleaning up failed registration:', deleteError);
-				}
-			}
-
-			// Step 8: Handle known Firebase error codes
-			switch (error.code) {
-				case 'auth/email-already-in-use':
-					setError('Email already in use.');
-					break;
-				case 'auth/invalid-email':
-					setError('Invalid email.');
-					break;
-				case 'auth/operation-not-allowed':
-					setError('Operation not allowed.');
-					break;
-				case 'auth/weak-password':
-					setError('Weak password.');
-					break;
-				case 'auth/too-many-requests':
-					setError('Too many attempts. Please try again later.');
-					break;
-				default:
-					setError('Something went wrong.');
-					break;
-			}
-
-			// Step 9: Notify user of registration error
-			setValidationError('An error occurred during registration. Please try again.');
-		}
-
-
-
-	};
-
 	const handleRegistrationError = (error: any) => {
 		if (newUser) {
 			try {
@@ -617,36 +304,88 @@ export default function Page() {
 		}
 		setValidationError('An error occurred during registration. Please try again.');
 	};
+	const handleRegister = async (e: React.FormEvent) => {
+		e.preventDefault();
+		console.log('Starting registration process...');
+	
+		const userData = {
+			email,
+			password,
+			firstName,
+			lastName,
+			userName,
+			gender,
+			birthday,
+			country,
+			phone,
+			Address,
+			city,
+			postalCode,
+			zipCode,
+			profilePicture,
+			selectedInterests,
+			idFace: idFaceRef.current?.files[0],
+			idFront: idFrontRef.current?.files[0],
+			idBack: idBackRef.current?.files[0]
+		};
+	
+		try {
+			const response = await fetch('/api/register', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify(userData)
+			});
+	
+			if (!response.ok) {
+				throw new Error('Failed to register');
+			}
+	
+			const data = await response.json();
+			console.log(data.message); // Log success message
+	
+			// Redirect to login after successful registration
+			router.push('/login');
+	
+		} catch (error) {
+			console.error('Registration error:', error);
+			handleRegistrationError(error);
 
-	const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const email = e.target.value;
-		setEmail(email);
-		const exists = await checkUserExists(email, '');
-		if (exists) {
-			setEmailExistsError('This email is already registered.');
-		} else {
-			setEmailExistsError('');
 		}
 	};
 
-	const handleUsernameChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
-		const username = e.target.value;
-		setUserName(username);
-		const exists = await checkUserExists('', username);
-		if (exists) {
-			setUserExistsError('This username is already taken.');
-		} else {
-			setUserExistsError('');
+	useEffect(() => {
+		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
+			setUser(currentUser);
+			setLoading(false);
+		});
+
+		const valid = validateStep6();
+
+		setIsStepValid(valid);
+		return () => unsubscribe();
+	}, []);
+
+	// Redirect User to home page if logged in
+	useEffect(() => {
+		if (user) {
+			router.push('/'); 
 		}
-	};
+	}, [user, router]);
 
-	if (loading) {
-		return <AnimatedLogo />;
-	}
+	// Step Animation Effect
+	useEffect(() => {
+		if (step > prevStep) {
+			animateStepForward(step);
+		} else if (step < prevStep) {
+			animateStepBackward(step);
+		}
+		setPrevStep(step);
+	}, [step, prevStep]);
 
-	if (user && user.emailVerified) {
-		return <AnimatedLogo />;
-	}
+	if(loading) return <AnimatedLogo />
+	if (user && user.emailVerified) return <AnimatedLogo />
 
 	return (
 		<div className="fixed inset-0 bg-gray-100">
@@ -689,10 +428,11 @@ export default function Page() {
 								passwordError={passwordError}
 								setBirthday={setBirthday}
 								birthdayError={birthdayError}
-								handleUsernameChange={handleUsernameChange}
-								handleEmailChange={handleEmailChange}
+								checkIfUsernameAlreadyExist={checkIfUsernameAlreadyExist}
+								checkIfEmailAlreadyExist={checkIfEmailAlreadyExist}
 							/>
-						)}                        {step === 2 && (
+						)}                        
+						{step === 2 && (
 							<SecondStep
 								setStep={setStep}
 								handleAvatarSelection={handleAvatarSelection}
@@ -721,31 +461,25 @@ export default function Page() {
 								setStep={setStep}
 								setCountry={setCountry}
 								validateStep={validateStep3}
-								isStepValid={isStep3Valid}
 								countryError={countryError}
 								setPhone={setPhone}
 								phone={phone}
 								phoneError={phoneError}
 								error={error}
 								setCity={setCity}
-								cityError={cityError}
 								setPostalCode={setPostalCode}
-								postalCodeError={postalCodeError}
 								setAddress={setAddress}
 								AddressError={AddressError}
 								setZipCode={SetZipCode}
-								zipCodeError={zipCodeError}
 							/>
 						)}
 
 						{step === 4 && (
 							<FourthStep
 								setStep={setStep}
-								verificationMessage={verificationMessage}
 								setCountry={setCountry}
 								setBirthday={setBirthday}
 								validateStep={validateStep3}
-								isStepValid={isStep3Valid}
 								handleSubmit={handleRegister}
 								countryError={countryError}
 								birthdayError={birthdayError}
@@ -753,15 +487,14 @@ export default function Page() {
 								phone={phone}
 								error={error}
 								setCity={setCity}
-								cityError={cityError}
 								setPostalCode={setPostalCode}
-								postalCodeError={postalCodeError}
 								setAddress={setAddress}
 								AddressError={AddressError}
 								setZipCode={SetZipCode}
 								zipCodeError={zipCodeError}
 								selectedInterests={selectedInterests}
 								setSelectedInterests={setSelectedInterests}
+								isStepValid={false}
 							/>
 						)}
 
@@ -780,9 +513,7 @@ export default function Page() {
 								idBackRef={idBackRef}
 								handleSubmit={handleRegister}
 								isStepValid={isStepValid}
-								setIsAuthenticated={setIsAuthenticated}
 								validationError={validationError}
-								successMessage={successMessage}
 								faceFileName={faceFileName}
 								frontFileName={frontFileName}
 								backFileName={backFileName}

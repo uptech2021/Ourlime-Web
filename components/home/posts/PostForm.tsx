@@ -1,5 +1,5 @@
 "use client"
-import { db } from '@/lib/firebaseConfig';
+import { db } from '@/config/firebase';
 import { uploadFile } from '@/helpers/firebaseStorage';
 import { ProfileData, SocialPosts, UserData } from '@/types/global';
 import { Button } from '@nextui-org/react';

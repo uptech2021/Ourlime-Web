@@ -13,19 +13,15 @@ type ThirdStepProps = {
 	setCountry: Dispatch<SetStateAction<string>>;
 	setPhone: Dispatch<SetStateAction<string>>;
 	phoneError?: string;
-	isStepValid: boolean;
 	validateStep: () => boolean;
 	countryError: string;
 	error: string;
 	setCity: Dispatch<SetStateAction<string>>;
-	cityError: string;
 	setPostalCode: Dispatch<SetStateAction<string>>;
-	postalCodeError: string;
 	setAddress: Dispatch<SetStateAction<string>>;
 	AddressError: string;
 	phone?: string;
 	setZipCode: Dispatch<SetStateAction<string>>;
-	zipCodeError: string;
 };
 
 const totalSteps = 5;
@@ -35,21 +31,15 @@ const progressPercentage = (currentStep / totalSteps) * 100;
 const ThirdStep: React.FC<ThirdStepProps> = ({
 	setStep,
 	setCountry,
-	isStepValid,
 	validateStep,
 	countryError,
 	setPhone,
 	phoneError,
 	phone,
-	error,
 	setCity,
-	cityError,
 	setPostalCode,
-	postalCodeError,
 	setAddress,
-	AddressError,
 	setZipCode,
-	zipCodeError,
 }) => {
 	const [selectedCountry, setSelectedCountry] = useState("");
 
@@ -108,6 +98,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 							<div className="w-full md:w-1/2">
 								<div className="relative">
 									<input
+										aria-label='City (Optional)'
 										type="text"
 										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 										placeholder="City (Optional)"
@@ -118,6 +109,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 							<div className="w-full md:w-1/2">
 								<div className="relative">
 									<input
+										aria-label='Region (Optional)'
 										type="text"
 										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 										placeholder="Region (Optional)"
@@ -128,6 +120,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						</div>
 
 						<Select
+							aria-label="Country"
 							placeholder="Country"
 							onChange={(e) => {
 								setCountry(e.target.value);
@@ -154,6 +147,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						)}
 
 						<input
+							aria-label='Address (Optional)'
 							type="text"
 							className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 							placeholder="Address (Optional)"
@@ -161,19 +155,20 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 						/>
 
 						<PhoneInput
+							aria-label="Phone Number"
 							value={phone}
 							className="phone rounded-md overflow-hidden"
 							defaultCountry="TT"
 							onChange={handlePhoneChange}
 							international
 							withCountryCallingCode
-							inputClass="w-full border-none text-black placeholder-black focus:outline-none bg-white"
 							autoComplete="off"
 							required
 							numberInputProps={{
 								maxLength: 15
 							}}
 							placeholder="Enter your phone number"
+							inputClass="w-full border-none text-black placeholder-black focus:outline-none bg-white"
 						/>
 
 						{attemptedSubmit && phoneError && (
@@ -186,6 +181,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 							<div className="w-full md:w-1/2">
 								<div className="relative">
 									<input
+										aria-label=''
 										type="text"
 										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 										placeholder="Zip Code (Optional)"
@@ -196,6 +192,7 @@ const ThirdStep: React.FC<ThirdStepProps> = ({
 							<div className="w-full md:w-1/2">
 								<div className="relative">
 									<input
+										aria-label='Postal Code (Optional)'
 										type="text"
 										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 										placeholder="Postal Code (Optional)"

@@ -2,7 +2,7 @@
 import { useEffect, useState } from 'react';
 import { deleteDoc, doc, getDoc } from 'firebase/firestore';
 import { useRouter } from 'next/navigation';
-import { auth, db } from '@/lib/firebaseConfig';
+import { auth, db } from '@/config/firebase';
 import {
 	signInWithEmailAndPassword,
 	deleteUser,

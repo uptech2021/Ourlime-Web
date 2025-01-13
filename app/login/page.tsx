@@ -1,10 +1,8 @@
 'use client';
 
 import AnimatedLogo from '@/components/AnimatedLoader';
-import { auth } from '@/lib/firebaseConfig';
 import { homeRedirect } from '@/helpers/Auth';
 import { Button } from '@nextui-org/react';
-import { signInWithEmailAndPassword } from 'firebase/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -35,38 +33,40 @@ export default function LoginPage() {
 		e.preventDefault();
 		setError('');
 		let formValid = true;
-
+	
 		if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
 			setEmailError('Please enter a valid email address.');
 			formValid = false;
 		} else setEmailError('');
-
+	
 		if (password.length < 6) {
 			setPasswordError('Password should be at least 6 characters.');
 			formValid = false;
 		} else setPasswordError('');
-
-		// Stop form submission if validation fails
+	
 		if (!formValid) return;
-
+	
 		try {
-			const userCredential = await signInWithEmailAndPassword(
-				auth,
-				email,
-				password
-			);
-			const user = userCredential.user;
-
-			if (!user.emailVerified) {
-				// console.log('Email not verified');
-				setError('Please verify your email before logging in.');
-				return;
+			const response = await fetch('/api/login', {
+				method: 'POST',
+				headers: {
+					'Content-Type': 'application/json'
+				},
+				body: JSON.stringify({ email, password })
+			});
+	
+			if (!response.ok) {
+				const errorData = await response.json();
+				throw new Error(errorData.error || 'Failed to login');
 			}
-
-			// console.log(user.emailVerified, ' is verified');
-    		window.location.replace('/');
+	
+			const data = await response.json();
+			console.log(data.message); 
+	
+			router.push('/');
+	
 		} catch (error: any) {
-			// console.error('Login error', error.code);
+			console.error('Login error:', error);
 			switch (error.code) {
 				case 'auth/user-not-found':
 					setError('No user found with this email.');
