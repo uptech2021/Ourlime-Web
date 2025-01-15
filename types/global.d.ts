@@ -148,3 +148,13 @@ export type Following = {
   profilePicture: string;
   email: string;
 };
+
+export type Comment = {
+    id: string;
+    text: string;
+    createdAt: Date;
+    updatedAt: Date;
+    feedsPostId: string;
+    userId: string;
+    replies: Comment[];
+};

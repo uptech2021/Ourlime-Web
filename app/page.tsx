@@ -15,6 +15,9 @@ import {
 	Bookmark
 } from 'lucide-react';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import CommentModal from '@/components/feeds/CommentsModal';
+import { fetchCommentsForPost } from '@/helpers/Posts';
+import { Comment } from '@/types/global';
 
 
 type UserData = {
@@ -109,6 +112,11 @@ export default function Page() {
 	const dropdownRef = useRef(null);
 	const [selectedUser, setSelectedUser] = useState(null);
 	const [showUserModal, setShowUserModal] = useState(false);
+	const [comments, setComments] = useState<Comment[]>([]);
+	const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+	const [isLoadingComments, setIsLoadingComments] = useState(false);
+	const [hasFetched, setHasFetched] = useState(false);
+	const [activePostId, setActivePostId] = useState<string | null>(null);
 
 
 	const navLinks = [
@@ -850,7 +858,9 @@ export default function Page() {
 						<Heart size={20} />
 						<span>Like</span>
 					</button>
-					<button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
+					<button 
+					className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+					onClick={() => handleOpenCommentModal(post.id)}>
 						<MessageCircle size={20} />
 						<span>Comment</span>
 					</button>
@@ -859,9 +869,66 @@ export default function Page() {
 						<span>Share</span>
 					</button>
 				</div>
+				{isCommentModalOpen && activePostId &&(
+						<CommentModal
+						postId={activePostId}
+						userId={post.userId}
+						onClose={() => setIsCommentModalOpen(false)}
+				/>)}
+			</div>
+
+			
+		);
+		
+	};
+
+	// Fetch comments when the component loads or when a new comment is added
+	const CommentsFetcher = ({ post }: { post: Post }) => {
+	
+		useEffect(() => {
+			const fetchComments = async () => {
+				if (!post?.id || hasFetched)  return;	
+				setIsLoadingComments(true);
+
+				try {
+					const fetchedComments = await fetchCommentsForPost(post.id);
+					setComments(fetchedComments);
+					setHasFetched(true);
+				} catch (error) {
+					console.error('Error fetching comments:', error);
+				} finally {
+					setIsLoadingComments(false);
+				}
+			};
+	
+			fetchComments();
+		}, [post?.id, hasFetched]); 
+
+		return (
+			<div className="comments-section">
+				{isLoadingComments ? (
+					<p>Loading comments...</p>
+				) : comments.length > 0 ? (
+					<ul>
+						{comments.map((comment) => (
+							<li key={comment.id}>{comment.text}</li>
+						))}
+					</ul>
+				) : (
+					<p>No comments available.</p>
+				)}
 			</div>
 		);
 	};
+	
+	const handleOpenCommentModal = (postId: string) => {
+		setActivePostId(postId); // Set the current postId
+		setIsCommentModalOpen(true);
+	  };
+
+	const handleCommentClick = () => {
+		setIsCommentModalOpen(true);
+	  };
 
 	const ShortsSection = () => {
 		const [shortFile, setShortFile] = useState<File | null>(null);
@@ -1481,9 +1548,13 @@ export default function Page() {
 
 						<div className="space-y-4 mt-4">
 							{posts.map((post) => (
-								<PostCard key={post.id} post={post} />
+								<div key={post.id}>
+								<PostCard post={post} />
+								<CommentsFetcher post={post}/>
+								</div>
 							))}
 						</div>
+						
 					</section>
 
 					{/* Section 3: Shorts/Reels - Fixed */}
@@ -1580,3 +1651,5 @@ export default function Page() {
 		</div>
 	);
 }
+
+
