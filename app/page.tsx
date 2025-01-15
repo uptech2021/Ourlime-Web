@@ -863,7 +863,6 @@ export default function Page() {
 		);
 	};
 
-
 	const ShortsSection = () => {
 		const [shortFile, setShortFile] = useState<File | null>(null);
 		const [previewUrl, setPreviewUrl] = useState<string | null>(null);
