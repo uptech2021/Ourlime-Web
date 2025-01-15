@@ -4,7 +4,6 @@ import { auth, db, storage } from '@/lib/firebaseConfig';
 import { onAuthStateChanged, signOut } from 'firebase/auth';
 import { addDoc, collection, doc, getDoc, getDocs, orderBy, query, where } from 'firebase/firestore';
 import Image from 'next/image';
-import Link from 'next/link';
 import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { AtSign, Bell, Compass, Globe, Hash, Heart, HelpCircle, LogOut, MessageCircle, MessageSquare, Plus, Search, Settings, Share, Smile, Upload, User, UserPlus, Wallet, X } from 'lucide-react';
@@ -18,6 +17,7 @@ import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import CommentModal from '@/components/feeds/CommentsModal';
 import { fetchCommentsForPost } from '@/helpers/Posts';
 import { Comment } from '@/types/global';
+
 
 
 type UserData = {
@@ -118,16 +118,6 @@ export default function Page() {
 	const [hasFetched, setHasFetched] = useState(false);
 	const [activePostId, setActivePostId] = useState<string | null>(null);
 
-
-	const navLinks = [
-		{ name: 'Home', href: '/' },
-		{ name: 'Blogs', href: '/blogs' },
-		{ name: 'Events', href: '/events' },
-		{ name: 'Jobs', href: '/jobs' },
-		{ name: 'Communities', href: '/communities' },
-		{ name: 'Marketplace', href: '/marketplace' }
-	];
-
 	const feedFilters = [
 		{ name: '', icon: Menu },
 		{ name: 'All', icon: Grid },
@@ -198,18 +188,13 @@ export default function Page() {
 	const fetchUserData = async (userId: string) => {
 		setIsLoading(true);
 		try {
-			console.log('Starting data fetch for user:', userId);
-
 			const userDoc = await getDoc(doc(db, 'users', userId));
 			if (!userDoc.exists()) {
-				console.log('User document not found');
 				setIsLoading(false);
 				return null;
 			}
 
 			const userDataFromDb = userDoc.data();
-			console.log('User data retrieved:', userDataFromDb);
-
 			const profileImagesQuery = query(
 				collection(db, 'profileImages'),
 				where('userId', '==', userId)
@@ -219,28 +204,20 @@ export default function Page() {
 				id: doc.id,
 				...doc.data()
 			}));
-			console.log('All user profile images:', userProfileImages);
-
 			const profileSetAsQuery = query(
 				collection(db, 'profileImageSetAs'),
 				where('userId', '==', userId),
 				where('setAs', '==', 'profile')
 			);
 			const setAsSnapshot = await getDocs(profileSetAsQuery);
-			console.log('Profile SetAs documents:', setAsSnapshot.docs.map(doc => doc.data()));
-
 			let profileImageData = null;
 
 			if (!setAsSnapshot.empty) {
 				const setAsDoc = setAsSnapshot.docs[0].data();
-				console.log('Selected SetAs document:', setAsDoc);
-
 				const matchingImage = userProfileImages.find(img => img.id === setAsDoc.profileImageId);
 
 				if (matchingImage) {
 					profileImageData = matchingImage;
-					console.log('Matched profile image:', profileImageData);
-					console.log('Direct imageURL check:', profileImageData.imageURL);
 					setProfileImage(profileImageData);
 				}
 			}
@@ -858,9 +835,9 @@ export default function Page() {
 						<Heart size={20} />
 						<span>Like</span>
 					</button>
-					<button 
-					className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
-					onClick={() => handleOpenCommentModal(post.id)}>
+					<button
+						className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+						onClick={() => handleOpenCommentModal(post.id)}>
 						<MessageCircle size={20} />
 						<span>Comment</span>
 					</button>
@@ -869,25 +846,25 @@ export default function Page() {
 						<span>Share</span>
 					</button>
 				</div>
-				{isCommentModalOpen && activePostId &&(
-						<CommentModal
+				{isCommentModalOpen && activePostId && (
+					<CommentModal
 						postId={activePostId}
 						userId={post.userId}
 						onClose={() => setIsCommentModalOpen(false)}
-				/>)}
+					/>)}
 			</div>
 
-			
+
 		);
-		
+
 	};
 
 	// Fetch comments when the component loads or when a new comment is added
 	const CommentsFetcher = ({ post }: { post: Post }) => {
-	
+
 		useEffect(() => {
 			const fetchComments = async () => {
-				if (!post?.id || hasFetched)  return;	
+				if (!post?.id || hasFetched) return;
 				setIsLoadingComments(true);
 
 				try {
@@ -900,9 +877,9 @@ export default function Page() {
 					setIsLoadingComments(false);
 				}
 			};
-	
+
 			fetchComments();
-		}, [post?.id, hasFetched]); 
+		}, [post?.id, hasFetched]);
 
 		return (
 			<div className="comments-section">
@@ -920,15 +897,15 @@ export default function Page() {
 			</div>
 		);
 	};
-	
+
 	const handleOpenCommentModal = (postId: string) => {
 		setActivePostId(postId); // Set the current postId
 		setIsCommentModalOpen(true);
-	  };
+	};
 
 	const handleCommentClick = () => {
 		setIsCommentModalOpen(true);
-	  };
+	};
 
 	const ShortsSection = () => {
 		const [shortFile, setShortFile] = useState<File | null>(null);
@@ -1146,75 +1123,6 @@ export default function Page() {
 		}
 	};
 
-	const ProfileDropdown = () => (
-		<div className="relative" ref={dropdownRef}>
-			<button
-				onClick={() => setIsProfileDropdownOpen(!isProfileDropdownOpen)}
-				className="w-10 h-10 rounded-full overflow-hidden focus:outline-none ring-2 ring-greenTheme ring-offset-2 transition-all duration-200"
-			>
-				{profileImage?.imageURL ? (
-					<Image
-						src={profileImage.imageURL}
-						alt="Profile"
-						width={40}
-						height={40}
-						className="w-full h-full object-cover"
-						loader={({ src }) => src}
-						unoptimized={true}
-					/>
-				) : (
-					<div className="w-full h-full bg-gray-200" />
-				)}
-			</button>
-
-			{isProfileDropdownOpen && (
-				<div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl py-2 z-50 transform transition-all duration-200 ease-out">
-					<div className="px-6 py-4 border-b border-gray-100">
-						<p className="text-lg font-semibold text-gray-800">{userData?.firstName} {userData?.lastName}</p>
-						<p className="text-sm text-gray-500">@{userData?.userName}</p>
-						<div className="mt-2 flex gap-4">
-							<span className="text-sm"><b>245</b> Friends</span>
-							<span className="text-sm"><b>128</b> Posts</span>
-						</div>
-					</div>
-
-					<div className="py-2">
-						<a href="/profile" className="flex items-center px-6 py-3 hover:bg-gray-50 transition-colors">
-							<User className="w-5 h-5 mr-3 text-greenTheme" />
-							<span>View Profile</span>
-						</a>
-						<a href="/settings" className="flex items-center px-6 py-3 hover:bg-gray-50 transition-colors">
-							<Settings className="w-5 h-5 mr-3 text-greenTheme" />
-							<span>Settings</span>
-						</a>
-						<a href="/wallet" className="flex items-center px-6 py-3 hover:bg-gray-50 transition-colors">
-							<Wallet className="w-5 h-5 mr-3 text-greenTheme" />
-							<span>Wallet</span>
-						</a>
-						<a href="/saved" className="flex items-center px-6 py-3 hover:bg-gray-50 transition-colors">
-							<Bookmark className="w-5 h-5 mr-3 text-greenTheme" />
-							<span>Saved Items</span>
-						</a>
-					</div>
-
-					<div className="border-t border-gray-100 py-2">
-						<a href="/help" className="flex items-center px-6 py-3 hover:bg-gray-50 transition-colors">
-							<HelpCircle className="w-5 h-5 mr-3 text-greenTheme" />
-							<span>Help & Support</span>
-						</a>
-						<button
-							onClick={handleLogout}
-							className="flex items-center w-full px-6 py-3 hover:bg-red-50 transition-colors text-red-600"
-						>
-							<LogOut className="w-5 h-5 mr-3" />
-							<span>Logout</span>
-						</button>
-					</div>
-				</div>
-			)}
-		</div>
-	);
-
 
 	const handleUserClick = (user) => {
 		setSelectedUser(user);
@@ -1300,81 +1208,562 @@ export default function Page() {
 		</>
 	);
 
-	return (
-		<div className="min-h-screen bg-gray-100">
-			<div className="fixed top-0 w-full z-50">
-				{/* Header */}
+	// First, add these state variables at the top of your Page component
+	const [activeTab, setActiveTab] = useState('feed');
+	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
-				<header className="bg-white shadow-md">
-					<div className="container mx-auto px-4 py-3 flex items-center justify-between">
-						{/* Logo */}
-						<div className="flex items-center">
-							<Image
-								src="/images/transparentLogo.png"
-								alt="Ourlime Logo"
-								width={40}
-								height={40}
-							/>
-							<span className="ml-2 text-xl font-bold text-greenTheme">Ourlime</span>
-						</div>
+	// Add this component inside your Page component
+	const MobileNavigation = () => {
+		return (
+			<>
+				{/* Bottom Navigation Bar */}
+				<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden">
+					<div className="flex justify-around items-center h-16">
+						<button
+							onClick={() => setActiveTab('feed')}
+							className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'feed' ? 'text-greenTheme' : 'text-gray-500'
+								}`}
+						>
+							<Grid size={24} />
+							<span className="text-xs mt-1">Feed</span>
+						</button>
 
-						{/* Search Bar */}
-						<div className="flex-1 mx-8">
-							<div className="relative w-full max-w-xl mx-auto">
-								<input
-									type="text"
-									placeholder="Search..."
-									className="w-full bg-gray-100 rounded-full px-12 py-2 focus:outline-none focus:ring-2 focus:ring-greenTheme"
-								/>
-								<Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 border-none" size={20} />
+						<button
+							onClick={() => setActiveTab('profile')}
+							className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-greenTheme' : 'text-gray-500'
+								}`}
+						>
+							<User size={24} />
+							<span className="text-xs mt-1">Profile</span>
+						</button>
+
+						<button
+							onClick={() => setActiveTab('discover')}
+							className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'discover' ? 'text-greenTheme' : 'text-gray-500'
+								}`}
+						>
+							<Compass size={24} />
+							<span className="text-xs mt-1">Discover</span>
+						</button>
+					</div>
+				</div>
+
+				{/* Mobile Content Panels */}
+				<div className={`
+					fixed inset-0 
+					bg-white 
+					z-40 
+					transition-transform duration-300 
+					lg:hidden
+					${activeTab !== 'feed' ? 'translate-x-0' : 'translate-x-full'}
+				`}>
+					{activeTab === 'profile' && (
+						<div className="h-full overflow-y-auto pt-20 pb-16 px-4">
+							{/* Profile Content (Section 1) */}
+							<div className="flex flex-col items-center mb-4">
+								<div className="w-24 h-24 rounded-full overflow-hidden mb-4">
+									{profileImage?.imageURL ? (
+										<Image
+											src={profileImage.imageURL}
+											alt={`${userData?.firstName}'s Profile Picture`}
+											width={96}
+											height={96}
+											className="w-full h-full object-cover"
+											priority
+											unoptimized={true}
+											loader={({ src }) => src}
+										/>
+									) : (
+										<div className="w-full h-full bg-gray-200" />
+									)}
+								</div>
+								<h3 className="text-xl font-semibold">{userData?.firstName} {userData?.lastName}</h3>
+								<span className="text-gray-600">@{userData?.userName}</span>
+							</div>
+
+							{/* Stats */}
+							<div className="grid grid-cols-3 gap-4 mb-6">
+								<div className="text-center p-3 bg-gray-50 rounded-lg">
+									<span className="block text-xl font-bold text-greenTheme">245</span>
+									<span className="text-sm text-gray-600">Friends</span>
+								</div>
+								<div className="text-center p-3 bg-gray-50 rounded-lg">
+									<span className="block text-xl font-bold text-greenTheme">128</span>
+									<span className="text-sm text-gray-600">Posts</span>
+								</div>
+								<div className="text-center p-3 bg-gray-50 rounded-lg">
+									<span className="block text-xl font-bold text-greenTheme">1.2k</span>
+									<span className="text-sm text-gray-600">Following</span>
+								</div>
+							</div>
+
+							{/* Users List */}
+							<div className="space-y-2">
+								<div className="relative mb-4">
+									<input
+										type="text"
+										placeholder="Search users..."
+										className="w-full px-10 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-greenTheme"
+										value={searchTerm}
+										onChange={handleSearch}
+									/>
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+								</div>
+
+								{filteredUsers.map((user) => (
+									<div
+										key={user.id}
+										className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+									>
+										<div className="flex items-center gap-3">
+											<div className="w-10 h-10 rounded-full overflow-hidden">
+												{user.profileImage ? (
+													<Image
+														src={user.profileImage}
+														alt={`${user.firstName}'s profile`}
+														width={40}
+														height={40}
+														className="w-full h-full object-cover"
+														loader={({ src }) => src}
+														unoptimized={true}
+													/>
+												) : (
+													<div className="w-full h-full bg-gray-200 flex items-center justify-center">
+														<span className="text-sm text-gray-400">
+															{user.firstName?.charAt(0)}
+															{user.lastName?.charAt(0)}
+														</span>
+													</div>
+												)}
+											</div>
+											<div>
+												<p className="font-medium">{`${user.firstName} ${user.lastName}`}</p>
+												<p className="text-sm text-gray-500">@{user.userName}</p>
+											</div>
+										</div>
+										<button
+											onClick={() => handleUserClick(user)}
+											className="p-2 text-greenTheme hover:bg-green-50 rounded-full"
+											title="plus"
+										>
+											<UserPlus size={20} />
+										</button>
+									</div>
+								))}
 							</div>
 						</div>
+					)}
 
-						{/* Navigation Items */}
-						<div className="flex items-center space-x-6">
-							<button className="text-gray-600 hover:text-greenTheme" title="message squre">
-								<MessageSquare size={24} />
-							</button>
-							<button className="text-gray-600 hover:text-greenTheme" title="bell">
-								<Bell size={24} />
-							</button>
-							<button className="text-gray-600 hover:text-greenTheme" title="settings">
-								<Settings size={24} />
-							</button>
-							<button className="text-gray-600 hover:text-greenTheme" title="compass">
-								<Compass size={24} />
-							</button>
+					{activeTab === 'discover' && (
+						<div className="h-full overflow-y-auto pt-20 pb-16 px-4">
+							{/* Communities Section */}
+							<div className="mb-8">
+								<div className="flex justify-between items-center mb-4">
+									<h2 className="text-xl font-bold">Communities</h2>
+									<button className="text-greenTheme">See All</button>
+								</div>
+								<div className="grid grid-cols-2 gap-4">
+									{[
+										{ name: 'Tech Hub', members: '2.3k', image: 'https://picsum.photos/200/200?random=1' },
+										{ name: 'Design Club', members: '1.5k', image: 'https://picsum.photos/200/200?random=2' },
+										{ name: 'Startup Network', members: '3.1k', image: 'https://picsum.photos/200/200?random=3' },
+										{ name: 'Dev Connect', members: '980', image: 'https://picsum.photos/200/200?random=4' }
+									].map((community, index) => (
+										<div key={index} className="relative rounded-lg overflow-hidden aspect-square">
+											<Image
+												src={community.image}
+												alt={community.name}
+												layout="fill"
+												className="object-cover"
+												unoptimized={true}
+											/>
+											<div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
+												<p className="text-white font-medium">{community.name}</p>
+												<p className="text-gray-300 text-sm">{community.members} members</p>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
 
-							<ProfileDropdown />
+							{/* Events Section */}
+							<div className="mb-8">
+								<div className="flex justify-between items-center mb-4">
+									<h2 className="text-xl font-bold">Upcoming Events</h2>
+									<button className="text-greenTheme">View All</button>
+								</div>
+								<div className="space-y-4">
+									{[
+										{ title: 'Tech Conference 2024', date: 'Mar 15', image: 'https://picsum.photos/200/200?random=5' },
+										{ title: 'Design Workshop', date: 'Mar 20', image: 'https://picsum.photos/200/200?random=6' },
+										{ title: 'Startup Meetup', date: 'Mar 25', image: 'https://picsum.photos/200/200?random=7' }
+									].map((event, index) => (
+										<div key={index} className="flex gap-4 items-center bg-gray-50 p-3 rounded-lg">
+											<Image
+												src={event.image}
+												alt={event.title}
+												width={60}
+												height={60}
+												className="rounded-lg"
+												unoptimized={true}
+											/>
+											<div>
+												<p className="font-medium">{event.title}</p>
+												<p className="text-gray-500 text-sm">{event.date}</p>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+
+							{/* Jobs Section */}
+							<div>
+								<div className="flex justify-between items-center mb-4">
+									<h2 className="text-xl font-bold">Featured Jobs</h2>
+									<button className="text-greenTheme">Browse All</button>
+								</div>
+								<div className="space-y-4">
+									{[
+										{ role: 'Senior Developer', company: 'TechCorp', location: 'Remote', image: 'https://picsum.photos/200/200?random=8' },
+										{ role: 'UX Designer', company: 'DesignLabs', location: 'New York', image: 'https://picsum.photos/200/200?random=9' },
+										{ role: 'Product Manager', company: 'StartupX', location: 'San Francisco', image: 'https://picsum.photos/200/200?random=10' }
+									].map((job, index) => (
+										<div key={index} className="border rounded-lg p-4">
+											<div className="flex gap-4 items-center">
+												<Image
+													src={job.image}
+													alt={job.company}
+													width={48}
+													height={48}
+													className="rounded-lg"
+													unoptimized={true}
+												/>
+												<div>
+													<p className="font-medium">{job.role}</p>
+													<p className="text-gray-600">{job.company}</p>
+													<p className="text-gray-500 text-sm">{job.location}</p>
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
 						</div>
-					</div>
-				</header>
+					)}
+
+					{/* Close Button */}
+					<button
+						onClick={() => setActiveTab('feed')}
+						className="absolute top-4 right-4 p-2 rounded-full bg-gray-100"
+						title="close"
+					>
+						<X size={24} />
+					</button>
+				</div>
+			</>
+		);
+	};
 
 
-				{/* Navigation Bar */}
-				<nav className="bg-white border-t border-gray-200">
-					<div className="container mx-auto px-4">
-						<div className="flex justify-center items-center space-x-8 overflow-x-auto md:overflow-visible">
-							{navLinks.map((link) => (
-								<Link
-									key={link.name}
-									href={link.href}
-									className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-700 hover:text-greenTheme hover:border-b-2 hover:border-greenTheme transition-colors duration-200"
-								>
-									{link.name}
-								</Link>
-							))}
-						</div>
-					</div>
-				</nav>
-			</div>
 
-			{/* Main content with three-column layout */}
+
+	return (
+		// <div className="min-h-screen bg-gray-100">
+		// 	{/* Main content with three-column layout */}
+		// 	<main className="pt-36 container mx-auto px-4 md:px-8">
+		// 		<div className="flex justify-between gap-8">
+		// 			{/* Section 1: Profile Details - Fixed */}
+		// 			<section className="w-[280px] bg-white rounded-lg shadow-md p-3 fixed left-8 top-36 h-[calc(100vh-9rem)] flex flex-col">
+		// 				{/* Profile section - made more compact */}
+		// 				<div className="flex flex-col items-center mb-4">
+		// 					<div className="w-16 h-16 rounded-full overflow-hidden mb-2">
+		// 						{profileImage?.imageURL ? (
+		// 							<Image
+		// 								src={profileImage.imageURL}
+		// 								alt={`${userData?.firstName}'s Profile Picture`}
+		// 								width={64}
+		// 								height={64}
+		// 								className="w-full h-full object-cover"
+		// 								priority
+		// 								unoptimized={true}
+		// 								loader={({ src }) => src}
+		// 							/>
+		// 						) : (
+		// 							<div className="w-full h-full bg-gray-200" />
+		// 						)}
+		// 					</div>
+		// 					<h3 className="font-semibold text-base">{userData?.firstName} {userData?.lastName}</h3>
+		// 					<span className="text-xs text-gray-600">@{userData?.userName}</span>
+		// 				</div>
+
+		// 				{/* Stats Grid - more compact */}
+		// 				<div className="grid grid-cols-3 gap-2 text-center mb-3 text-sm">
+		// 					<div className="flex flex-col">
+		// 						<span className="font-bold text-greenTheme">245</span>
+		// 						<span className="text-xs text-gray-600">Friends</span>
+		// 					</div>
+		// 					<div className="flex flex-col">
+		// 						<span className="font-bold text-greenTheme">128</span>
+		// 						<span className="text-xs text-gray-600">Posts</span>
+		// 					</div>
+		// 					<div className="flex flex-col">
+		// 						<span className="font-bold text-greenTheme">1.2k</span>
+		// 						<span className="text-xs text-gray-600">Following</span>
+		// 					</div>
+		// 				</div>
+
+		// 				{/* Search and Users Section */}
+		// 				<div className="flex-1 overflow-hidden flex flex-col">
+		// 					<div className="relative mb-2">
+		// 						<input
+		// 							type="text"
+		// 							placeholder="Search users..."
+		// 							className="w-full px-8 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none"
+		// 							value={searchTerm}
+		// 							onChange={handleSearch}
+		// 						/>
+		// 						<Search className="absolute left-2 top-1/2 transform -translate-y-1/2 text-gray-400" size={16} />
+		// 					</div>
+
+		// 					<div className="flex-1 overflow-y-auto">
+		// 						{filteredUsers.map((user) => (
+		// 							<div
+		// 								key={user.id}
+		// 								className="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg"
+		// 							>
+		// 								<div className="flex items-center gap-2">
+		// 									<div className="w-8 h-8 rounded-full overflow-hidden">
+		// 										{user.profileImage ? (
+		// 											<Image
+		// 												src={user.profileImage}
+		// 												alt={`${user.firstName}'s profile`}
+		// 												width={32}
+		// 												height={32}
+		// 												className="w-full h-full object-cover"
+		// 												loader={({ src }) => src}
+		// 												unoptimized={true}
+		// 											/>
+		// 										) : (
+		// 											<div className="w-full h-full bg-gray-200 flex items-center justify-center">
+		// 												<span className="text-xs text-gray-400">
+		// 													{user.firstName?.charAt(0)}
+		// 													{user.lastName?.charAt(0)}
+		// 												</span>
+		// 											</div>
+		// 										)}
+		// 									</div>
+		// 									<div className="flex flex-col">
+		// 										<span className="font-medium text-sm">{`${user.firstName} ${user.lastName}`}</span>
+		// 										<span className="text-xs text-gray-500">@{user.userName}</span>
+		// 									</div>
+		// 								</div>
+		// 								<button
+		// 									onClick={() => handleUserClick(user)}
+		// 									className="p-1 text-greenTheme hover:bg-green-50 rounded-full"
+		// 									title="users"
+		// 								>
+		// 									<Plus size={16} />
+		// 								</button>
+		// 							</div>
+		// 						))}
+		// 					</div>
+		// 				</div>
+
+		// 				{showUserModal && selectedUser && <UserModal />}
+
+		// 			</section>
+
+		// 			{/* Section 2: Feeds and Posts - Scrollable */}
+		// 			<section className="w-[calc(100%-600px)] bg-white rounded-lg shadow-md p-4 mx-auto min-h-screen">
+		// 				<div
+		// 					ref={sliderRef}
+		// 					style={sliderStyles}
+		// 					className="flex items-center space-x-4 overflow-x-auto pb-4 select-none cursor-grab scroll-smooth scrollbar-none"
+		// 					onMouseDown={mouseDown}
+		// 					onMouseLeave={mouseLeave}
+		// 					onMouseUp={mouseUp}
+		// 					onMouseMove={mouseMove}
+		// 					onTouchStart={touchStart}
+		// 					onTouchEnd={mouseUp}
+		// 					onTouchMove={touchMove}
+		// 				>
+		// 					{feedFilters.map((filter) => (
+		// 						<button
+		// 							key={filter.name || 'menu'}
+		// 							className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-greenTheme hover:text-white transition-colors whitespace-nowrap flex-shrink-0 select-none"
+		// 						>
+		// 							<filter.icon size={18} className="flex-shrink-0" />
+		// 							{filter.name && <span>{filter.name}</span>}
+		// 						</button>
+		// 					))}
+		// 				</div>
+
+		// 				<div
+		// 					onClick={() => setIsPostModalOpen(true)}
+		// 					className="border rounded-lg p-4 mb-6 bg-white mt-4 cursor-pointer shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)]"
+		// 				>
+		// 					{/* Existing content structure stays exactly the same */}
+		// 					<div className="flex justify-start mb-4">
+		// 						<div className="w-16 h-16 rounded-full overflow-hidden">
+		// 							{profileImage?.imageURL ? (
+		// 								<Image
+		// 									src={profileImage.imageURL}
+		// 									alt="Profile"
+		// 									width={64}
+		// 									height={64}
+		// 									className="w-full h-full object-cover"
+		// 									priority
+		// 									unoptimized={true}
+		// 									loader={({ src }) => src}
+		// 								/>
+		// 							) : (
+		// 								<div className="w-full h-full bg-gray-200" />
+		// 							)}
+		// 						</div>
+		// 					</div>
+
+		// 					<div className="text-left pb-2 mb-4">
+		// 						<div className="border-b border-gray-300 py-2">
+		// 							<span className="text-gray-500">Tell us what&apos;s on your mind</span>
+		// 						</div>
+		// 					</div>
+
+		// 					<div className="flex items-center gap-4">
+		// 						<button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
+		// 							<ImageIcon size={20} />
+		// 							<span>Gallery</span>
+		// 						</button>
+		// 						<button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
+		// 							<Smile size={20} />
+		// 							{/* <span>Emoji</span> */}
+		// 						</button>
+		// 					</div>
+		// 				</div>
+
+		// 				{isPostModalOpen && <CreatePostModal />}
+
+
+		// 				<ShortsSection />
+
+		// 				<div className="space-y-4 mt-4">
+		// 					{posts.map((post) => (
+		// 						<div key={post.id}>
+		// 						<PostCard post={post} />
+		// 						<CommentsFetcher post={post}/>
+		// 						</div>
+		// 					))}
+		// 				</div>
+
+		// 			</section>
+
+		// 			{/* Section 3: Shorts/Reels - Fixed */}
+		// 			<section className="w-[280px] bg-white rounded-lg shadow-md p-4 fixed right-8 top-36 h-[calc(100vh-9rem)] overflow-y-auto">
+		// 				{/* Communities Grid */}
+		// 				<div className="mb-8">
+		// 					<h2 className="text-lg font-bold mb-4">Communities</h2>
+		// 					<div className="grid grid-cols-2 gap-3">
+		// 						{[
+		// 							{ name: 'Tech Hub', members: '2.3k', image: 'https://picsum.photos/200/200?random=1' },
+		// 							{ name: 'Design Club', members: '1.5k', image: 'https://picsum.photos/200/200?random=2' },
+		// 							{ name: 'Startup Network', members: '3.1k', image: 'https://picsum.photos/200/200?random=3' },
+		// 							{ name: 'Dev Connect', members: '980', image: 'https://picsum.photos/200/200?random=4' }
+		// 						].map((community, index) => (
+		// 							<div key={index} className="relative group cursor-pointer">
+		// 								<Image
+		// 									src={community.image}
+		// 									alt={community.name}
+		// 									width={120}
+		// 									height={120}
+		// 									className="rounded-lg object-cover w-full h-24"
+		// 									unoptimized={true}
+		// 								/>
+		// 								<div className="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-50 rounded-b-lg">
+		// 									<p className="text-white text-sm font-medium truncate">{community.name}</p>
+		// 									<p className="text-gray-300 text-xs">{community.members} members</p>
+		// 								</div>
+		// 							</div>
+		// 						))}
+		// 					</div>
+		// 				</div>
+
+		// 				{/* Events Grid */}
+		// 				<div className="mb-8">
+		// 					<h2 className="text-lg font-bold mb-4">Upcoming Events</h2>
+		// 					<div className="space-y-4">
+		// 						{[
+		// 							{ title: 'Tech Conference 2024', date: 'Mar 15', image: 'https://picsum.photos/200/200?random=5' },
+		// 							{ title: 'Design Workshop', date: 'Mar 20', image: 'https://picsum.photos/200/200?random=6' },
+		// 							{ title: 'Startup Meetup', date: 'Mar 25', image: 'https://picsum.photos/200/200?random=7' }
+		// 						].map((event, index) => (
+		// 							<div key={index} className="flex gap-3 items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg">
+		// 								<Image
+		// 									src={event.image}
+		// 									alt={event.title}
+		// 									width={60}
+		// 									height={60}
+		// 									className="rounded-lg object-cover"
+		// 									unoptimized={true}
+		// 								/>
+		// 								<div>
+		// 									<p className="font-medium text-sm">{event.title}</p>
+		// 									<p className="text-gray-500 text-xs">{event.date}</p>
+		// 								</div>
+		// 							</div>
+		// 						))}
+		// 					</div>
+		// 				</div>
+
+		// 				{/* Jobs Grid */}
+		// 				<div>
+		// 					<h2 className="text-lg font-bold mb-4">Featured Jobs</h2>
+		// 					<div className="space-y-4">
+		// 						{[
+		// 							{ role: 'Senior Developer', company: 'TechCorp', location: 'Remote', image: 'https://picsum.photos/200/200?random=8' },
+		// 							{ role: 'UX Designer', company: 'DesignLabs', location: 'New York', image: 'https://picsum.photos/200/200?random=9' },
+		// 							{ role: 'Product Manager', company: 'StartupX', location: 'San Francisco', image: 'https://picsum.photos/200/200?random=10' }
+		// 						].map((job, index) => (
+		// 							<div key={index} className="border rounded-lg p-3 cursor-pointer hover:border-greenTheme transition-colors">
+		// 								<div className="flex gap-3 items-center">
+		// 									<Image
+		// 										src={job.image}
+		// 										alt={job.company}
+		// 										width={40}
+		// 										height={40}
+		// 										className="rounded-lg"
+		// 										unoptimized={true}
+		// 									/>
+		// 									<div>
+		// 										<p className="font-medium text-sm">{job.role}</p>
+		// 										<p className="text-gray-500 text-xs">{job.company}</p>
+		// 										<p className="text-gray-400 text-xs">{job.location}</p>
+		// 									</div>
+		// 								</div>
+		// 							</div>
+		// 						))}
+		// 					</div>
+		// 				</div>
+		// 			</section>
+
+		// 		</div>
+		// 	</main>
+		// </div>
+
+		<div className="min-h-screen bg-gray-100">
 			<main className="pt-36 container mx-auto px-4 md:px-8">
-				<div className="flex justify-between gap-8">
-					{/* Section 1: Profile Details - Fixed */}
-					<section className="w-[280px] bg-white rounded-lg shadow-md p-3 fixed left-8 top-36 h-[calc(100vh-9rem)] flex flex-col">
-						{/* Profile section - made more compact */}
+				<div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_280px] gap-4 lg:gap-8">
+					{/* Section 1: Profile Details */}
+					<section className="
+						w-full lg:w-[280px] 
+						bg-white rounded-lg shadow-md 
+						p-3
+						order-2 lg:order-1
+						sticky top-36
+						h-[calc(100vh-9rem)]
+						overflow-y-auto
+						scrollbar-thin scrollbar-thumb-gray-200
+						hidden lg:block
+						">
+						{/* Profile section */}
 						<div className="flex flex-col items-center mb-4">
 							<div className="w-16 h-16 rounded-full overflow-hidden mb-2">
 								{profileImage?.imageURL ? (
@@ -1396,7 +1785,7 @@ export default function Page() {
 							<span className="text-xs text-gray-600">@{userData?.userName}</span>
 						</div>
 
-						{/* Stats Grid - more compact */}
+						{/* Stats Grid */}
 						<div className="grid grid-cols-3 gap-2 text-center mb-3 text-sm">
 							<div className="flex flex-col">
 								<span className="font-bold text-greenTheme">245</span>
@@ -1418,7 +1807,7 @@ export default function Page() {
 								<input
 									type="text"
 									placeholder="Search users..."
-									className="w-full px-8 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none"
+									className="w-full px-8 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-greenTheme/20"
 									value={searchTerm}
 									onChange={handleSearch}
 								/>
@@ -1429,7 +1818,7 @@ export default function Page() {
 								{filteredUsers.map((user) => (
 									<div
 										key={user.id}
-										className="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg"
+										className="flex items-center justify-between p-1.5 hover:bg-gray-50 rounded-lg transition-colors"
 									>
 										<div className="flex items-center gap-2">
 											<div className="w-8 h-8 rounded-full overflow-hidden">
@@ -1459,8 +1848,8 @@ export default function Page() {
 										</div>
 										<button
 											onClick={() => handleUserClick(user)}
-											className="p-1 text-greenTheme hover:bg-green-50 rounded-full"
-											title="users"
+											className="p-1 text-greenTheme hover:bg-green-50 rounded-full transition-colors"
+											title="Add user"
 										>
 											<Plus size={16} />
 										</button>
@@ -1468,18 +1857,37 @@ export default function Page() {
 								))}
 							</div>
 						</div>
-
-						{showUserModal && selectedUser && <UserModal />}
-
 					</section>
 
-
-					{/* Section 2: Feeds and Posts - Scrollable */}
-					<section className="w-[calc(100%-600px)] bg-white rounded-lg shadow-md p-4 mx-auto min-h-screen">
+					{/* Section 2: Feeds and Posts */}
+					<section className="
+						w-full lg:w-auto
+						bg-white rounded-lg shadow-md 
+						p-4 md:p-6
+						order-1 lg:order-2
+						min-h-screen
+						flex flex-col
+						gap-4
+						">
+						{/* Feed Filters */}
 						<div
 							ref={sliderRef}
 							style={sliderStyles}
-							className="flex items-center space-x-4 overflow-x-auto pb-4 select-none cursor-grab scroll-smooth scrollbar-none"
+							className="
+          flex items-center 
+          space-x-4 
+          overflow-x-auto 
+          pb-4 
+          select-none 
+          cursor-grab 
+          scroll-smooth 
+          scrollbar-none
+          -mx-4 md:-mx-6
+          px-4 md:px-6
+          sticky top-0 
+          bg-white 
+          z-10
+        "
 							onMouseDown={mouseDown}
 							onMouseLeave={mouseLeave}
 							onMouseUp={mouseUp}
@@ -1491,21 +1899,43 @@ export default function Page() {
 							{feedFilters.map((filter) => (
 								<button
 									key={filter.name || 'menu'}
-									className="flex items-center gap-2 px-4 py-2 rounded-full bg-gray-100 hover:bg-greenTheme hover:text-white transition-colors whitespace-nowrap flex-shrink-0 select-none"
+									className="
+              flex items-center 
+              gap-2 px-4 py-2 
+              rounded-full 
+              bg-gray-100 
+              hover:bg-greenTheme 
+              hover:text-white 
+              transition-colors 
+              whitespace-nowrap 
+              flex-shrink-0 
+              select-none
+              text-sm md:text-base
+            "
 								>
 									<filter.icon size={18} className="flex-shrink-0" />
-									{filter.name && <span>{filter.name}</span>}
+									{filter.name && <span className="hidden sm:inline">{filter.name}</span>}
 								</button>
 							))}
 						</div>
 
+						{/* Create Post Card */}
 						<div
 							onClick={() => setIsPostModalOpen(true)}
-							className="border rounded-lg p-4 mb-6 bg-white mt-4 cursor-pointer shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)]"
+							className="
+          border rounded-lg 
+          p-4 
+          bg-white 
+          cursor-pointer 
+          shadow-[0_2px_15px_-3px_rgba(0,0,0,0.07),0_10px_20px_-2px_rgba(0,0,0,0.04)]
+          hover:shadow-lg 
+          transition-all 
+          duration-300
+          transform hover:scale-[1.01]
+        "
 						>
-							{/* Existing content structure stays exactly the same */}
-							<div className="flex justify-start mb-4">
-								<div className="w-16 h-16 rounded-full overflow-hidden">
+							<div className="flex items-center gap-4">
+								<div className="w-12 h-12 md:w-16 md:h-16 rounded-full overflow-hidden flex-shrink-0">
 									{profileImage?.imageURL ? (
 										<Image
 											src={profileImage.imageURL}
@@ -1521,47 +1951,60 @@ export default function Page() {
 										<div className="w-full h-full bg-gray-200" />
 									)}
 								</div>
-							</div>
-
-							<div className="text-left pb-2 mb-4">
-								<div className="border-b border-gray-300 py-2">
-									<span className="text-gray-500">Tell us what&apos;s on your mind</span>
+								<div className="flex-1">
+									<div className="border rounded-full px-4 py-2 text-gray-500 hover:bg-gray-50">
+										<span className="text-sm md:text-base">Tell us what's on your mind</span>
+									</div>
 								</div>
 							</div>
 
-							<div className="flex items-center gap-4">
+							<div className="flex items-center gap-4 mt-4">
 								<button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
 									<ImageIcon size={20} />
-									<span>Gallery</span>
+									<span className="hidden sm:inline">Gallery</span>
 								</button>
-								<button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
+								<button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme" title="smile">
 									<Smile size={20} />
-									{/* <span>Emoji</span> */}
 								</button>
 							</div>
 						</div>
 
 						{isPostModalOpen && <CreatePostModal />}
 
+						{/* Shorts Section */}
+						<div className="relative -mx-4 md:-mx-6 px-4 md:px-6">
+							<ShortsSection />
+						</div>
 
-						<ShortsSection />
-
+						{/* Posts Feed */}
 						<div className="space-y-4 mt-4">
 							{posts.map((post) => (
 								<div key={post.id}>
-								<PostCard post={post} />
-								<CommentsFetcher post={post}/>
+									<PostCard post={post} />
+									<CommentsFetcher post={post} />
 								</div>
 							))}
 						</div>
-						
 					</section>
 
-					{/* Section 3: Shorts/Reels - Fixed */}
-					<section className="w-[280px] bg-white rounded-lg shadow-md p-4 fixed right-8 top-36 h-[calc(100vh-9rem)] overflow-y-auto">
+					{/* Section 3: Communities/Events/Jobs */}
+					<section className="
+		w-full lg:w-[280px]
+		bg-white rounded-lg shadow-md 
+		p-4 md:p-6
+		order-3
+		sticky top-36
+		h-[calc(100vh-9rem)]
+		overflow-y-auto
+		scrollbar-thin scrollbar-thumb-gray-200
+		hidden lg:block
+		">
 						{/* Communities Grid */}
 						<div className="mb-8">
-							<h2 className="text-lg font-bold mb-4">Communities</h2>
+							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+								Communities
+								<button className="text-sm text-greenTheme hover:underline">See All</button>
+							</h2>
 							<div className="grid grid-cols-2 gap-3">
 								{[
 									{ name: 'Tech Hub', members: '2.3k', image: 'https://picsum.photos/200/200?random=1' },
@@ -1569,7 +2012,18 @@ export default function Page() {
 									{ name: 'Startup Network', members: '3.1k', image: 'https://picsum.photos/200/200?random=3' },
 									{ name: 'Dev Connect', members: '980', image: 'https://picsum.photos/200/200?random=4' }
 								].map((community, index) => (
-									<div key={index} className="relative group cursor-pointer">
+									<div
+										key={index}
+										className="
+                relative 
+                group 
+                cursor-pointer 
+                transform 
+                transition-all 
+                duration-300 
+                hover:scale-105
+              "
+									>
 										<Image
 											src={community.image}
 											alt={community.name}
@@ -1578,7 +2032,15 @@ export default function Page() {
 											className="rounded-lg object-cover w-full h-24"
 											unoptimized={true}
 										/>
-										<div className="absolute bottom-0 left-0 right-0 p-2 bg-black bg-opacity-50 rounded-b-lg">
+										<div className="
+                absolute bottom-0 
+                left-0 right-0 
+                p-2 
+                bg-gradient-to-t 
+                from-black/80 
+                to-transparent 
+                rounded-b-lg
+              ">
 											<p className="text-white text-sm font-medium truncate">{community.name}</p>
 											<p className="text-gray-300 text-xs">{community.members} members</p>
 										</div>
@@ -1589,24 +2051,38 @@ export default function Page() {
 
 						{/* Events Grid */}
 						<div className="mb-8">
-							<h2 className="text-lg font-bold mb-4">Upcoming Events</h2>
+							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+								Upcoming Events
+								<button className="text-sm text-greenTheme hover:underline">View All</button>
+							</h2>
 							<div className="space-y-4">
 								{[
 									{ title: 'Tech Conference 2024', date: 'Mar 15', image: 'https://picsum.photos/200/200?random=5' },
 									{ title: 'Design Workshop', date: 'Mar 20', image: 'https://picsum.photos/200/200?random=6' },
 									{ title: 'Startup Meetup', date: 'Mar 25', image: 'https://picsum.photos/200/200?random=7' }
 								].map((event, index) => (
-									<div key={index} className="flex gap-3 items-center cursor-pointer hover:bg-gray-50 p-2 rounded-lg">
+									<div
+										key={index}
+										className="
+                flex gap-3 
+                items-center 
+                cursor-pointer 
+                hover:bg-gray-50 
+                p-2 rounded-lg 
+                transition-all 
+                duration-300
+              "
+									>
 										<Image
 											src={event.image}
 											alt={event.title}
 											width={60}
 											height={60}
-											className="rounded-lg object-cover"
+											className="rounded-lg object-cover flex-shrink-0"
 											unoptimized={true}
 										/>
 										<div>
-											<p className="font-medium text-sm">{event.title}</p>
+											<p className="font-medium text-sm line-clamp-1">{event.title}</p>
 											<p className="text-gray-500 text-xs">{event.date}</p>
 										</div>
 									</div>
@@ -1616,21 +2092,36 @@ export default function Page() {
 
 						{/* Jobs Grid */}
 						<div>
-							<h2 className="text-lg font-bold mb-4">Featured Jobs</h2>
+							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+								Featured Jobs
+								<button className="text-sm text-greenTheme hover:underline">Browse All</button>
+							</h2>
 							<div className="space-y-4">
 								{[
 									{ role: 'Senior Developer', company: 'TechCorp', location: 'Remote', image: 'https://picsum.photos/200/200?random=8' },
 									{ role: 'UX Designer', company: 'DesignLabs', location: 'New York', image: 'https://picsum.photos/200/200?random=9' },
 									{ role: 'Product Manager', company: 'StartupX', location: 'San Francisco', image: 'https://picsum.photos/200/200?random=10' }
 								].map((job, index) => (
-									<div key={index} className="border rounded-lg p-3 cursor-pointer hover:border-greenTheme transition-colors">
+									<div
+										key={index}
+										className="
+                border rounded-lg 
+                p-3 
+                cursor-pointer 
+                hover:border-greenTheme 
+                transition-all 
+                duration-300
+                transform hover:scale-[1.02]
+                hover:shadow-md
+              "
+									>
 										<div className="flex gap-3 items-center">
 											<Image
 												src={job.image}
 												alt={job.company}
 												width={40}
 												height={40}
-												className="rounded-lg"
+												className="rounded-lg flex-shrink-0"
 												unoptimized={true}
 											/>
 											<div>
@@ -1644,11 +2135,12 @@ export default function Page() {
 							</div>
 						</div>
 					</section>
-
 				</div>
-			</main>
 
+				<MobileNavigation />
+			</main>
 		</div>
+
 	);
 }
 

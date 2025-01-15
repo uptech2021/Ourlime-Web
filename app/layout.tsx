@@ -1,4 +1,4 @@
-import Header from '@/components/Header';
+// import Header from '@/components/Header';
 import type { Metadata } from 'next';
 import './globals.css';
 import Providers from './providers';
@@ -6,6 +6,9 @@ import React from 'react';
 import { SpeedInsights } from '@vercel/speed-insights/next';
 import { Analytics } from '@vercel/analytics/react';
 import Script from 'next/script';
+import Header from '@/components/Header';
+
+
 //TODO aaron statistics on dashboard, communities, posts, jobs, articles, events, users
 //TODO aaron Manage features wont be created, but a statistics page would be to display everything
 //TODO SEO aaron metadata customized for "ourlime.com" (hypothetical content)
