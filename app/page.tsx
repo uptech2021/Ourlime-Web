@@ -8,7 +8,6 @@ import { useRouter } from 'next/navigation';
 import { UserData, ProfileImage, SearchUser, Post } from '@/types/userTypes';
 import LeftSection from '@/components/home/LeftSection';
 import RightSection from '@/components/home/RightSection'; // Import the RightSection component
-import Header from '@/components/Header';
 import MiddleSection from '@/components/home/MiddleSection'; // Import the MiddleSection component
 
 
@@ -296,11 +295,7 @@ export default function Page() {
 		<div className="min-h-screen bg-gray-100">
 				{/* Header */}
 
-				<Header 
-				profileImage={profileImage}
-                userData={userData} // Pass user data directly
-                handleLogout={handleLogout} // Ensure handleLogout is defined in this component
-            />
+			
 
 
 		

@@ -1,29 +1,31 @@
-export type UserData = {
+type UserData = {
 	id: string;
 	firstName: string;
 	lastName: string;
 	userName: string;
 	email: string;
 	gender: string;
+
 	birthday: string;
 	country: string;
 	isAdmin: boolean;
 	last_loggedIn: Date;
 	userTier: number;
 	createdAt: Date;
-    profileImage?: string;
+    imageUrl?: string;
 };
 
-export type ProfileImage = {
+type ProfileImage = {
 	id: string;
 	imageURL: string;
 	userId: string;
 	typeOfImage: string;
 	createdAt: Date;
 	updatedAt: Date;
+
 };
 
-export type SearchUser = {
+type SearchUser = {
 	id: string;
 	userName: string;
 	firstName: string;
@@ -31,13 +33,15 @@ export type SearchUser = {
 	profileImage?: string;
 };
 
-export type Post = {
+
+type Post = {
 	id: string;
 	caption: string;
 	description: string;
 	visibility: string;
 	createdAt: Date;
 	userId: string;
+
 	hashtags: Array<string>;
 	media: string;
 	userReferences: Array<string>;
@@ -49,7 +53,7 @@ export type Post = {
 	};
 };
 
-export type PostData = {
+type PostData = {
 	userId: string;
 	caption: string;
 	description: string;
@@ -57,10 +61,19 @@ export type PostData = {
 	visibility: string;
 };
 
-export type AppUser = {
+
+type AppUser = {
 	id: string;
 	firstName: string;
 	lastName: string;
 	userName: string;
 	profileImage?: string;
 }; 
+export type {
+	UserData, 
+	ProfileImage,
+	SearchUser,
+	Post,
+	PostData,
+	AppUser 
+}

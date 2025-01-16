@@ -29,7 +29,7 @@ export default function MiddleSection({
 		MozUserSelect: 'none',
 		msUserSelect: 'none'
 	} as const;
-	
+
 	const feedFilters = [
 		{ name: '', icon: Menu },
 		{ name: 'All', icon: Grid },
@@ -75,9 +75,9 @@ export default function MiddleSection({
 			>
 				<div className="flex justify-start mb-4">
 					<div className="w-16 h-16 rounded-full overflow-hidden">
-						{user?.profileImage ? (
+						{user?.imageUrl ? (
 							<Image
-								src={user.profileImage}
+								src={user.imageUrl}
 								alt="Profile"
 								width={64}
 								height={64}
@@ -109,20 +109,21 @@ export default function MiddleSection({
 				</div>
 			</div>
 
-			<MemoriesSection/>
+			<MemoriesSection />
 
 			{isPostModalOpen && (
 				<CreatePost
 					setTogglePostForm={setIsPostModalOpen}
-					profilePicture={user?.profileImage || ''}
+					profilePicture={user?.imageUrl || ''}
 				/>
 			)}
 
-<div className="space-y-4 mt-4">
-							{posts.map((post) => (
-								<PostCard key={post.id} post={post} />
-							))}
-						</div>
+			<div className="space-y-4 mt-4">
+				{posts.map((post) => (
+					<PostCard key={post.id} post={post} />
+
+				))}
+			</div>
 		</section>
 	);
 }
