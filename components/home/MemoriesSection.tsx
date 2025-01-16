@@ -1,11 +1,11 @@
 import { useEffect, useState } from 'react';
 import { auth, db, storage } from '@/lib/firebaseConfig';
-import { addDoc, collection, getDoc, getDocs, orderBy, query, doc } from 'firebase/firestore';
+import { addDoc, collection, getDoc, getDocs, orderBy, query, doc, where } from 'firebase/firestore';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import Image from 'next/image';
 import { Plus, Upload } from 'lucide-react';
 
-const MemoriesSection = () => {
+const MemoriesSection = ({ profileImage }) => {
     const [shortFile, setShortFile] = useState<File | null>(null);
     const [previewUrl, setPreviewUrl] = useState<string | null>(null);
     const [isUploading, setIsUploading] = useState(false);
@@ -69,32 +69,62 @@ const MemoriesSection = () => {
                 const shortsRef = collection(db, 'shorts');
                 const q = query(shortsRef, orderBy('createdAt', 'desc'));
                 const snapshot = await getDocs(q);
-
+    
                 const shortsData = await Promise.all(
                     snapshot.docs.map(async (docSnapshot) => {
                         const shortData = docSnapshot.data();
                         const userDocRef = doc(db, 'users', shortData.userId);
                         const userDoc = await getDoc(userDocRef);
                         const userData = userDoc.data();
-
+    
+                        // Fetch user's profile image using the provided logic
+                        const profileImagesQuery = query(
+                            collection(db, 'profileImages'),
+                            where('userId', '==', userDoc.id)
+                        );
+                        const profileImagesSnapshot = await getDocs(profileImagesQuery);
+    
+                        const profileSetAsQuery = query(
+                            collection(db, 'profileImageSetAs'),
+                            where('userId', '==', userDoc.id),
+                            where('setAs', '==', 'profile')
+                        );
+                        const setAsSnapshot = await getDocs(profileSetAsQuery);
+    
+                        let profileImageUrl = null;
+                        if (!setAsSnapshot.empty) {
+                            const setAsDoc = setAsSnapshot.docs[0].data();
+                            const matchingImage = profileImagesSnapshot.docs.find(
+                                (img) => img.id === setAsDoc.profileImageId
+                            );
+                            if (matchingImage) {
+                                profileImageUrl = matchingImage.data().imageURL;
+                            }
+                        }
+    
                         return {
                             id: docSnapshot.id,
                             ...shortData,
                             userName: userData?.userName,
                             firstName: userData?.firstName,
-                            lastName: userData?.lastName
+                            lastName: userData?.lastName,
+                            profileImage: profileImageUrl, // Include profileImage URL
                         };
                     })
                 );
-
+    
+                console.log('Fetched Shorts Data with Profile Images:', shortsData);
+    
                 setShorts(shortsData);
             } catch (error) {
-                console.log('Error fetching shorts:', error);
+                console.error('Error fetching shorts:', error);
             }
         };
-
+    
         fetchShorts();
     }, []);
+    
+
 
     return (
         <div className="mb-8">
@@ -151,10 +181,7 @@ const MemoriesSection = () => {
 
                     {/* Shorts preview tiles */}
                     {shorts.map((short) => (
-                        <div
-                            key={short.id}
-                            className="flex-shrink-0 w-32 h-64 relative mb-14"
-                        >
+                        <div key={short.id} className="flex-shrink-0 w-32 h-64 relative mb-14">
                             <div className="h-full rounded-lg overflow-hidden">
                                 {short.typeUrl.includes('.mp4') ? (
                                     <video
@@ -177,13 +204,21 @@ const MemoriesSection = () => {
                             </div>
 
                             <div className="absolute -bottom-6 left-1/2 transform -translate-x-1/2 w-12 h-12 bg-white rounded-full shadow-lg">
-                                <Image
-                                    src="/images/transparentLogo.png"
-                                    alt="Ourlime Logo"
-                                    width={48}
-                                    height={48}
-                                    className="w-full h-full object-contain"
-                                />
+                                
+                                    {short.profileImage ? (
+                                        <Image
+                                            src={short.profileImage}
+                                            alt="Uploader's Profile"
+                                            width={48}
+                                            height={48}
+                                            className="w-full h-full object-cover"
+                                            loader={({ src }) => src}
+                                            unoptimized={true}
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gray-200" />
+                                    )}
+                                
                             </div>
 
                             <div className="absolute -bottom-14 left-0 right-0 text-center">
@@ -191,6 +226,7 @@ const MemoriesSection = () => {
                             </div>
                         </div>
                     ))}
+
                 </div>
             </div>
         </div>

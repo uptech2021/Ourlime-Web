@@ -2,15 +2,16 @@ import Image from 'next/image';
 
 export default function RightSection() {
     return (
-        <section className="w-full fixed right-0 lg:w-[280px] xl:w-[400px]
+        <section className=" w-full
 		bg-white rounded-lg shadow-md 
 		p-4 md:p-6
-		order-3
+		order-2 lg:order-1
 		sticky top-36
 		h-[calc(100vh-9rem)]
 		overflow-y-auto
 		scrollbar-thin scrollbar-thumb-gray-200
-		hidden lg:block">
+		hidden lg:block
+        z-10">
             {/* Communities Grid */}
             <div className="mb-8">
 							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">

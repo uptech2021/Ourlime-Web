@@ -194,10 +194,10 @@ transform hover:scale-[1.01]
 			</div>
 		</div>
 		<div className="relative -mx-4 md:-mx-6 px-4 md:px-6">
-			<MemoriesSection/>
-			</div>
+			<MemoriesSection profileImage={profileImage} />
+		</div>
 
-			{isPostModalOpen && (
+		{isPostModalOpen && (
 				<CreatePost
 					setTogglePostForm={setIsPostModalOpen}
 					profilePicture={profileImage?.imageURL || ''}

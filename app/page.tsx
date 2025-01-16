@@ -7,8 +7,11 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserData, ProfileImage, SearchUser, Post } from '@/types/userTypes';
 import LeftSection from '@/components/home/LeftSection';
-import RightSection from '@/components/home/RightSection'; 
+import UserModal from '@/components/home/LeftSection';
+import RightSection from '@/components/home/RightSection';
 import MiddleSection from '@/components/home/MiddleSection';
+import { Compass, Grid, Search, User, UserPlus, X } from 'lucide-react';
+import Image from 'next/image';
 
 
 export default function Page() {
@@ -24,6 +27,8 @@ export default function Page() {
 	const dropdownRef = useRef(null);
 	const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 	const [showUserModal, setShowUserModal] = useState(false);
+	const [isUserModalVisible, setIsUserModalVisible] = useState(false);
+	
 
 	const fetchAllUsers = async () => {
 		const usersRef = collection(db, 'users');
@@ -46,8 +51,8 @@ export default function Page() {
 					where('setAs', '==', 'profile')
 				);
 				const setAsSnapshot = await getDocs(profileSetAsQuery);
-				
-				
+
+
 				let profileImageUrl = null;
 				if (!setAsSnapshot.empty) {
 					const setAsDoc = setAsSnapshot.docs[0].data();
@@ -122,7 +127,7 @@ export default function Page() {
 				}
 			}
 
-			const userData = { 
+			const userData = {
 				id: userDoc.id,
 				...userDataFromDb
 			} as UserData;
@@ -256,38 +261,300 @@ export default function Page() {
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
 
-	const handleUserClick = (user: UserData) => {
-		setSelectedUser(user);
-		setShowUserModal(true);
-	};
+	const handleUserClick = (user) => {
+        setSelectedUser(user);
+        setIsUserModalVisible(true);
+    };
 
 
-	return (
-		<div className="min-h-screen bg-gray-100">
 
-			{/* Main content with three-column layout */}
-			<main className="pt-36 container mx-auto px-4 md:px-8">
-				<div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_280px] gap-4 lg:gap-8">
+	const [activeTab, setActiveTab] = useState('feed');
+	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
 
-					{/* Section 1: Profile Details - Fixed */}
-					<LeftSection
-						profileImage={profileImage}
-						userData={userData}
-						searchTerm={searchTerm}
-						handleSearch={handleSearch}
-						filteredUsers={filteredUsers}
-						handleUserClick={handleUserClick}
-						selectedUser={selectedUser}
-					/>
+	// Add this component inside your Page component
+	const MobileNavigation = () => {
+		return (
+			<>
+				{/* Bottom Navigation Bar */}
+				<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden">
+					<div className="flex justify-around items-center h-16">
+						<button
+							onClick={() => setActiveTab('feed')}
+							className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'feed' ? 'text-greenTheme' : 'text-gray-500'
+								}`}
+						>
+							<Grid size={24} />
+							<span className="text-xs mt-1">Feed</span>
+						</button>
 
-					{/* Section 2: Middle Section - New Component */}
-					<MiddleSection posts={posts} user={userData} profileImage={profileImage} />
-								
-					<RightSection /> 
-					
+						<button
+							onClick={() => setActiveTab('profile')}
+							className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'profile' ? 'text-greenTheme' : 'text-gray-500'
+								}`}
+						>
+							<User size={24} />
+							<span className="text-xs mt-1">Profile</span>
+						</button>
+
+						<button
+							onClick={() => setActiveTab('discover')}
+							className={`flex flex-col items-center justify-center w-full h-full ${activeTab === 'discover' ? 'text-greenTheme' : 'text-gray-500'
+								}`}
+						>
+							<Compass size={24} />
+							<span className="text-xs mt-1">Discover</span>
+						</button>
+					</div>
 				</div>
-			</main>
 
-		</div>
+				{/* Mobile Content Panels */}
+				<div className={`
+					fixed inset-0 
+					bg-white 
+					z-40 
+					transition-transform duration-300 
+					lg:hidden
+					${activeTab !== 'feed' ? 'translate-x-0' : 'translate-x-full'}
+				`}>
+					{activeTab === 'profile' && (
+						<div className="h-full overflow-y-auto pt-20 pb-16 px-4">
+							{/* Profile Content (Section 1) */}
+							<div className="flex flex-col items-center mb-4">
+								<div className="w-24 h-24 rounded-full overflow-hidden mb-4">
+									{profileImage?.imageURL ? (
+										<Image
+											src={profileImage.imageURL}
+											alt={`${userData?.firstName}'s Profile Picture`}
+											width={96}
+											height={96}
+											className="w-full h-full object-cover"
+											priority
+											unoptimized={true}
+											loader={({ src }) => src}
+										/>
+									) : (
+										<div className="w-full h-full bg-gray-200" />
+									)}
+								</div>
+								<h3 className="text-xl font-semibold">{userData?.firstName} {userData?.lastName}</h3>
+								<span className="text-gray-600">@{userData?.userName}</span>
+							</div>
+
+							{/* Stats */}
+							<div className="grid grid-cols-3 gap-4 mb-6">
+								<div className="text-center p-3 bg-gray-50 rounded-lg">
+									<span className="block text-xl font-bold text-greenTheme">245</span>
+									<span className="text-sm text-gray-600">Friends</span>
+								</div>
+								<div className="text-center p-3 bg-gray-50 rounded-lg">
+									<span className="block text-xl font-bold text-greenTheme">128</span>
+									<span className="text-sm text-gray-600">Posts</span>
+								</div>
+								<div className="text-center p-3 bg-gray-50 rounded-lg">
+									<span className="block text-xl font-bold text-greenTheme">1.2k</span>
+									<span className="text-sm text-gray-600">Following</span>
+								</div>
+							</div>
+
+							{/* Users List */}
+							<div className="space-y-2">
+								<div className="relative mb-4">
+									<input
+										type="text"
+										placeholder="Search users..."
+										className="w-full px-10 py-2 rounded-full border border-gray-200 focus:outline-none focus:ring-2 focus:ring-greenTheme"
+										value={searchTerm}
+										onChange={handleSearch}
+									/>
+									<Search className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
+								</div>
+
+								{filteredUsers.map((user) => (
+									<div
+										key={user.id}
+										className="flex items-center justify-between p-3 bg-gray-50 rounded-lg"
+									>
+										<div className="flex items-center gap-3">
+											<div className="w-10 h-10 rounded-full overflow-hidden">
+												{user.profileImage ? (
+													<Image
+														src={user.profileImage}
+														alt={`${user.firstName}'s profile`}
+														width={40}
+														height={40}
+														className="w-full h-full object-cover"
+														loader={({ src }) => src}
+														unoptimized={true}
+													/>
+												) : (
+													<div className="w-full h-full bg-gray-200 flex items-center justify-center">
+														<span className="text-sm text-gray-400">
+															{user.firstName?.charAt(0)}
+															{user.lastName?.charAt(0)}
+														</span>
+													</div>
+												)}
+											</div>
+											<div>
+												<p className="font-medium">{`${user.firstName} ${user.lastName}`}</p>
+												<p className="text-sm text-gray-500">@{user.userName}</p>
+											</div>
+										</div>
+										<button
+											onClick={() => handleUserClick(user)}
+											className="p-2 text-greenTheme hover:bg-green-50 rounded-full"
+											title="plus"
+										>
+											<UserPlus size={20} />
+										</button>
+									</div>
+								))}
+							</div>
+						</div>
+					)}
+
+					{activeTab === 'discover' && (
+						<div className="h-full overflow-y-auto pt-20 pb-16 px-4">
+							{/* Communities Section */}
+							<div className="mb-8">
+								<div className="flex justify-between items-center mb-4">
+									<h2 className="text-xl font-bold">Communities</h2>
+									<button className="text-greenTheme">See All</button>
+								</div>
+								<div className="grid grid-cols-2 gap-4">
+									{[
+										{ name: 'Tech Hub', members: '2.3k', image: 'https://picsum.photos/200/200?random=1' },
+										{ name: 'Design Club', members: '1.5k', image: 'https://picsum.photos/200/200?random=2' },
+										{ name: 'Startup Network', members: '3.1k', image: 'https://picsum.photos/200/200?random=3' },
+										{ name: 'Dev Connect', members: '980', image: 'https://picsum.photos/200/200?random=4' }
+									].map((community, index) => (
+										<div key={index} className="relative rounded-lg overflow-hidden aspect-square">
+											<Image
+												src={community.image}
+												alt={community.name}
+												layout="fill"
+												className="object-cover"
+												unoptimized={true}
+											/>
+											<div className="absolute inset-0 bg-gradient-to-t from-black/80 to-transparent flex flex-col justify-end p-3">
+												<p className="text-white font-medium">{community.name}</p>
+												<p className="text-gray-300 text-sm">{community.members} members</p>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+
+							{/* Events Section */}
+							<div className="mb-8">
+								<div className="flex justify-between items-center mb-4">
+									<h2 className="text-xl font-bold">Upcoming Events</h2>
+									<button className="text-greenTheme">View All</button>
+								</div>
+								<div className="space-y-4">
+									{[
+										{ title: 'Tech Conference 2024', date: 'Mar 15', image: 'https://picsum.photos/200/200?random=5' },
+										{ title: 'Design Workshop', date: 'Mar 20', image: 'https://picsum.photos/200/200?random=6' },
+										{ title: 'Startup Meetup', date: 'Mar 25', image: 'https://picsum.photos/200/200?random=7' }
+									].map((event, index) => (
+										<div key={index} className="flex gap-4 items-center bg-gray-50 p-3 rounded-lg">
+											<Image
+												src={event.image}
+												alt={event.title}
+												width={60}
+												height={60}
+												className="rounded-lg"
+												unoptimized={true}
+											/>
+											<div>
+												<p className="font-medium">{event.title}</p>
+												<p className="text-gray-500 text-sm">{event.date}</p>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+
+							{/* Jobs Section */}
+							<div>
+								<div className="flex justify-between items-center mb-4">
+									<h2 className="text-xl font-bold">Featured Jobs</h2>
+									<button className="text-greenTheme">Browse All</button>
+								</div>
+								<div className="space-y-4">
+									{[
+										{ role: 'Senior Developer', company: 'TechCorp', location: 'Remote', image: 'https://picsum.photos/200/200?random=8' },
+										{ role: 'UX Designer', company: 'DesignLabs', location: 'New York', image: 'https://picsum.photos/200/200?random=9' },
+										{ role: 'Product Manager', company: 'StartupX', location: 'San Francisco', image: 'https://picsum.photos/200/200?random=10' }
+									].map((job, index) => (
+										<div key={index} className="border rounded-lg p-4">
+											<div className="flex gap-4 items-center">
+												<Image
+													src={job.image}
+													alt={job.company}
+													width={48}
+													height={48}
+													className="rounded-lg"
+													unoptimized={true}
+												/>
+												<div>
+													<p className="font-medium">{job.role}</p>
+													<p className="text-gray-600">{job.company}</p>
+													<p className="text-gray-500 text-sm">{job.location}</p>
+												</div>
+											</div>
+										</div>
+									))}
+								</div>
+							</div>
+						</div>
+					)}
+
+					{/* Close Button */}
+					<button
+						onClick={() => setActiveTab('feed')}
+						className="absolute top-4 right-4 p-2 rounded-full bg-gray-100"
+						title="close"
+					>
+						<X size={24} />
+					</button>
+				</div>
+			</>
+		);
+	};
+	return (
+		<div className="min-h-screen w-full bg-gray-100">
+			
+  {/* Main content with three-column layout */}
+  <main className="pt-36 w-full px-2 md:px-8">
+    <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
+      <div>
+        {/* Section 1: Profile Details - Fixed */}
+        <LeftSection
+          profileImage={profileImage}
+          userData={userData}
+          searchTerm={searchTerm}
+          handleSearch={handleSearch}
+          filteredUsers={filteredUsers}
+          handleUserClick={handleUserClick}
+          selectedUser={selectedUser}
+		  setShowUserModal={setIsUserModalVisible}
+        />
+      </div>
+      <div>
+        {/* Section 2: Middle Section - New Component */}
+        <MiddleSection posts={posts} user={userData} profileImage={profileImage} />
+      </div>
+      <div>
+        {/* Section 3: Right Section */}
+        <RightSection />
+      </div>
+    </div>
+
+				<MobileNavigation />
+			</main>
+			</div>
+			
+	
 	);
 }
