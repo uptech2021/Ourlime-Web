@@ -5,14 +5,13 @@ type UserData = {
 	userName: string;
 	email: string;
 	gender: string;
-
 	birthday: string;
 	country: string;
 	isAdmin: boolean;
 	last_loggedIn: Date;
 	userTier: number;
 	createdAt: Date;
-    imageUrl?: string;
+    profileImage?: string;
 };
 
 type ProfileImage = {

@@ -7,8 +7,8 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserData, ProfileImage, SearchUser, Post } from '@/types/userTypes';
 import LeftSection from '@/components/home/LeftSection';
-import RightSection from '@/components/home/RightSection'; // Import the RightSection component
-import MiddleSection from '@/components/home/MiddleSection'; // Import the MiddleSection component
+import RightSection from '@/components/home/RightSection'; 
+import MiddleSection from '@/components/home/MiddleSection';
 
 
 export default function Page() {
@@ -19,25 +19,11 @@ export default function Page() {
 	const [searchTerm, setSearchTerm] = useState('');
 	const [allUsers, setAllUsers] = useState<SearchUser[]>([]);
 	const [filteredUsers, setFilteredUsers] = useState<SearchUser[]>([]);
-	const sliderRef = useRef<HTMLDivElement>(null);
-	const [isDown, setIsDown] = useState(false);
-	const [startX, setStartX] = useState(0);
-	const [scrollLeft, setScrollLeft] = useState(0);
-	const [isPostModalOpen, setIsPostModalOpen] = useState(false);
-	const [caption, setCaption] = useState('');
-	const [description, setDescription] = useState('');
-	const [visibility, setVisibility] = useState('public');
 	const [posts, setPosts] = useState<Post[]>([]);
-	const [selectedFiles, setSelectedFiles] = useState<File[]>([]);
-	const [previews, setPreviews] = useState<string[]>([]);
-	const [selectedShort, setSelectedShort] = useState<File | null>(null);
 	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 	const dropdownRef = useRef(null);
 	const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 	const [showUserModal, setShowUserModal] = useState(false);
-
-
-
 
 	const fetchAllUsers = async () => {
 		const usersRef = collection(db, 'users');
@@ -60,7 +46,8 @@ export default function Page() {
 					where('setAs', '==', 'profile')
 				);
 				const setAsSnapshot = await getDocs(profileSetAsQuery);
-
+				
+				
 				let profileImageUrl = null;
 				if (!setAsSnapshot.empty) {
 					const setAsDoc = setAsSnapshot.docs[0].data();
@@ -84,7 +71,6 @@ export default function Page() {
 		setAllUsers(usersWithProfiles);
 		setFilteredUsers(usersWithProfiles);
 	};
-
 
 	const fetchUserData = async (userId: string) => {
 		setIsLoading(true);
@@ -136,11 +122,11 @@ export default function Page() {
 				}
 			}
 
-			const userData = {
+			const userData = { 
 				id: userDoc.id,
 				...userDataFromDb
 			} as UserData;
-
+			console.log('TEST', userData);
 			setUserData(userData);
 			setIsLoading(false);
 
@@ -178,7 +164,6 @@ export default function Page() {
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const searchTerm = e.target.value.toLowerCase();
 		setSearchTerm(searchTerm);
-
 		const filtered = allUsers.filter(user =>
 			user.userName.toLowerCase().includes(searchTerm) ||
 			user.firstName.toLowerCase().includes(searchTerm) ||
@@ -193,7 +178,6 @@ export default function Page() {
 			const postsRef = collection(db, 'feedPosts');
 			const q = query(postsRef, orderBy('createdAt', 'desc'));
 			const snapshot = await getDocs(q);
-
 			const postsWithUserData = await Promise.all(
 				snapshot.docs.map(async (postDoc) => {
 					const postData = postDoc.data();
@@ -272,37 +256,19 @@ export default function Page() {
 		return () => document.removeEventListener('mousedown', handleClickOutside);
 	}, []);
 
-	const handleLogout = async () => {
-		try {
-			await signOut(auth);
-			router.push('/login');
-		} catch (error) {
-			console.error('Error logging out:', error);
-		}
-	};
-
-	
-
 	const handleUserClick = (user: UserData) => {
 		setSelectedUser(user);
 		setShowUserModal(true);
 	};
 
-	
-
 
 	return (
 		<div className="min-h-screen bg-gray-100">
-				{/* Header */}
-
-			
-
-
-		
 
 			{/* Main content with three-column layout */}
 			<main className="pt-36 container mx-auto px-4 md:px-8">
 				<div className="flex justify-between gap-8">
+
 					{/* Section 1: Profile Details - Fixed */}
 					<LeftSection
 						profileImage={profileImage}
@@ -312,15 +278,11 @@ export default function Page() {
 						filteredUsers={filteredUsers}
 						handleUserClick={handleUserClick}
 						selectedUser={selectedUser}
-						
-						
 					/>
 
-
 					{/* Section 2: Middle Section - New Component */}
-					<MiddleSection posts={posts} user={userData} />
-									
-					
+					<MiddleSection posts={posts} user={userData} profileImage={profileImage} />
+								
 					<RightSection /> 
 					
 				</div>

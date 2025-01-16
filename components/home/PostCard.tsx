@@ -2,6 +2,7 @@ import { Post } from '@/types/userTypes'; // Adjust the import based on your pro
 import Image from 'next/image';
 import { Heart, MessageCircle, Share } from 'lucide-react';
 import { useState } from 'react';
+import CommentModal from './CommentsModal';
 
 
 const PostMedia = ({ media }) => {
@@ -57,7 +58,24 @@ const PostMedia = ({ media }) => {
     );
 };
 
+
+
 const PostCard = ({ post }: { post: Post }) => {
+    const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+    const [activePostId, setActivePostId] = useState<string | null>(null);
+
+    const handleOpenCommentModal = (postId: string) => {
+        setActivePostId(postId); // Set the current postId
+        setIsCommentModalOpen(true);
+    };
+
+  
+
+
+
+	const handleCommentClick = () => {
+		setIsCommentModalOpen(true);
+	};
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-4">
             {/* User Info Header */}
@@ -127,7 +145,8 @@ const PostCard = ({ post }: { post: Post }) => {
                     <Heart size={20} />
                     <span>Like</span>
                 </button>
-                <button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
+                <button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+                	onClick={() => handleOpenCommentModal(post.id)}>
                     <MessageCircle size={20} />
                     <span>Comment</span>
                 </button>
@@ -136,6 +155,12 @@ const PostCard = ({ post }: { post: Post }) => {
                     <span>Share</span>
                 </button>
             </div>
+            {isCommentModalOpen && activePostId && (
+					<CommentModal
+						postId={activePostId}
+						userId={post.userId}
+						onClose={() => setIsCommentModalOpen(false)}
+					/>)}
         </div>
     );
 };
