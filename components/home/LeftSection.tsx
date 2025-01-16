@@ -100,7 +100,17 @@ export default function LeftSection({
     const [isUserModalVisible, setIsUserModalVisible] = useState(false);
 
     return (
-        <section className="w-[280px] bg-white rounded-lg shadow-md p-3 fixed left-8 top-36 h-[calc(100vh-9rem)] flex flex-col">
+        <section className="
+						fixed left-0 lg:w-[280px] xl:w-[400px]
+						bg-white rounded-lg shadow-md 
+						p-3
+						order-2 lg:order-1
+						top-36
+						h-[calc(100vh-9rem)]
+						overflow-y-auto
+						scrollbar-thin scrollbar-thumb-gray-200
+						hidden lg:block
+						">
             {/* Profile section - made more compact */}
             <div className="flex flex-col items-center mb-4">
                 <div className="w-16 h-16 rounded-full overflow-hidden mb-2">
@@ -145,7 +155,7 @@ export default function LeftSection({
                     <input
                         type="text"
                         placeholder="Search users..."
-                        className="w-full px-8 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none"
+                        className="w-full px-8 py-1.5 rounded-lg border border-gray-200 text-sm focus:outline-none focus:ring-2 focus:ring-greenTheme/20"
                         value={searchTerm}
                         onChange={handleSearch}
                     />
@@ -189,8 +199,8 @@ export default function LeftSection({
                                     handleUserClick(user);
                                     setIsUserModalVisible(true);
                                 }}
-                                className="p-1 text-greenTheme hover:bg-green-50 rounded-full"
-                                title="users"
+                                className="p-1 text-greenTheme hover:bg-green-50 rounded-full transition-colors"
+                                title="add user"
                             >
                                 <Plus size={16} />
                             </button>

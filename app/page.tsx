@@ -267,7 +267,7 @@ export default function Page() {
 
 			{/* Main content with three-column layout */}
 			<main className="pt-36 container mx-auto px-4 md:px-8">
-				<div className="flex justify-between gap-8">
+				<div className="grid grid-cols-1 lg:grid-cols-[280px_minmax(0,1fr)_280px] gap-4 lg:gap-8">
 
 					{/* Section 1: Profile Details - Fixed */}
 					<LeftSection
