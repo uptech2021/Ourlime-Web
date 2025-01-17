@@ -202,9 +202,6 @@ export default function Page() {
 		return () => unsubscribe();
 	}, []);
 
-	useEffect(() => {
-		fetchAllUsers();
-	}, []);
 
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const searchTerm = e.target.value.toLowerCase();
@@ -302,11 +299,9 @@ export default function Page() {
 	}, []);
 
 	const handleUserClick = (user) => {
-        setSelectedUser(user);
-        setIsUserModalVisible(true);
-    };
-
-
+		setSelectedUser(user);
+		setIsUserModalVisible(true);
+	};
 
 	const [activeTab, setActiveTab] = useState('feed');
 	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -593,8 +588,6 @@ export default function Page() {
 
 				<MobileNavigation />
 			</main>
-			</div>
-			
-	
+		</div>
 	);
 }
