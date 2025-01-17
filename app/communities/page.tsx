@@ -518,65 +518,7 @@ export default function CommunitiesPage() {
       {isModalOpen && <CreateCommunityModal />}
 
       <div className="min-h-screen bg-gray-50">
-        {/* Header Content */}
-        <div className="fixed top-0 w-full z-50">
-          <header className="bg-white shadow-md">
-            <div className="container mx-auto px-4 py-3 flex items-center justify-between">
-              <div className="flex items-center">
-                <Image
-                  src="/images/transparentLogo.png"
-                  alt="Ourlime Logo"
-                  width={40}
-                  height={40}
-                />
-                <span className="ml-2 text-xl font-bold text-greenTheme">Ourlime</span>
-              </div>
-
-              <div className="flex-1 mx-8">
-                <div className="relative w-full max-w-xl mx-auto">
-                  <input
-                    type="text"
-                    placeholder="Search..."
-                    className="w-full bg-gray-100 rounded-full px-12 py-2 outline-none"
-                  />
-                  <Search className="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400" size={20} />
-                </div>
-              </div>
-
-              <div className="flex items-center space-x-6">
-                <button className="text-gray-600 hover:text-greenTheme" title="Message Square">
-                  <MessageSquare size={24} />
-                </button>
-                <button className="text-gray-600 hover:text-greenTheme" title="Notifications">
-                  <Bell size={24} />
-                </button>
-                <button className="text-gray-600 hover:text-greenTheme" title="Settings">
-                  <Settings size={24} />
-                </button>
-                <button className="text-gray-600 hover:text-greenTheme" title="Explore">
-                  <Compass size={24} />
-                </button>
-                <ProfileDropdown />
-              </div>
-            </div>
-          </header>
-
-          <nav className="bg-white border-t border-gray-200">
-            <div className="container mx-auto px-4">
-              <div className="flex justify-center items-center space-x-8 overflow-x-auto md:overflow-visible">
-                {navLinks.map((link) => (
-                  <Link
-                    key={link.name}
-                    href={link.href}
-                    className="whitespace-nowrap px-3 py-4 text-sm font-medium text-gray-700 hover:text-greenTheme hover:border-b-2 hover:border-greenTheme transition-colors duration-200"
-                  >
-                    {link.name}
-                  </Link>
-                ))}
-              </div>
-            </div>
-          </nav>
-        </div>
+      
 
         {/* Main content*/}
         <main className="container mx-auto px-4 pt-36">

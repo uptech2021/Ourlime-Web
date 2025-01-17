@@ -7,7 +7,6 @@ import { useEffect, useState, useRef } from 'react';
 import { useRouter } from 'next/navigation';
 import { UserData, ProfileImage, SearchUser, Post } from '@/types/userTypes';
 import LeftSection from '@/components/home/LeftSection';
-import UserModal from '@/components/home/LeftSection';
 import RightSection from '@/components/home/RightSection';
 import MiddleSection from '@/components/home/MiddleSection';
 import { Compass, Grid, Search, User, UserPlus, X } from 'lucide-react';
@@ -26,8 +25,49 @@ export default function Page() {
 	const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
 	const dropdownRef = useRef(null);
 	const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
-	const [showUserModal, setShowUserModal] = useState(false);
 	const [isUserModalVisible, setIsUserModalVisible] = useState(false);
+	const [topCommunities, setTopCommunities] = useState([]);
+
+    useEffect(() => {
+		const fetchTopCommunities = async () => {
+		  try {
+			//  Get all memberships from communityVariantMembership
+			const membershipRef = collection(db, "communityVariantMembership");
+			const membershipSnapshot = await getDocs(membershipRef);
+	
+			const membershipCounts = membershipSnapshot.docs.reduce((acc, doc) => {
+			  const data = doc.data();
+			  const communityId = data.communityVariantId;
+	
+			  if (communityId) {
+				acc[communityId] = (acc[communityId] || 0) + 1;
+			  }
+			  return acc;
+			}, {} as Record<string, number>);
+	
+			//  Fetch community details for the top communities
+			const communitiesRef = collection(db, "communityVariant");
+			const communitySnapshot = await getDocs(communitiesRef);
+	
+			const communities = communitySnapshot.docs.map((doc) => ({
+			  id: doc.id,
+			  ...doc.data(),
+			  membershipCount: membershipCounts[doc.id] || 0,
+			}));
+	
+			//  Sort communities by membership count and get the top 4
+			const topCommunities = communities
+			  .sort((a, b) => b.membershipCount - a.membershipCount)
+			  .slice(0, 4);
+	
+			setTopCommunities(topCommunities);
+		  } catch (error) {
+			console.error("Error fetching top communities:", error);
+		  }
+		};
+	
+		fetchTopCommunities();
+	  }, []);
 	
 
 	const fetchAllUsers = async () => {
@@ -547,7 +587,7 @@ export default function Page() {
       </div>
       <div>
         {/* Section 3: Right Section */}
-        <RightSection />
+        <RightSection topCommunities={topCommunities}/>
       </div>
     </div>
 

@@ -1,6 +1,17 @@
 import Image from 'next/image';
 
-export default function RightSection() {
+type Community = {
+    id: string;
+    title: string;
+    membershipCount: number;
+    imageUrl: string;
+  };
+  
+  type RightSectionProps = {
+    topCommunities: Community[];
+  };
+
+export default function RightSection({ topCommunities }: RightSectionProps) {
     return (
         <section className=" w-full
 		bg-white rounded-lg shadow-md 
@@ -14,47 +25,42 @@ export default function RightSection() {
         z-10">
             {/* Communities Grid */}
             <div className="mb-8">
-							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
-								Communities
-								<button className="text-sm text-greenTheme hover:underline">See All</button>
-							</h2>
-							<div className="grid grid-cols-2 gap-3">
-                    {[
-                        { name: 'Tech Hub', members: '2.3k', image: 'https://picsum.photos/200/200?random=1' },
-                        { name: 'Design Club', members: '1.5k', image: 'https://picsum.photos/200/200?random=2' },
-                        { name: 'Startup Network', members: '3.1k', image: 'https://picsum.photos/200/200?random=3' },
-                        { name: 'Dev Connect', members: '980', image: 'https://picsum.photos/200/200?random=4' }
-                    ].map((community, index) => (
-                        <div key={index} className=" relative 
-                group 
-                cursor-pointer 
-                transform 
-                transition-all 
-                duration-300 
-                hover:scale-105">
-                            <Image
-                                src={community.image}
-                                alt={community.name}
-                                width={120}
-                                height={120}
-                                className="rounded-lg object-cover w-full h-24"
-                                unoptimized={true}
-                            />
-                            <div className="absolute bottom-0 
-                left-0 right-0 
-                p-2 
-                bg-gradient-to-t 
-                from-black/80 
-                to-transparent 
-                rounded-b-lg">
-                                <p className="text-white text-sm font-medium truncate">{community.name}</p>
-                                <p className="text-gray-300 text-xs">{community.members} members</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
-            </div>
+        <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+          Communities
+          <button
+  onClick={() => (window.location.href = "/communities")}
+  className="text-sm text-greenTheme hover:underline"
+>
+  See All
+</button>
 
+        </h2>
+        <div className="grid grid-cols-2 gap-3">
+          {topCommunities.map((community) => (
+            <div
+              key={community.id}
+              className="relative group cursor-pointer transform transition-all duration-300 hover:scale-105"
+            >
+              <Image
+                src={community.imageUrl}
+                alt={community.title}
+                width={120}
+                height={120}
+                className="rounded-lg object-cover w-full h-24"
+                unoptimized={true}
+              />
+              <div className="absolute bottom-0 left-0 right-0 p-2 bg-gradient-to-t from-black/80 to-transparent rounded-b-lg">
+                <p className="text-white text-sm font-medium truncate">
+                  {community.title}
+                </p>
+                <p className="text-gray-300 text-xs">
+                  {community.membershipCount.toLocaleString()} members
+                </p>
+              </div>
+            </div>
+          ))}
+        </div>
+      </div>
             {/* Events Grid */}
             <div className="mb-8">
 							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
