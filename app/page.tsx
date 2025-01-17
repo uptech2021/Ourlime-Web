@@ -28,54 +28,7 @@ export default function Page() {
 	const [selectedUser, setSelectedUser] = useState<UserData | null>(null);
 	const [showUserModal, setShowUserModal] = useState(false);
 	const [isUserModalVisible, setIsUserModalVisible] = useState(false);
-	
 
-	const fetchAllUsers = async () => {
-		const usersRef = collection(db, 'users');
-		const snapshot = await getDocs(usersRef);
-
-		const usersWithProfiles = await Promise.all(
-			snapshot.docs.map(async (userDoc) => {
-				const userData = userDoc.data();
-
-				// Get user's profile image
-				const profileImagesQuery = query(
-					collection(db, 'profileImages'),
-					where('userId', '==', userDoc.id)
-				);
-				const profileImagesSnapshot = await getDocs(profileImagesQuery);
-
-				const profileSetAsQuery = query(
-					collection(db, 'profileImageSetAs'),
-					where('userId', '==', userDoc.id),
-					where('setAs', '==', 'profile')
-				);
-				const setAsSnapshot = await getDocs(profileSetAsQuery);
-
-
-				let profileImageUrl = null;
-				if (!setAsSnapshot.empty) {
-					const setAsDoc = setAsSnapshot.docs[0].data();
-					const matchingImage = profileImagesSnapshot.docs
-						.find(img => img.id === setAsDoc.profileImageId);
-					if (matchingImage) {
-						profileImageUrl = matchingImage.data().imageURL;
-					}
-				}
-
-				return {
-					id: userDoc.id,
-					firstName: userData.firstName,
-					lastName: userData.lastName,
-					userName: userData.userName,
-					profileImage: profileImageUrl
-				};
-			})
-		);
-
-		setAllUsers(usersWithProfiles);
-		setFilteredUsers(usersWithProfiles);
-	};
 
 	const fetchUserData = async (userId: string) => {
 		setIsLoading(true);
@@ -162,9 +115,6 @@ export default function Page() {
 		return () => unsubscribe();
 	}, []);
 
-	useEffect(() => {
-		fetchAllUsers();
-	}, []);
 
 	const handleSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
 		const searchTerm = e.target.value.toLowerCase();
@@ -262,11 +212,9 @@ export default function Page() {
 	}, []);
 
 	const handleUserClick = (user) => {
-        setSelectedUser(user);
-        setIsUserModalVisible(true);
-    };
-
-
+		setSelectedUser(user);
+		setIsUserModalVisible(true);
+	};
 
 	const [activeTab, setActiveTab] = useState('feed');
 	const [isMobileNavOpen, setIsMobileNavOpen] = useState(false);
@@ -524,37 +472,35 @@ export default function Page() {
 	};
 	return (
 		<div className="min-h-screen w-full bg-gray-100">
-			
-  {/* Main content with three-column layout */}
-  <main className="pt-36 w-full px-2 md:px-8">
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
-      <div>
-        {/* Section 1: Profile Details - Fixed */}
-        <LeftSection
-          profileImage={profileImage}
-          userData={userData}
-          searchTerm={searchTerm}
-          handleSearch={handleSearch}
-          filteredUsers={filteredUsers}
-          handleUserClick={handleUserClick}
-          selectedUser={selectedUser}
-		  setShowUserModal={setIsUserModalVisible}
-        />
-      </div>
-      <div>
-        {/* Section 2: Middle Section - New Component */}
-        <MiddleSection posts={posts} user={userData} profileImage={profileImage} />
-      </div>
-      <div>
-        {/* Section 3: Right Section */}
-        <RightSection />
-      </div>
-    </div>
+
+			{/* Main content with three-column layout */}
+			<main className="pt-36 w-full px-2 md:px-8">
+				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
+					<div>
+						{/* Section 1: Profile Details - Fixed */}
+						<LeftSection
+							profileImage={profileImage}
+							userData={userData}
+							searchTerm={searchTerm}
+							handleSearch={handleSearch}
+							filteredUsers={filteredUsers}
+							handleUserClick={handleUserClick}
+							selectedUser={selectedUser}
+							setShowUserModal={setIsUserModalVisible}
+						/>
+					</div>
+					<div>
+						{/* Section 2: Middle Section - New Component */}
+						<MiddleSection posts={posts} user={userData} profileImage={profileImage} />
+					</div>
+					<div>
+						{/* Section 3: Right Section */}
+						<RightSection />
+					</div>
+				</div>
 
 				<MobileNavigation />
 			</main>
-			</div>
-			
-	
+		</div>
 	);
 }

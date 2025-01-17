@@ -149,6 +149,13 @@ export type Following = {
   email: string;
 };
 
+export type Following = {
+  followerId: string;
+  followeeId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
 export type UserData = {
 	id: string;
 	firstName: string;

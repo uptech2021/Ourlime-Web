@@ -1,9 +1,14 @@
 import { Post } from '@/types/userTypes'; // Adjust the import based on your project structure
 import Image from 'next/image';
 import { Heart, MessageCircle, Share } from 'lucide-react';
-import { useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import CommentModal from './CommentsModal';
 
+import { collection, query, where, getDocs, addDoc, updateDoc, onSnapshot, deleteDoc, writeBatch, serverTimestamp, doc, increment, getDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebaseConfig';
+import debounce from 'lodash/debounce';
+
+import { User } from "@/types/global"
 
 const PostMedia = ({ media }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -59,7 +64,6 @@ const PostMedia = ({ media }) => {
 };
 
 
-
 const PostCard = ({ post }: { post: Post }) => {
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [activePostId, setActivePostId] = useState<string | null>(null);
@@ -69,13 +73,182 @@ const PostCard = ({ post }: { post: Post }) => {
         setIsCommentModalOpen(true);
     };
 
-  
+    const handleCommentClick = () => {
+        setIsCommentModalOpen(true);
+    };
+
+
+    // Add these states to PostCard component
+    const [isLiked, setIsLiked] = useState(false);
+    const [likeCount, setLikeCount] = useState(0);
+
+    // Check if user has liked the post
+    useEffect(() => {
+        console.log('Checking like status for post:', post.id);
+        const checkLikeStatus = async () => {
+            const currentUserId = auth.currentUser?.uid;
+            const likesRef = collection(db, 'feedsPostLikeCount');
+            const q = query(
+                likesRef,
+                where('feedsPostId', '==', post.id),
+                where('userId', '==', currentUserId)
+            );
+            const snapshot = await getDocs(q);
+            setIsLiked(!snapshot.empty);
+            console.log('User like status:', !snapshot.empty);
+        };
+        checkLikeStatus();
+    }, [post.id]);
+
+
+    // Listen to total like count
+    useEffect(() => {
+        const likesCountRef = collection(db, 'likesCount');
+        const q = query(likesCountRef, where('feedsPostId', '==', post.id));
+
+        const unsubscribe = onSnapshot(q, (snapshot) => {
+            if (!snapshot.empty) {
+                const count = snapshot.docs[0].data().likeCount;
+                setLikeCount(count);
+            }
+        });
+
+        return () => unsubscribe();
+    }, [post.id]);
+
+
+    // Add debounced like handler
+    const debouncedLikeHandler = useCallback(
+        debounce(async (postId: string, userId: string, currentLikeState: boolean) => {
+            try {
+                const likesRef = collection(db, 'feedsPostLikeCount');
+                const userLikeQuery = query(
+                    likesRef,
+                    where('feedsPostId', '==', postId),
+                    where('userId', '==', userId)
+                );
+
+                const batch = writeBatch(db);
+                const snapshot = await getDocs(userLikeQuery);
+
+                // Handle feedsPostLikeCount
+                if (!currentLikeState) {
+                    const newLikeRef = doc(likesRef);
+                    batch.set(newLikeRef, {
+                        feedsPostId: postId,
+                        userId: userId,
+                        likes: true,
+                        timestamp: serverTimestamp()
+                    });
+                } else {
+                    batch.delete(snapshot.docs[0].ref);
+                }
+
+                // Handle likesCount
+                const likesCountRef = collection(db, 'likesCount');
+                const countQuery = query(likesCountRef, where('feedsPostId', '==', postId));
+                const countSnapshot = await getDocs(countQuery);
+
+                if (countSnapshot.empty) {
+                    const newCountRef = doc(likesCountRef);
+                    batch.set(newCountRef, {
+                        feedsPostId: postId,
+                        likeCount: 1,
+                        commentCount: 0,
+                        shareCount: 0
+                    });
+                } else {
+                    const countDoc = countSnapshot.docs[0];
+                    const { commentCount, shareCount } = countDoc.data();
+                    batch.update(countDoc.ref, {
+                        likeCount: currentLikeState ? increment(-1) : increment(1),
+                        commentCount,
+                        shareCount
+                    });
+                }
+
+
+                await batch.commit();
+                console.log(`Like ${currentLikeState ? 'removed' : 'added'} successfully`);
+            } catch (error) {
+                console.error('Error processing like:', error);
+                setIsLiked(currentLikeState);
+            }
+        }, 5000), //5000 for a 5 second dela
+        []
+    );
+
+
+    // Update handleLike to use optimistic updates
+    const handleLike = () => {
+        const currentUserId = auth.currentUser?.uid;
+        if (!currentUserId) return;
+
+        setIsLiked(!isLiked);
+        debouncedLikeHandler(post.id, currentUserId, isLiked);
+    };
 
 
 
-	const handleCommentClick = () => {
-		setIsCommentModalOpen(true);
-	};
+    // LIKED USERS IMAGE WHICH IS BEING FETCHED
+    // STARTS HERE
+
+    const [likedUsers, setLikedUsers] = useState<any[]>([]);
+
+    useEffect(() => {
+        const likesRef = collection(db, 'feedsPostLikeCount');
+        const q = query(likesRef, where('feedsPostId', '==', post.id));
+
+        const unsubscribe = onSnapshot(q, async (snapshot) => {
+            const users = await Promise.all(
+                snapshot.docs.map(async (docSnapshot) => {
+                    const likeData = docSnapshot.data();
+                    const userDocRef = doc(db, 'users', likeData.userId);
+                    const userSnapshot = await getDoc(userDocRef);
+                    const userData = userSnapshot.data() as User;
+
+                    const profileImagesQuery = query(
+                        collection(db, 'profileImages'),
+                        where('userId', '==', likeData.userId)
+                    );
+                    const profileSetAsQuery = query(
+                        collection(db, 'profileImageSetAs'),
+                        where('userId', '==', likeData.userId),
+                        where('setAs', '==', 'profile')
+                    );
+                    const [profileImagesSnapshot, setAsSnapshot] = await Promise.all([
+                        getDocs(profileImagesQuery),
+                        getDocs(profileSetAsQuery)
+                    ]);
+
+                    let profileImage = null;
+                    if (!setAsSnapshot.empty) {
+                        const setAsDoc = setAsSnapshot.docs[0].data();
+                        const matchingImage = profileImagesSnapshot.docs
+                            .find(img => img.id === setAsDoc.profileImageId);
+                        if (matchingImage) {
+                            profileImage = matchingImage.data().imageURL;
+                        }
+                    }
+
+                    return {
+                        id: likeData.userId,
+                        firstName: userData.firstName,
+                        lastName: userData.lastName,
+                        userName: userData.userName,
+                        profileImage
+                    };
+                })
+            );
+            setLikedUsers(users);
+        });
+
+        return () => unsubscribe();
+    }, [post.id]);
+
+    // ENDS HERE
+
+
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-4">
             {/* User Info Header */}
@@ -140,27 +313,78 @@ const PostCard = ({ post }: { post: Post }) => {
             )}
 
             {/* Interaction Buttons */}
-            <div className="flex items-center gap-4 pt-3 border-t">
-                <button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
-                    <Heart size={20} />
-                    <span>Like</span>
-                </button>
-                <button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
-                	onClick={() => handleOpenCommentModal(post.id)}>
-                    <MessageCircle size={20} />
-                    <span>Comment</span>
-                </button>
-                <button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
-                    <Share size={20} />
-                    <span>Share</span>
-                </button>
+            <div>
+                {/* Interaction Buttons */}
+                <div className="flex items-center gap-4 pt-3 border-t">
+                    <button
+                        onClick={handleLike}
+                        className={`flex items-center gap-2 ${isLiked ? 'text-greenTheme' : 'text-gray-600'
+                            } hover:text-greenTheme transition-colors duration-200`}
+                    >
+                        <Heart
+                            size={20}
+                            fill={isLiked ? 'currentColor' : 'none'}
+                            className="transform transition-transform duration-200 hover:scale-110"
+                        />
+                        <span>Like</span>
+                    </button>
+
+                    <button
+                        className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+                        onClick={() => handleOpenCommentModal(post.id)}
+                    >
+                        <MessageCircle size={20} />
+                        <span>Comment</span>
+                    </button>
+
+                    <button className="flex items-center gap-2 text-gray-600 hover:text-greenTheme">
+                        <Share size={20} />
+                        <span>Share</span>
+                    </button>
+                </div>
+
+                {/* Likes Avatars Row with Enhanced Hover Effects */}
+                <div className="flex -space-x-2 hover:space-x-2 transition-all duration-300">
+                    {likedUsers.slice(0, 3).map((user, index) => (
+                        <div
+                            key={user.id}
+                            className="w-8 h-8 rounded-full relative group"
+                            style={{ zIndex: 3 - index }}
+                        >
+                            <div className="absolute inset-0 bg-gradient-to-r from-greenTheme to-emerald-400 rounded-full animate-pulse group-hover:animate-none" />
+                            <div className="absolute inset-[2px] bg-white rounded-full" />
+                            <div className="absolute inset-[2px] rounded-full overflow-hidden transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
+                                {user.profileImage ? (
+                                    <Image
+                                        src={user.profileImage}
+                                        alt={`${user.firstName}'s profile`}
+                                        width={32}
+                                        height={32}
+                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
+                                        loader={({ src }) => src}
+                                        unoptimized
+                                    />
+                                ) : (
+                                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                        <span className="text-xs font-medium text-gray-500">
+                                            {user.firstName?.charAt(0)}
+                                        </span>
+                                    </div>
+                                )}
+                            </div>
+                        </div>
+                    ))}
+                </div>
             </div>
+
+
             {isCommentModalOpen && activePostId && (
-					<CommentModal
-						postId={activePostId}
-						userId={post.userId}
-						onClose={() => setIsCommentModalOpen(false)}
-					/>)}
+                <CommentModal
+                    postId={activePostId}
+                    userId={post.userId}
+                    onClose={() => setIsCommentModalOpen(false)}
+                />
+            )}
         </div>
     );
 };
