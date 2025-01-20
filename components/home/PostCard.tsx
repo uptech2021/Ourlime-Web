@@ -382,6 +382,7 @@ const PostCard = ({ post }: { post: Post }) => {
                 <CommentModal
                     postId={activePostId}
                     userId={post.userId}
+                    profilePicture=''
                     onClose={() => setIsCommentModalOpen(false)}
                 />
             )}
