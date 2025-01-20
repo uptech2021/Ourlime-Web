@@ -2,7 +2,7 @@ import React, { useEffect, useState } from "react";
 import { addDoc, serverTimestamp, collection, getDoc, query, getDocs, where, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Comment, Post } from '@/types/global';
-import { fetchCommentsForPost, fetchPostById } from '@/helpers/Posts';
+import { fetchCommentsForPost, fetchPosts } from '@/helpers/Posts';
 import { UserData, ProfileImage } from "@/types/userTypes";
 
 
@@ -64,6 +64,20 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
   const [profileImage, setProfileImage] = useState<ProfileImage | null>(null);
 	const [commentUserData, setCommentUserData] = useState<UserData | null>(null);
   
+  useEffect(() => {
+    const loadPostDetails = async () => {
+      console.log("Fetching post with ID: ", postId);
+      const fetchedPosts = await fetchPosts(); // Fetch all posts
+      const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
+      setPostDetails(specificPost || null); // Set the specific post or null if not found
+      setIsLoading(false);
+    };
+
+    console.log("post details: ",postDetails);
+
+    loadPostDetails();
+}, [postId]);
+
 		useEffect(() => {
 			const fetchComments = async () => {
 				if (!postId || hasFetched) return;
@@ -84,20 +98,6 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 			fetchComments();
 		}, [postId, hasFetched]);
 
-    useEffect(() => {
-      const loadPostDetails = async () => {
-          console.log("Fetching post with ID: ", postId);
-          const fetchedPost = await fetchPostById(postId);
-          setPostDetails(fetchedPost);
-          setIsLoading(false);
-      };
-
-      console.log("post details: ",postDetails);
-
-      loadPostDetails();
-  }, [postId]);
-
-  
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (comment.trim()) {
@@ -134,7 +134,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                         <div>
                             {postDetails.user ? ( // Check if user exists
                                 <p className="text-sm font-medium">
-                                    {postDetails.user.firstName} {postDetails.user.lastName} <span className="text-gray-400">{postDetails.user.userName}</span>
+                                    {postDetails.user.firstName} {postDetails.user.lastName} <span className="text-gray-400">@{postDetails.user.userName}</span>
                                 </p>
                             ) : (
                                 <p>User information not available.</p> // Fallback message

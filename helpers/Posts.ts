@@ -1,5 +1,5 @@
 import { db } from "@/lib/firebaseConfig";
-import { collection, getDoc, getDocs, query, Timestamp, where, doc } from "firebase/firestore";
+import { collection, getDoc, getDocs, query, Timestamp, where, doc, orderBy } from "firebase/firestore";
 import { Comment } from '@/types/global';
 import { UserData } from "@/types/userTypes";
 import { Post } from "@/types/userTypes";
@@ -48,23 +48,71 @@ export const fetchAllFeedPosts = async (): Promise<Post[]> => {
     }
 };
 
-// Function to fetch a specific post by ID
-export const fetchPostById = async (postId: string): Promise<Post | null> => {
-    const postRef = doc(db, 'feedPosts', postId); // Reference to the specific post
+export const fetchPosts = async (): Promise<Post[]> => {
+    const postsRef = collection(db, 'feedPosts');
+    const q = query(postsRef, orderBy('createdAt', 'desc'));
+    const snapshot = await getDocs(q);
+    const postsWithUserData = await Promise.all(
+        snapshot.docs.map(async (postDoc) => {
+            const postData = postDoc.data();
 
-    try {
-        const postDoc = await getDoc(postRef);
-        if (postDoc.exists()) {
-            return { id: postDoc.id, ...postDoc.data() } as Post; // Return the post data
-            
-        } else {
-            console.log("No such post!");
-            return null;
-        }
-    } catch (error) {
-        console.error('Error fetching post:', error);
-        return null;
-    }
+            // Fetch user data
+            const userDocRef = doc(db, 'users', postData.userId);
+            const userDocSnap = await getDoc(userDocRef);
+            const userData = userDocSnap.data();
+
+            // Get user's profile image
+            const profileImagesQuery = query(
+                collection(db, 'profileImages'),
+                where('userId', '==', postData.userId)
+            );
+            const profileImagesSnapshot = await getDocs(profileImagesQuery);
+            const profileSetAsQuery = query(
+                collection(db, 'profileImageSetAs'),
+                where('userId', '==', postData.userId),
+                where('setAs', '==', 'profile')
+            );
+            const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+            let profileImage = null;
+            if (!setAsSnapshot.empty) {
+                const setAsDoc = setAsSnapshot.docs[0].data();
+                const matchingImage = profileImagesSnapshot.docs
+                    .find(img => img.id === setAsDoc.profileImageId);
+                if (matchingImage) {
+                    profileImage = matchingImage.data();
+                }
+            }
+
+            // Fetch media for this post
+            const mediaQuery = query(
+                collection(db, 'feedsPostSummary'),
+                where('feedsPostId', '==', postDoc.id)
+            );
+            const mediaSnapshot = await getDocs(mediaQuery);
+            const media = mediaSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            }));
+
+            return {
+                id: postDoc.id,
+                caption: postData.caption,
+                description: postData.description,
+                visibility: postData.visibility,
+                createdAt: postData.createdAt.toDate(),
+                userId: postData.userId,
+                hashtags: postData.hashtags || [],
+                media,
+                user: {
+                    ...userData,
+                    profileImage: profileImage?.imageURL,
+                },
+            } as unknown as Post;
+        })
+    );
+
+    return postsWithUserData;
 };
 
 // Reusable function to fetch comments for a specific post
@@ -80,10 +128,10 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
 
             // Fetch user data for the comment
             const userDoc = await getDoc(doc(db, "users", userId));
-            let userData: UserData | null = null;
+            let commentUserData: UserData | null = null;
 
             if (userDoc.exists()) {
-                userData = userDoc.data() as UserData;
+                commentUserData = userDoc.data() as UserData;
             } else {
                 console.log("No user document found for userId:", userId);
             }
@@ -95,7 +143,7 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
                 updatedAt: new Date(data.updatedAt), // Convert Firestore timestamp to Date
                 feedsPostId: data.feedsPostId,
                 userId: userId,
-                userData: userData, // Include userData in the comment object
+                userData: commentUserData, // Include userData in the comment object
                 replies: [], // Initialize replies as an empty array
             } as Comment;
         }));

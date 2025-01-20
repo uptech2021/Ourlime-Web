@@ -67,6 +67,7 @@ const PostMedia = ({ media }) => {
 const PostCard = ({ post }: { post: Post }) => {
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [activePostId, setActivePostId] = useState<string | null>(null);
+    const currentUserId = auth.currentUser?.uid; 
 
     const handleOpenCommentModal = (postId: string) => {
         setActivePostId(postId); // Set the current postId
@@ -381,7 +382,7 @@ const PostCard = ({ post }: { post: Post }) => {
             {isCommentModalOpen && activePostId && (
                 <CommentModal
                     postId={activePostId}
-                    userId={post.userId}
+                    userId={currentUserId}
                     profilePicture=''
                     onClose={() => setIsCommentModalOpen(false)}
                 />
