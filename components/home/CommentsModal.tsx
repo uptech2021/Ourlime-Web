@@ -1,7 +1,7 @@
 import React, { useEffect, useState } from "react";
 import { addDoc, serverTimestamp, collection, getDoc, query, getDocs, where, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import { Comment, Post } from '@/types/global';
+import { Comment, Post, Reply } from '@/types/global';
 import { fetchCommentsForPost, fetchPosts } from '@/helpers/Posts';
 import { UserData, ProfileImage } from "@/types/userTypes";
 import Image from "next/image";
@@ -16,6 +16,7 @@ interface CommentModalProps {
 
 const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) => {
   const [comment, setComment] = useState("");
+  const [reply, setReply] = useState("");
 
   // Static data for post details and comments
 
@@ -23,7 +24,8 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
   const [postDetails, setPostDetails] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
 	const [isLoadingComments, setIsLoadingComments] = useState(false);
-	const [hasFetched, setHasFetched] = useState(false);
+	const [replies, setReplies] = useState<Reply[]>([]);
+  const [hasFetched, setHasFetched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   
   useEffect(() => {
@@ -78,12 +80,39 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
       try {
         await addDoc(collection(db, "feedsPostComments"), commentData);
         setComment(""); // Clear the input field after submission
+
+        //Refetch comments after creating a new comment
+        const fetchedComments = await fetchCommentsForPost(postId);
+        setComments(fetchedComments);
+
       } catch (e) {
         console.error("Error adding comment:", e);
       }
     }
   };
   
+  const handleReply = async (e: React.FormEvent, commentId: string) => {
+    e.preventDefault();
+    if(reply.trim()){
+      const replyData = {
+        reply,
+        feedsPostCommentId: commentId,
+        userId,
+        createdAt: serverTimestamp(),
+      };
+
+      try{
+        await addDoc(collection(db, "feedsPostCommentsReplies"), replyData);
+        setReply("");
+
+        const fetchedComments = await fetchCommentsForPost(postId);
+        setComments(fetchedComments);
+      }catch (error){
+        console.error("Error adding reply: ", error);
+      }
+    }
+  }
+
   const PostMedia = ({ media }) => {
     const [activeIndex, setActiveIndex] = useState(0);
   

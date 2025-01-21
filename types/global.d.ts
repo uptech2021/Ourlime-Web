@@ -237,3 +237,11 @@ export type Comment = {
     profileImage?: string;
   };
 };
+
+export type Reply = {
+  reply: string;
+  feedsPostCommentId: string;
+  feedsPostCommentReplyId: string;
+  userId: string;
+  createdAt: Date;
+};
