@@ -79,11 +79,11 @@
   }
   
   .phone {
-    @apply bg-greenForm bg-opacity-60 p-2;
+    @apply bg-white rounded-md pl-2;
   }
 
   .phone .PhoneInputInput {
-    @apply w-full rounded-md border-none bg-transparent text-white outline-none;
+    @apply w-full rounded-md border-none bg-transparent text-black outline-none;
   }
   .phoneS .PhoneInputInput {
     @apply  rounded-md border-none bg-transparent outline-none ;
@@ -111,5 +111,23 @@
   }
 
 }
+
+
+.stepTransition {
+  position: absolute;
+  width: 100%;
+  transition: all 0.5s ease;
+}
+
+.slideLeft {
+  transform: translateX(-100%);
+  opacity: 0;
+}
+
+.slideIn {
+  transform: translateX(0);
+  opacity: 1;
+}
+
 
 

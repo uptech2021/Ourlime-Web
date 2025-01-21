@@ -1,502 +1,689 @@
+// 'use client';
+
+// import { useEffect, useState } from 'react';
+// import ProfileSidebar from '@/components/profile/ProfileSidebar';
+// import { Camera, CircleUser, ImageIcon, Info, Users, Video } from 'lucide-react';
+// import Image from 'next/image';
+// import { UserData, ProfileImage } from '@/types/userTypes';
+// import ChangeProfileImageModal from '@/components/profile/ChangeProfileImageModal';
+// import { addDoc, collection, doc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+// import { auth, db, storage } from '@/lib/firebaseConfig';
+// import { onAuthStateChanged } from 'firebase/auth';
+// import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+// import { useProfileStore } from 'src/store/useProfileStore';
+
+// export default function ProfilePage() {
+//   const [activeTab, setActiveTab] = useState('general');
+//   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
+//   const [userData, setUserData] = useState<UserData | null>(null);
+//   const { profileImage } = useProfileStore();
+//   const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
+//   const [userImages, setUserImages] = useState<ProfileImage[]>([]);
+
+//   const handleImageSelect = (image) => {
+//     // Handle image selection logic
+//   };
+
+//   // In your profile page where handleImageUpload is defined
+//   const handleImageUpload = async (file: File) => {
+//     const user = auth.currentUser;
+//     if (!user) return;
+
+//     const storageRef = ref(storage, `profiles/${user.uid}/${Date.now()}_${file.name}`);
+
+//     const uploadTask = await uploadBytes(storageRef, file);
+//     const imageURL = await getDownloadURL(uploadTask.ref);
+
+//     const profileImageRef = await addDoc(collection(db, 'profileImages'), {
+//       userId: user.uid,
+//       imageURL: imageURL,
+//       uploadedAt: serverTimestamp()
+//     });
+
+//     const profileSetAsQuery = query(
+//       collection(db, 'profileImageSetAs'),
+//       where('userId', '==', user.uid),
+//       where('setAs', '==', 'profile')
+//     );
+//     const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+//     if (!setAsSnapshot.empty) {
+//       const setAsDoc = setAsSnapshot.docs[0];
+//       await updateDoc(doc(db, 'profileImageSetAs', setAsDoc.id), {
+//         profileImageId: profileImageRef.id
+//       });
+//     }
+
+//     // Update the global store
+//     useProfileStore.getState().setProfileImage({
+//       id: profileImageRef.id,
+//       imageURL,
+//       userId: user.uid,
+//       typeOfImage: 'profile',
+//       createdAt: new Date(),
+//       updatedAt: new Date()
+//     });
+//   };
+
+//   useEffect(() => {
+//     const unsubscribe = onAuthStateChanged(auth, async (user) => {
+//       if (user) {
+//         console.log('Current user:', user);
+
+//         const profileImagesQuery = query(
+//           collection(db, 'profileImages'),
+//           where('userId', '==', user.uid)
+//         );
+//         console.log('Query created for user:', user.uid);
+
+//         const profileImagesSnapshot = await getDocs(profileImagesQuery);
+//         console.log('Query snapshot:', profileImagesSnapshot.docs);
+
+//         const images = profileImagesSnapshot.docs.map(doc => {
+//           console.log('Document data:', doc.data());
+//           return {
+//             id: doc.id,
+//             ...doc.data()
+//           };
+//         }) as ProfileImage[];
+
+//         console.log('Processed images:', images);
+//         setUserImages(images);
+//       }
+//     });
+
+//     return () => unsubscribe();
+//   }, []);
+
+//   return (
+//     <div className="min-h-screen w-full bg-gray-50">
+//       <main className="h-[calc(100vh-10px)] pt-24 md:pt-24 lg:pt-32 w-full px-2 md:px-8">
+//         <div className="max-w-7xl mx-auto h-full">
+//           <div className="flex flex-col lg:flex-row gap-4 h-full relative">
+//             <ProfileSidebar
+//               activeTab={activeTab}
+//               setActiveTab={setActiveTab}
+//               setIsSidebarOpen={setIsSidebarOpen}
+//               isSidebarOpen={isSidebarOpen}
+//               setUserData={setUserData}
+//               setProfileImage={setProfileImage}
+//             />
+
+//             <div className="flex-1 bg-white rounded-lg shadow-sm flex flex-col overflow-x-hidden">
+//               {/* Cover Image Section */}
+//               <div className="relative h-40 md:h-48 lg:h-60">
+//                 <div className="absolute inset-0">
+//                   <Image
+//                     src={userData?.coverImage ? userData.coverImage : "https://images.unsplash.com/photo-1707343843437-caacff5cfa74"}
+//                     alt="Cover"
+//                     fill
+//                     className="object-cover"
+//                     priority
+//                     loader={({ src }) => src}
+//                     unoptimized={true}
+//                   />
+//                 </div>
+//               </div>
+
+//               <div className="px-4 md:px-6 lg:px-8">
+//                 {/* Profile Picture and User Info in same line */}
+//                 <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 -mt-12 mb-6">
+//                   {/* Profile Picture */}
+//                   <div className="relative group">
+//                     <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white overflow-hidden bg-white shadow-md">
+//                       <Image
+//                         src={profileImage?.imageURL || "/images/default-avatar.jpg"}
+//                         alt="Profile"
+//                         width={112}
+//                         height={112}
+//                         className="w-full h-full object-cover"
+//                         loader={({ src }) => src}
+//                         unoptimized={true}
+//                       />
+//                     </div>
+//                     <button
+//                       onClick={() => setIsChangeImageModalOpen(true)}
+//                       className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 rounded-full transition-opacity"
+//                       title='Change Profile Picture'
+//                     >
+//                       <Camera size={20} className="text-white" />
+//                     </button>
+
+//                     {isChangeImageModalOpen && (
+//                       <ChangeProfileImageModal
+//                         isOpen={isChangeImageModalOpen}
+//                         onClose={() => setIsChangeImageModalOpen(false)}
+//                         existingImages={userImages}
+//                         onSelectImage={handleImageSelect}
+//                         onUploadNewImage={handleImageUpload}
+//                       />
+//                     )}
+//                   </div>
+
+//                   {/* User Info */}
+//                   <div className="flex flex-col md:flex-row flex-1 items-start md:items-center justify-between mt-2 md:mt-8 w-full">
+//                     <div>
+//                       <div className="flex flex-wrap items-center gap-2">
+//                         <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+//                           {userData?.firstName} {userData?.lastName}
+//                         </h1>
+//                         <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+//                           <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+//                           Online
+//                         </span>
+//                       </div>
+//                       <p className="text-gray-600 text-sm">@{userData?.userName}</p>
+//                     </div>
+
+//                     <div className="flex gap-2 mt-3 md:mt-0">
+//                       <button className="bg-greenTheme text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+//                         Edit Profile
+//                       </button>
+//                       <button className="border border-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+//                         Share
+//                       </button>
+//                     </div>
+//                   </div>
+//                 </div>
+
+//                 {/* Bio Section */}
+//                 <div className="mb-6">
+//                   <p className="text-gray-600 text-sm max-w-2xl leading-relaxed">
+//                     {userData?.bio || "No bio available"}
+//                   </p>
+//                 </div>
+
+//                 {/* Navigation */}
+//                 <div className="border-b">
+//                   <div className="flex gap-x-4 md:gap-x-6 overflow-x-auto scrollbar-hide">
+//                     <button className="px-2 md:px-3 py-3 text-greenTheme border-b-2 border-greenTheme font-medium whitespace-nowrap flex items-center gap-2">
+//                       <CircleUser size={18} />
+//                       <span>Timeline</span>
+//                     </button>
+//                     <button className="px-2 md:px-3 py-3 text-gray-600 hover:text-greenTheme font-medium whitespace-nowrap flex items-center gap-2">
+//                       <Info size={18} />
+//                       <span>About</span>
+//                     </button>
+//                     <button className="px-2 md:px-3 py-3 text-gray-600 hover:text-greenTheme font-medium whitespace-nowrap flex items-center gap-2">
+//                       <Users size={18} />
+//                       <span>Friends</span>
+//                     </button>
+//                     <button className="px-2 md:px-3 py-3 text-gray-600 hover:text-greenTheme font-medium whitespace-nowrap flex items-center gap-2">
+//                       <ImageIcon size={18} />
+//                       <span>Photos</span>
+//                     </button>
+//                     <button className="px-2 md:px-3 py-3 text-gray-600 hover:text-greenTheme font-medium whitespace-nowrap flex items-center gap-2">
+//                       <Video size={18} />
+//                       <span>Videos</span>
+//                     </button>
+//                   </div>
+//                 </div>
+//               </div>
+
+//               {/* Content Area */}
+//               <div className="p-4 sm:p-6 lg:p-8">
+//                 <div className="space-y-4">
+//                   {/* Content sections will be added here */}
+//                 </div>
+//               </div>
+//             </div>
+
+//           </div>
+//         </div>
+//       </main>
+//     </div>
+//   );
+// }
+
+
 'use client';
 
-import Navbar from '@/comm/Navbar';
-import AnimatedLogo from '@/components/AnimatedLoader';
-import PostForm from '@/components/home/posts/PostForm';
-import EditProfileModal from '@/components/profile/EditProfileModal';
-import About from '@/components/profile/filters/About';
-import FollowModal from '@/components/profile/FollowModal';
-import ProfilePosts from '@/components/profile/profilePosts';
-import { db } from '@/firebaseConfig';
-import { loginRedirect } from '@/helpers/Auth';
-import communityImage2 from '@/public/images/home/computer.webp';
-import { Communities, Follower, Following, ProfileData, SocialPosts, UserData } from '@/types/global';
-import { fetchFollowersAndFollowing, fetchUserCommunities, fetchUserData, fetchUserPosts, updateUserProfile } from '@/utils/profileUtils';
-import { Avatar, AvatarGroup, Button, Image } from '@nextui-org/react';
-import { getAuth, onAuthStateChanged, User } from 'firebase/auth';
-import { collection, getDocs } from 'firebase/firestore';
-import { CircleEllipsis, Smile, UsersRound } from 'lucide-react';
-import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
-import { Suspense, useEffect, useState } from 'react';
-import styles from './profile.module.css';
+import { useEffect, useState } from 'react';
+import ProfileSidebar from '@/components/profile/ProfileSidebar';
+import { Bookmark, Calendar, Camera, CircleUser, ImageIcon, Info, Users, UsersRound, Video } from 'lucide-react';
+import Image from 'next/image';
+import { UserData, ProfileImage } from '@/types/userTypes';
+import ChangeProfileImageModal from '@/components/profile/ChangeProfileImageModal';
+import { addDoc, collection, doc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+import { auth, db, storage } from '@/lib/firebaseConfig';
+import { onAuthStateChanged } from 'firebase/auth';
+import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
+import { useProfileStore } from 'src/store/useProfileStore';
+import ChangeCoverImageModal from '@/components/profile/ChangeCoverImageModal';
+import TimelineContent from '@/components/profile/links/TimelineContent';
+import AboutContent from '@/components/profile/links/AboutContent';
+import FriendsContent from '@/components/profile/links/FriendsContent';
+import PhotosContent from '@/components/profile/links/PhotosContent';
+import VideosContent from '@/components/profile/links/VideosContent';
 
-// Create a new client component to handle the search params
-const FilterHandler = ({ setSelectedFilter }: { setSelectedFilter: (filter: string) => void }) => {
-  const searchParams = useSearchParams();
-
-  useEffect(() => {
-    const filterParam = searchParams.get('filter');
-    if (filterParam === 'about') {
-      setSelectedFilter('about');
-      const aboutSection = document.querySelector('[data-filter="about"]');
-      if (aboutSection) {
-        aboutSection.scrollIntoView({ behavior: 'smooth' });
-      }
-    }
-  }, [searchParams, setSelectedFilter]);
-
-  return null;
-};
-
-export default function Profile() {
-  const router = useRouter();
-  const [user, setUser] = useState<User | null>(null);
-  const [profile, setProfile] = useState<ProfileData | null>(null);
+export default function ProfilePage() {
+  const [activeTab, setActiveTab] = useState('timeline');
+  const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
-  const [posts, setPosts] = useState<SocialPosts[]>([]); // State for posts
-  const [loading, setLoading] = useState(true);
-  const [togglePostForm, setTogglePostForm] = useState<boolean>(false);
-  const [postCreated, setPostCreated] = useState<boolean>(false); //Checks if a post was created
-  const [socialPosts, setSocialPosts] = useState<SocialPosts[]>([]); // For new posts
-  const [communities, setCommunities] = useState<Communities[]>([]); // State for communities
-  const [selectedFilter, setSelectedFilter] = useState<string>('all'); // Default is 'all'
-  const [isEditModalOpen, setEditModalOpen] = useState(false);
-  const [followers, setFollowers] = useState<Follower[]>([]);
-  const [following, setFollowing] = useState<Following[]>([]);
-  const [showFollowModal, setShowFollowModal] = useState(false);
-  const [followModalType, setFollowModalType] = useState<'followers' | 'following'>('followers');
+  const { profileImage } = useProfileStore();
+  const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
+  const [userImages, setUserImages] = useState<ProfileImage[]>([]);
+  const [isChangeCoverModalOpen, setIsChangeCoverModalOpen] = useState(false);
+  const [selectedCoverImage, setSelectedCoverImage] = useState<ProfileImage | null>(null);
+  const [coverImage, setCoverImage] = useState<ProfileImage | null>(null);
+  const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    const fetchData = async () => {
-      try {
-        await loginRedirect(router, true);
-        setLoading(false);
-      } catch (error) {
-        console.error('Error in loginRedirect:', error);
-        setLoading(false);
-      }
+
+  const handleImageSelect = async (selectedImage: ProfileImage) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const profileSetAsQuery = query(
+      collection(db, 'profileImageSetAs'),
+      where('userId', '==', user.uid),
+      where('setAs', '==', 'profile')
+    );
+    const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+    if (!setAsSnapshot.empty) {
+      const setAsDoc = setAsSnapshot.docs[0];
+      await updateDoc(doc(db, 'profileImageSetAs', setAsDoc.id), {
+        profileImageId: selectedImage.id
+      });
+    }
+
+    useProfileStore.getState().setProfileImage(selectedImage);
+    setIsChangeImageModalOpen(false);
+  };
+
+  const handleImageUpload = async (file: File) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const storageRef = ref(storage, `profiles/${user.uid}/${Date.now()}_${file.name}`);
+
+    const uploadTask = await uploadBytes(storageRef, file);
+    const imageURL = await getDownloadURL(uploadTask.ref);
+
+    const profileImageRef = await addDoc(collection(db, 'profileImages'), {
+      userId: user.uid,
+      imageURL: imageURL,
+      uploadedAt: serverTimestamp()
+    });
+
+    const profileSetAsQuery = query(
+      collection(db, 'profileImageSetAs'),
+      where('userId', '==', user.uid),
+      where('setAs', '==', 'profile')
+    );
+    const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+    if (!setAsSnapshot.empty) {
+      const setAsDoc = setAsSnapshot.docs[0];
+      await updateDoc(doc(db, 'profileImageSetAs', setAsDoc.id), {
+        profileImageId: profileImageRef.id
+      });
+    }
+
+    useProfileStore.getState().setProfileImage({
+      id: profileImageRef.id,
+      imageURL,
+      userId: user.uid,
+      typeOfImage: 'profile',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    setIsChangeImageModalOpen(false);
+  };
+
+  const handleCoverImageSelect = (selectedImage: ProfileImage) => {
+    setSelectedCoverImage(selectedImage);
+  };
+
+
+  const handleSaveCoverImage = async () => {
+    if (!selectedCoverImage) return;
+
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const coverSetAsQuery = query(
+      collection(db, 'profileImageSetAs'),
+      where('userId', '==', user.uid),
+      where('setAs', '==', 'coverProfile')
+    );
+    const setAsSnapshot = await getDocs(coverSetAsQuery);
+
+    if (!setAsSnapshot.empty) {
+      const setAsDoc = setAsSnapshot.docs[0];
+      await updateDoc(doc(db, 'profileImageSetAs', setAsDoc.id), {
+        profileImageId: selectedCoverImage.id
+      });
+    } else {
+      await addDoc(collection(db, 'profileImageSetAs'), {
+        userId: user.uid,
+        profileImageId: selectedCoverImage.id,
+        setAs: 'coverProfile'
+      });
+    }
+
+    // Instant update
+    setCoverImage(selectedCoverImage);
+    setIsChangeCoverModalOpen(false);
+    setSelectedCoverImage(null);
+  };
+
+
+  const handleCoverImageUpload = async (file: File) => {
+    const user = auth.currentUser;
+    if (!user) return;
+
+    const storageRef = ref(storage, `profiles/${user.uid}/covers/${Date.now()}_${file.name}`);
+
+    const uploadTask = await uploadBytes(storageRef, file);
+    const imageURL = await getDownloadURL(uploadTask.ref);
+
+    const coverImageRef = await addDoc(collection(db, 'profileImages'), {
+      userId: user.uid,
+      imageURL,
+      typeOfImage: 'coverProfile',
+      createdAt: new Date(),
+      updatedAt: new Date()
+    });
+
+    const newCoverImage = {
+      id: coverImageRef.id,
+      imageURL,
+      userId: user.uid,
+      typeOfImage: 'coverProfile',
+      createdAt: new Date(),
+      updatedAt: new Date()
     };
 
-    fetchData();
-
-    const auth = getAuth();
-    const unsubscribe = onAuthStateChanged(auth, async (currentUser) => {
-      if (currentUser) {
-        setUser(currentUser);
-  
-        // console.log('Authenticated user:', {
-        //   uid: currentUser.uid,
-        //   email: currentUser.email,
-        //   displayName: currentUser.displayName,
-        //   photoURL: currentUser.photoURL
-        // });
-  
-        const userData = await fetchUserData(currentUser);
-        if (userData) {
-          setProfile(userData.profileData);
-          setUserData(userData.userData);
-        }
-
-        const userPosts = await fetchUserPosts(currentUser.email || '');
-        setPosts(userPosts);
-  
-        const userCommunities = await fetchUserCommunities(currentUser.uid);
-        setCommunities(userCommunities);
-
-        const { followers, following } = await fetchFollowersAndFollowing(currentUser);
-        setFollowers(followers);
-        setFollowing(following);
-      } else {
-        setUser(null);
-        setProfile(null);
-        setUserData(null);
-        setPosts([]);
-        setCommunities([]);
-        // console.log('No authenticated user');
-      }
-  
-      setLoading(false);
-    });
-  
-    return () => unsubscribe();
-  }, [router]);
-  
-  // Use this function to signal that a post was created
-  const handlePostCreated = () => {
-    setPostCreated((prev) => !prev); // Toggle postCreated state
+    setSelectedCoverImage(newCoverImage);
+    setUserImages(prev => [...prev, newCoverImage]);
   };
 
-  // Use another useEffect to refetch posts when postCreated changes
   useEffect(() => {
-    if (user) {
-      const fetchPosts = async () => {
-        try {
-          const getPosts = await getDocs(collection(db, 'posts'));
-          const postsData = getPosts.docs.map((doc) => doc.data() as SocialPosts);
-          const userPosts = postsData
-            .filter((post) => post.email === user.email)
-            .sort((a, b) => b.time - a.time); // Sort by most recent
-          setPosts(userPosts);
-        } catch (error) {
-          // console.error('Error fetching posts:', error);
+    const unsubscribe = onAuthStateChanged(auth, async (user) => {
+      if (user) {
+        const profileImagesQuery = query(
+          collection(db, 'profileImages'),
+          where('userId', '==', user.uid)
+        );
+
+        const profileImagesSnapshot = await getDocs(profileImagesQuery);
+        const images = profileImagesSnapshot.docs.map(doc => ({
+          id: doc.id,
+          ...doc.data()
+        })) as ProfileImage[];
+
+        setUserImages(images);
+
+        // Fetch current cover image
+        const coverSetAsQuery = query(
+          collection(db, 'profileImageSetAs'),
+          where('userId', '==', user.uid),
+          where('setAs', '==', 'coverProfile')
+        );
+        const coverSnapshot = await getDocs(coverSetAsQuery);
+
+        if (!coverSnapshot.empty) {
+          const setAsDoc = coverSnapshot.docs[0].data();
+          const matchingCoverImage = images.find(img => img.id === setAsDoc.profileImageId);
+          if (matchingCoverImage) {
+            setCoverImage(matchingCoverImage);
+          }
         }
-      };
-  
-      fetchPosts();
-    }
-  }, [postCreated, user]);
-  
-  const handleProfileUpdate = (updatedData: Partial<ProfileData>) => {
-    setProfile(prevProfile => ({
-      ...prevProfile,
-      ...updatedData
-    }));
-  };
-
-  const handleUserDataUpdate = (updatedData: Partial<UserData>) => {
-    setUserData(prevUserData => ({
-      ...prevUserData,
-      ...updatedData
-    }));
-  };
-
-  const handleNavigateToAbout = () => {
-    setSelectedFilter('about');
-    // Add a small delay to ensure the DOM is ready
-    setTimeout(() => {
-      const aboutSection = document.querySelector('[data-filter="about"]');
-      if (aboutSection) {
-        aboutSection.scrollIntoView({ behavior: 'smooth' });
       }
-    }, 100);
-  };
+    });
 
-  const handleFollowClick = (type: 'followers' | 'following') => {
-    setFollowModalType(type);
-    setShowFollowModal(true);
-  };
+    return () => unsubscribe();
+  }, []);
 
-  if (loading) {
-    return <AnimatedLogo />; 
-  }
-
-  if (!user || !profile || !userData) {
-    return <div></div>;
-  }
-
-  // Logic to filter posts based on selected filter
-  const filteredPosts = posts.filter(post => {
-    if (selectedFilter === 'all') return true; // Show all posts
-    if (selectedFilter === 'photos') return post.postImage !== undefined; // Filter posts with images
-    if (selectedFilter === 'videos') return post.video !== undefined; // Filter posts with videos
-    return true;
-  });
-
-  const toggleEditModal = () => {
-    setEditModalOpen(!isEditModalOpen);
-  };
-
-  const handleSave = async (updatedData: Partial<ProfileData & { photoURL?: string }>) => {
-    console.log("Received updated data in Profile:", updatedData);
-    const auth = getAuth();
-    const currentUser = auth.currentUser;
-
-    if (currentUser) {
-      try {
-        await updateUserProfile(currentUser, updatedData);
-
-        setProfile(prevProfile => ({
-          ...prevProfile,
-          ...updatedData,
-        } as ProfileData));
-
-        setUserData(prevUserData => ({
-          ...prevUserData,
-          ...(updatedData.photoURL && { photoURL: updatedData.photoURL }),
-        } as UserData));
-
-        setUser(currentUser);
-
-        console.log("Profile updated successfully");
-      } catch (error) {
-        console.error('Error updating profile:', error);
-      }
-    } else {
-      console.error('No authenticated user found');
-    }
-
-    setEditModalOpen(false);
-  };
 
   return (
-    <Suspense fallback={<div>Loading...</div>}>
-      <div className="flex justify-center bg-gray-100 min-h-screen w-full">
-        <FilterHandler setSelectedFilter={setSelectedFilter} />
-        <div className="w-full max-w-screen-xl">
-          <Navbar>
-            {/* Overlay for post form */}
-            {togglePostForm && (
-              <>
-                <div className="fixed inset-0 z-40 bg-black bg-opacity-50"></div>
-                <div className="fixed inset-0 z-50 flex items-stretch sm:items-center justify-center">
-                  <PostForm 
-                    profile={profile}
-                    user={userData}
-                    setSocialPosts={setSocialPosts}
-                    setTogglePostForm={setTogglePostForm}
-                    onPostCreated={handlePostCreated}
-                  />
-                </div>
-              </>
-            )}
-
-            {isEditModalOpen && (
-              <EditProfileModal 
-                isOpen={isEditModalOpen} 
-                onClose={toggleEditModal} 
-                onSave={handleSave}
-                initialData={profile}
-                onNavigateToAbout={handleNavigateToAbout}
+    <div className="min-h-screen w-full bg-gray-50">
+      <main className="h-[calc(100vh-10px)] pt-24 md:pt-24 lg:pt-32 w-full px-2 md:px-8">
+        <div className="max-w-7xl mx-auto h-full">
+          <div className="flex flex-col lg:flex-row gap-4 h-full relative">
+            {/* Fixed Left Sidebar */}
+            <div className="lg:sticky lg:top-32">
+              <ProfileSidebar
+                activeTab={activeTab}
+                setActiveTab={setActiveTab}
+                setIsSidebarOpen={setIsSidebarOpen}
+                isSidebarOpen={isSidebarOpen}
+                setUserData={setUserData}
+                setProfileImage={useProfileStore.getState().setProfileImage}
               />
-            )}
+            </div>
 
-            <div className="flex h-full min-h-screen w-full flex-col overflow-y-auto bg-gray-100 text-gray-800">
-              {/* Profile Information Section */}
-              <section className={styles.profileContainer}>
-                <Image 
-                  src={profile.banner} 
-                  alt="Profile Banner" 
-                  className={styles.bannerImage}
-                  width={4000}
-                  height={200}
-                />
-                <div className={styles.avatarContainer}>
-                  <Image
-                    src={user.photoURL}
-                    alt="Profile picture"
-                    className={styles.avatar}
-                    width={120}
-                    height={120}
-                  />
-                </div>
-                <div className={styles.profileInfo}>
-                  <div className="md:flex md:justify-between md:items-start">
-                    <div>
-                      <h1 className="text-xl font-semibold">{profile.firstName} {profile.lastName}</h1>
-                      <p className="text-gray-600">@{userData.userName}</p>
-                      <div className="mt-2 flex space-x-2">
-                        <Button 
-                          onClick={toggleEditModal}
-                          className="border border-gray-300 rounded-md px-4 py-1 text-sm"
-                        >
-                          Edit
-                        </Button>
-                      </div>
-                      <div className="mt-2 flex space-x-4 text-sm">
-                        <div 
-                          className="cursor-pointer"
-                          onClick={() => handleFollowClick('following')}
-                        >
-                          <p>{following.length} Following</p>
-                          <AvatarGroup isBordered max={3}>
-                            {following.map((follow, index) => (
-                              <Avatar key={index} src={follow.profilePicture} alt={follow.username} />
-                            ))}
-                          </AvatarGroup>
-                        </div>
-                        <p className="cursor-pointer">{posts.length} Posts</p>
-                        <div 
-                          className="cursor-pointer"
-                          onClick={() => handleFollowClick('followers')}
-                        >
-                          <p>{followers.length} Followers</p>
-                          <AvatarGroup isBordered max={3}>
-                            {followers.map((follower, index) => (
-                              <Avatar key={index} src={follower.profilePicture} alt={follower.username} />
-                            ))}
-                          </AvatarGroup>
-                        </div>
-                      </div>
-                    </div>
-                  </div>
-                </div>
-              </section>
-              {/* Navigation Section */}
-              <nav className="mb-4 border-b border-gray-300 sticky top-0 bg-white z-10 rounded-t-lg overflow-x-auto">
-                <ul className="flex whitespace-nowrap p-2 text-sm md:text-base min-w-max">
-                  <li 
-                    className={`cursor-pointer px-4 py-2 ${selectedFilter === 'all' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-                    onClick={() => setSelectedFilter('all')}>
-                    Timeline
-                  </li>
-                  <li 
-                    className={`cursor-pointer px-4 py-2 ${selectedFilter === 'communities' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-                    onClick={() => setSelectedFilter('communities')}>
-                    Communities
-                  </li>
-                  <li 
-                    className={`cursor-pointer px-4 py-2 ${selectedFilter === 'likes' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-                    onClick={() => setSelectedFilter('likes')}>
-                    Likes
-                  </li>
-                  <li 
-                    className={`cursor-pointer px-4 py-2 ${selectedFilter === 'photos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-                    onClick={() => setSelectedFilter('photos')}>
-                    Photos
-                  </li>
-                  <li 
-                    className={`cursor-pointer px-4 py-2 ${selectedFilter === 'videos' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-                    onClick={() => setSelectedFilter('videos')}>
-                    Videos
-                  </li>
-                  <li
-                    data-filter="about"
-                    className={`cursor-pointer px-4 py-2 ${selectedFilter === 'about' ? 'font-bold border-b-2 border-green-400' : 'text-gray-600'}`}
-                    onClick={() => setSelectedFilter('about')}>
-                    About
-                  </li>
-                </ul>
-              </nav>
-              {/* Posts Section */}
-
-              <section className="flex flex-col md:flex-row flex-grow gap-4 overflow-y-auto">
-                {/* Timeline Posts Section */}
-                <div className="w-full overflow-y-auto p-2 md:w-2/3">
-                  {selectedFilter === 'about' ? (
-                    <About 
-                      onProfileUpdate={handleProfileUpdate}
-                      onUserDataUpdate={handleUserDataUpdate}
-                    />
-                  ) : (
-                    <>
-                      {/* New Post Section */}
-                      {selectedFilter === 'all' && (
-                        <div
-                          className="mb-4 rounded-xl bg-white p-4 shadow-lg cursor-pointer"
-                          onClick={() => setTogglePostForm(true)}
-                        >
-                          <div className="flex flex-col md:flex-row justify-around items-center gap-4 rounded-xl p-5">
-                            <div className="h-10 w-10 overflow-hidden rounded-full">
-                              <Avatar 
-                                src={user.photoURL as string} 
-                                alt="Avatar" 
-                                className="h-full w-full object-cover rounded-full"
-                                isBordered
-                              />
-                            </div>
-                            <p className="mb-5 mt-5 w-full cursor-pointer border-b border-gray-300 pb-2 text-base outline-none">
-                              What&apos;s going on?
-                            </p>
-                          </div>
-                          <div className="mt-5 flex flex-wrap items-center gap-3">
-                            <Button>Gallery</Button>
-                            <Smile className="text-green-600 cursor-pointer" />
-                            <CircleEllipsis className="ml-auto cursor-pointer" color="grey" />
-                          </div>
-                        </div>
-                      )}
-
-                      {/* Dynamically Render Posts */}
-                      <ProfilePosts 
-                        socialPosts={filteredPosts} 
-                        selectedPost={selectedFilter} 
-                        user={userData}
-                        onProfileUpdate={handleProfileUpdate}
-                        onUserDataUpdate={handleUserDataUpdate}
+            <div className="flex-1 bg-white rounded-lg shadow-sm overflow-y-auto">
+              <div className="flex-shrink-0">
+                {/* Cover Image Section */}
+                <div className="relative h-40 md:h-48 lg:h-60">
+                  <div className="absolute inset-0">
+                    {isLoading && (
+                      <div className="w-full h-full bg-gray-200 animate-pulse" />
+                    )}
+                    {coverImage?.imageURL && (
+                      <Image
+                        src={coverImage.imageURL}
+                        alt="Cover"
+                        fill
+                        className="object-cover"
+                        priority
+                        loader={({ src }) => src}
+                        unoptimized={true}
+                        onLoadingComplete={() => setIsLoading(false)}
                       />
-                    </>
+                    )}
+                  </div>
+
+                  <button
+                    onClick={() => setIsChangeCoverModalOpen(true)}
+                    className="absolute bottom-4 right-4 bg-white/80 backdrop-blur-sm hover:bg-white px-4 py-2 rounded-lg text-sm font-medium flex items-center gap-2 transition-all"
+                  >
+                    <Camera size={18} />
+                    Change Cover
+                  </button>
+
+                  {isChangeCoverModalOpen && (
+                    <ChangeCoverImageModal
+                      isOpen={isChangeCoverModalOpen}
+                      onClose={() => setIsChangeCoverModalOpen(false)}
+                      existingImages={userImages}
+                      onSelectImage={handleCoverImageSelect}
+                      onSave={handleSaveCoverImage}
+                      onUploadNewImage={handleCoverImageUpload}
+                    />
                   )}
                 </div>
 
-                {/* Sidebar Section */}
-                <div className="w-full overflow-y-auto p-2 md:w-1/3">
-                  <div className="mb-4 rounded-xl bg-white p-4 shadow-lg" key={profile?.aboutMe}>
-                    <h2 className="mb-2 border-b pb-2 text-lg font-semibold">About</h2>
-                    <div className="flex flex-col justify-between mt-4 md:mt-0 ml-auto text-sm text-gray-600 mr-auto">
-                      <p><strong>Bio:</strong> {profile?.aboutMe || 'This user has not updated their bio'}</p>
-                      <p><strong>Date of Birth:</strong> {profile?.birthday || 'Not specified'}</p>
-                      <p><strong>Gender:</strong> {userData?.gender || 'Not specified'}</p>
-                      <p><strong>Job:</strong> {profile?.workingAt || 'Not specified'}</p>
-                      <p><strong>School:</strong> {profile?.school || 'Not specified'}</p>
-                      <p><strong>Country:</strong> {profile?.country || 'Not specified'}</p>
-                    </div>
-                  </div>
-                
+                <div className="px-4 md:px-6 lg:px-8">
+                  {/* Profile Picture and User Info */}
+                  <div className="flex flex-col md:flex-row items-start md:items-center gap-4 md:gap-6 -mt-12 mb-6">
+                    <div className="relative group">
+                      <div className="w-24 h-24 sm:w-28 sm:h-28 rounded-full border-4 border-white overflow-hidden bg-white shadow-md">
+                        <Image
+                          src={profileImage?.imageURL || "/images/default-avatar.jpg"}
+                          alt="Profile"
+                          width={112}
+                          height={112}
+                          className="w-full h-full object-cover"
+                          loader={({ src }) => src}
+                          unoptimized={true}
+                        />
+                      </div>
+                      <button
+                        onClick={() => setIsChangeImageModalOpen(true)}
+                        className="absolute inset-0 flex items-center justify-center bg-black/60 opacity-0 group-hover:opacity-100 rounded-full transition-opacity"
+                        title='Change Profile Picture'
+                      >
+                        <Camera size={20} className="text-white" />
+                      </button>
 
-                  {/* Communities Section */}  
-                  <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
-                    <div className="flex items-center justify-between">
-                      <h3 className="text-lg font-semibold"> Joined Communities</h3>
-                      <Link href="/communities">
-                        <UsersRound className="text-green-600" />
-                      </Link>
+                      {isChangeImageModalOpen && (
+                        <ChangeProfileImageModal
+                          isOpen={isChangeImageModalOpen}
+                          onClose={() => setIsChangeImageModalOpen(false)}
+                          existingImages={userImages}
+                          onSelectImage={handleImageSelect}
+                          onUploadNewImage={handleImageUpload}
+                        />
+                      )}
                     </div>
-                    <ul className="mt-3 flex flex-wrap justify-around">
-                      {/* Dynamically render communities fetched from Firestore */}
-                      {communities.length > 0 ? (
-                        communities.map((community) => (
-                          <li key={community.id} className="mb-3 text-center">
-                            <Image
-                              src={community.communityImage as string}
-                              alt={community.name}
-                              width={50}
-                              height={50}
-                              className="rounded-full"
-                            />
-                            <p className="mt-2 text-sm">{community.name}</p>
-                          </li>
-                        ))
-                      ) : (
-                        <p>No communities found.</p>
-                      )}
-                    </ul>
-                  </div>
-                  {/* Photos Section */}
-                  <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
-                    <h2 className="mb-2 border-b pb-2 text-lg font-semibold">Photos</h2>
-                    <div className="grid grid-cols-3 gap-2">
-                      {/* Filter posts with images and display them */}
-                      {posts.filter(post => post.postImage).length > 0 ? (
-                        posts
-                          .filter(post => post.postImage) // Filter posts that contain images
-                          .slice(0, 6) // Limit to 6 images for display
-                          .map((post, i) => (
-                            <Image
-                              key={i}
-                              src={post.postImage as string} // Render the post image
-                              alt={`Photo ${i}`}
-                              width={50}
-                              height={50}
-                              className="h-full w-full object-cover rounded-lg"
-                            />
-                          ))
-                      ) : (
-                        <p>No photos available.</p>
-                      )}
+
+                    <div className="flex flex-col md:flex-row flex-1 items-start md:items-center justify-between mt-2 md:mt-8 w-full">
+                      <div>
+                        <div className="flex flex-wrap items-center gap-2">
+                          <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
+                            {userData?.firstName} {userData?.lastName}
+                          </h1>
+                          <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
+                            <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
+                            Online
+                          </span>
+                        </div>
+                        <p className="text-gray-600 text-sm">@{userData?.userName}</p>
+                      </div>
+
+                      <div className="flex gap-2 mt-3 md:mt-0">
+                        <button className="bg-greenTheme text-white px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-green-600 transition-colors">
+                          Edit Profile
+                        </button>
+                        <button className="border border-gray-300 px-4 py-1.5 rounded-lg text-sm font-medium hover:bg-gray-50 transition-colors">
+                          Share
+                        </button>
+                      </div>
                     </div>
                   </div>
 
-                  {/* Videos Section */}
-                  <div className="mb-4 rounded-xl bg-white p-4 shadow-lg">
-                    <h2 className="mb-2 border-b pb-2 text-lg font-semibold">Videos</h2>
-                    <div className="grid grid-cols-3 gap-2">
-                      {Array(3)
-                        .fill(1)
-                        .map((_, i) => (
-                          <Image
-                            key={i}
-                            src={communityImage2.toString()}
-                            alt={`Video ${i}`}
-                            width={50}
-                            height={50}
-                            className="h-full w-full object-cover rounded-lg"
-                          />
-                        ))}
+                  {/* Bio Section */}
+                  <div className="mb-6">
+                    <p className="text-gray-600 text-sm max-w-2xl leading-relaxed">
+                      {userData?.bio || "No bio available"}
+                    </p>
+                  </div>
+
+                  {/* Navigation */}
+                  <div className="border-b">
+                    <div className="flex gap-x-4 md:gap-x-6 overflow-x-auto scrollbar-hide">
+                      <button
+                        onClick={() => setActiveTab('timeline')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'timeline'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <CircleUser size={18} />
+                        <span>Timeline</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('about')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'about'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <Info size={18} />
+                        <span>About</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('friends')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'friends'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <Users size={18} />
+                        <span>Friends</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('photos')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'photos'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <ImageIcon size={18} />
+                        <span>Photos</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('videos')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'videos'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <Video size={18} />
+                        <span>Videos</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('groups')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'groups'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <UsersRound size={18} />
+                        <span>Groups</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('events')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'events'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <Calendar size={18} />
+                        <span>Events</span>
+                      </button>
+
+                      <button
+                        onClick={() => setActiveTab('saved')}
+                        className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'saved'
+                          ? 'text-greenTheme border-b-2 border-greenTheme'
+                          : 'text-gray-600 hover:text-greenTheme'
+                          }`}
+                      >
+                        <Bookmark size={18} />
+                        <span>Saved</span>
+                      </button>
                     </div>
                   </div>
                 </div>
-              </section>
+              </div>
+
+              {/* Scrollable Content Area */}
+              <div className="flex-1 overflow-y-auto min-h-0">
+                <div className="p-4 sm:p-6 lg:p-8">
+                  {activeTab === 'timeline' && (
+                    <TimelineContent userData={userData} profileImage={profileImage} />
+                  )}
+                  {activeTab === 'about' && (
+                    <AboutContent userData={userData} profileImage={profileImage} />
+                  )}
+                  {activeTab === 'friends' && (
+                    <FriendsContent userData={userData} profileImage={profileImage} />
+                  )}
+                  {activeTab === 'photos' && (
+                    <PhotosContent userData={userData} profileImage={profileImage} />
+                  )}
+                  {activeTab === 'videos' && (
+                    <VideosContent userData={userData} profileImage={profileImage} />
+                  )}
+                </div>
+              </div>
             </div>
-          </Navbar>
+          </div>
         </div>
-        <FollowModal
-          isOpen={showFollowModal}
-          onClose={() => setShowFollowModal(false)}
-          data={followModalType === 'followers' ? followers : following}
-          type={followModalType}
-        />
-      </div>
-    </Suspense>
+      </main>
+    </div>
   );
+
 }
+

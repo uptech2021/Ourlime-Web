@@ -1,6 +1,5 @@
 import { StaticImageData } from "next/image";
 
-
 export type Articles = {
   id: string;
   title: string;
@@ -147,4 +146,94 @@ export type Following = {
   username: string;
   profilePicture: string;
   email: string;
+};
+
+export type Following = {
+  followerId: string;
+  followeeId: string;
+  createdAt: Date;
+  updatedAt: Date;
+}
+
+export type UserData = {
+	id: string;
+	firstName: string;
+	lastName: string;
+	userName: string;
+	email: string;
+	gender: string;
+	birthday: string;
+	country: string;
+	isAdmin: boolean;
+	last_loggedIn: Date;
+	userTier: number;
+	createdAt: Date;
+}
+
+export type ProfileImage = {
+	id: string;
+	imageURL: string;
+	userId: string;
+	typeOfImage: string;
+	createdAt: Date;
+	updatedAt: Date;
+}
+
+export type SearchUser = {
+	id: string;
+	userName: string;
+	firstName: string;
+	lastName: string;
+	profileImage?: string;
+}
+
+export type Post = {
+	id: string;
+	caption: string;
+	description: string;
+	visibility: string;
+	createdAt: Date;
+	userId: string;
+	hashtags: Array<string>;
+	media: string;
+	userReferences: Array<string>;
+	user: {
+		firstName: string;
+		lastName: string;
+		userName: string;
+		profileImage?: string;
+	};
+}
+
+export type PostData = {
+	userId: string;
+	caption: string;
+	description: string;
+	createdAt: Date;
+	visibility: string;
+}
+
+
+export type User = {
+	id: string;
+	firstName: string;
+	lastName: string;
+	userName: string;
+	profileImage?: string;
+}
+
+export type Comment = {
+  id: string;
+  comment: string;
+  createdAt: Date;
+  updatedAt: Date;
+  feedsPostId: string;
+  userId: string;
+  replies: Comment[];
+  userData: {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    profileImage?: string;
+  };
 };

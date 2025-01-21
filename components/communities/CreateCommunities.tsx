@@ -8,7 +8,7 @@ import {
 } from 'lucide-react';
 import React, { SetStateAction, useRef, useState } from 'react';
 import { uploadFile } from '@/helpers/firebaseStorage';
-import { db } from '@/firebaseConfig';
+import { db } from '@/lib/firebaseConfig';
 import { addDoc, collection } from 'firebase/firestore';
 import { Communities } from '@/types/global';
 import { toast, ToastContainer } from 'react-toastify';

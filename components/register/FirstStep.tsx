@@ -1,160 +1,414 @@
 'use client';
-// import { sendOtp } from '@/helpers/Auth';
-import { Button, Checkbox } from '@nextui-org/react';
 
+import { Button, Checkbox, DatePicker, Select, SelectItem } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
-import PhoneInput from 'react-phone-number-input';
-
+import { db } from '@/lib/firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Dispatch, SetStateAction } from 'react';
+import styles from "./register.module.css"
+import TermsModal from './TermsModal';
+import PrivacyModal from './PrivacyModal';
+import Link from 'next/link';
+import transparentLogo from 'public/images/transparentLogo.png';
+import Image from 'next/image';
+import { gsap } from 'gsap';
+
+const checkUserExists = async (email: string, username: string) => {
+	const usersRef = collection(db, 'users');
+	const promises = [];
+
+	if (email) {
+		const emailQuery = query(usersRef, where('email', '==', email));
+		promises.push(getDocs(emailQuery));
+	}
+
+	if (username) {
+		const usernameQuery = query(usersRef, where('username', '==', username));
+		promises.push(getDocs(usernameQuery));
+	}
+
+	const results = await Promise.all(promises);
+	const exists = results.some(snapshot => !snapshot.empty);
+	return exists;
+};
 
 type FirstStepProps = {
 	setUserName: Dispatch<SetStateAction<string>>;
 	userNameError: string;
+	userExistsError: string;
+	firstNameError: string;
+	lastNameError: string;
+	genderError: string;
 	setEmail: Dispatch<SetStateAction<string>>;
 	emailError: string;
-	setPhone: Dispatch<SetStateAction<string>>;
-	phoneError?: string;
+	emailExistsError: string;
+	setBirthday: Dispatch<SetStateAction<string>>;
+	birthdayError: string;
 	setPassword: Dispatch<SetStateAction<string>>;
 	setConfirmPassword: Dispatch<SetStateAction<string>>;
 	confirmPasswordError: string;
 	setStep: Dispatch<SetStateAction<number>>;
 	validateStep: () => boolean;
 	passwordError: string;
-	phone?: string;
+	setGender: Dispatch<SetStateAction<string>>;
+	setFirstName: Dispatch<SetStateAction<string>>;
+	setLastName: Dispatch<SetStateAction<string>>;
+	handleUsernameChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
+	handleEmailChange: (e: React.ChangeEvent<HTMLInputElement>) => void;
 };
 
 export default function FirstStep({
 	setUserName,
 	userNameError,
+	userExistsError,
+	firstNameError,
+	lastNameError,
+	genderError,
 	setEmail,
+	emailExistsError,
 	emailError,
-	setPhone,
-	phoneError,
+	setBirthday,
+	birthdayError,
 	setPassword,
 	setConfirmPassword,
 	confirmPasswordError,
 	setStep,
 	validateStep,
 	passwordError,
-	phone
+	setGender,
+	setFirstName,
+	setLastName,
+	handleUsernameChange,
+	handleEmailChange
 }: FirstStepProps) {
 	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
+	const [isTermsOpen, setIsTermsOpen] = useState(false);
+	const [isPrivacyOpen, setIsPrivacyOpen] = useState(false);
+	const [isTermsAccepted, setIsTermsAccepted] = useState(false);
+	const [isPrivacyAccepted, setIsPrivacyAccepted] = useState(false);
+	const [termsError, setTermsError] = useState('');
+	const [privacyError, setPrivacyError] = useState('');
+	const [isFormValid, setIsFormValid] = useState(false);
+
+	const [formData, setFormData] = useState({
+		firstName: '',
+		lastName: '',
+		userName: '',
+		email: '',
+		gender: '',
+		birthday: '',
+		password: '',
+		confirmPassword: ''
+	});
 
 	useEffect(() => {
-		validateStep();
-	}, [validateStep]);
+		const isValid =
+			formData.firstName.trim() !== '' &&
+			formData.lastName.trim() !== '' &&
+			formData.userName.trim() !== '' &&
+			formData.email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/) &&
+			formData.gender !== '' &&
+			formData.birthday !== '' &&
+			formData.password.length >= 6 &&
+			formData.password === formData.confirmPassword &&
+			isTermsAccepted &&
+			isPrivacyAccepted;
+
+		setIsFormValid(isValid);
+	}, [formData, isTermsAccepted, isPrivacyAccepted]);
+
 
 	const handleNextStep = () => {
-		setAttemptedNextStep(true);
-		if (validateStep()) {
-			setStep(2);
+		if (validateStep() && isFormValid) {
+			gsap.to(".step-1", {
+				x: -100,
+				opacity: 0,
+				duration: 0.5,
+				onComplete: () => {
+					setStep(2);
+					gsap.fromTo(".step-2",
+						{ x: 100, opacity: 0 },
+						{ 
+							x: 0, 
+							opacity: 1, 
+							duration: 0.5,
+							onComplete: () => {
+								// Wait 1 second after content appears
+								setTimeout(() => {
+									gsap.to(".progress-bar", {
+										width: `${(2/5) * 100}%`,
+										duration: 1,
+										ease: "power2.inOut"
+									});
+								}, 1000);
+							}
+						}
+					);
+				}
+			});
 		}
 	};
-
 	
-      
+	
+
+	const totalSteps = 5;
+	const currentStep = 1;
+	const progressPercentage = (currentStep / totalSteps) * 100;
+
 
 	return (
-		<div className="step-1">
+		<div className='step-1 border-none bg-black bg-opacity-[50%] px-5 py-4 mt-5 h-screen relative'>
+			{/* Custom progress bar */}
+			<div className="absolute top-0 left-0 right-0 h-1 bg-gray-300">
+				<div
+					className="h-full bg-greenTheme transition-all duration-700 ease-in-out relative"
+					style={{ width: `${progressPercentage}%` }}
+				>
+					<Image
+						src={transparentLogo}
+						alt="Logo"
+						className="absolute -top-2 right-0 transform translate-x-1/2 transition-all duration-700"
+						width={20}
+						height={20}
+					/>
+				</div>
+			</div>
+
+			<div className="md:text-center mb-4 mt-6">
+				<p className="text-2xl font-bold text-white xl:text-2xl">
+					Welcome to{' '}
+					<p className="text-4xl md:inline md:text-2xl">Ourlime</p>
+				</p>
+				<h2 className="text-2xl font-bold text-white md:text-4xl xl:text-5xl">
+					Create your new account
+				</h2>
+				<p className="mt-4 flex flex-col gap-1 text-xl font-bold text-white md:flex-row md:justify-center">
+					Already have an account?
+					<Link href="/login" className="text-xl font-bold text-[#01EB53]">
+						Sign In
+					</Link>
+				</p>
+			</div>
+
 			<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
-				<div className="w-full">
+				<div className="w-full md:w-1/2">
 					<div className="relative">
 						<input
 							type="text"
-							className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-							placeholder="Username"
-							onChange={(e) => setUserName(e.target.value)}
-							required
+							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+							placeholder="First Name"
+							onChange={(e) => {
+								setFormData({ ...formData, firstName: e.target.value });
+								setFirstName(e.target.value);
+							}}
 						/>
+						{attemptedNextStep && firstNameError && (
+							<p className="text-bold mt-1 text-left text-red-500">{firstNameError}</p>
+						)}
 					</div>
-					{attemptedNextStep && userNameError && (
-						<p className="text-bold mt-1 text-left text-red-500">
-							{userNameError}
-						</p>
+				</div>
+				<div className="w-full md:w-1/2">
+					<div className="relative">
+						<input
+							type="text"
+							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+							placeholder="Last Name"
+							onChange={(e) => {
+								setFormData({ ...formData, lastName: e.target.value });
+								setLastName(e.target.value);
+							}}
+						/>
+						{attemptedNextStep && lastNameError && (
+							<p className="text-bold mt-1 text-left text-red-500">{lastNameError}</p>
+						)}
+					</div>
+				</div>
+			</div>
+
+			<div className="mb-4">
+				<div className="relative">
+					<input
+						type="text"
+						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+						placeholder="Username"
+						onChange={(e) => {
+							setFormData({ ...formData, userName: e.target.value });
+							handleUsernameChange(e);
+						}}
+						required
+					/>
+					{userExistsError && (
+						<p className="text-bold mt-1 text-left text-red-500">{userExistsError}</p>
 					)}
 				</div>
 			</div>
+
 			<div className="mb-4">
 				<div className="relative">
 					<input
 						type="email"
-						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
+						className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
 						placeholder="Email Address"
-						onChange={(e) => setEmail(e.target.value)}
+						onChange={(e) => {
+							setFormData({ ...formData, email: e.target.value });
+							handleEmailChange(e);
+						}}
 						required
 					/>
+					{emailExistsError && (
+						<p className="text-bold mt-1 text-left text-red-500">{emailExistsError}</p>
+					)}
 				</div>
-				{attemptedNextStep && emailError && (
-					<p className="text-bold mt-1 text-left text-red-500">{emailError}</p>
+			</div>
+
+			<div className="mb-4">
+				<Select
+					placeholder="Gender"
+					onChange={(e) => {
+						setFormData({ ...formData, gender: e.target.value });
+						setGender(e.target.value);
+					}}
+					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-white px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					classNames={{
+						base: "text-black",
+						trigger: "text-black",
+						value: "text-black"
+					}}
+				>
+					<SelectItem className="greenForm" key="male" value="male">Male</SelectItem>
+					<SelectItem className="greenForm" key="female" value="female">Female</SelectItem>
+					<SelectItem className="greenForm" key="other" value="other">Other</SelectItem>
+				</Select>
+				{attemptedNextStep && genderError && (
+					<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
 				)}
 			</div>
+
 			<div className="mb-4">
-				<div className="relative">
-					<PhoneInput
-						value={phone}
-						className="phone"
-						defaultCountry="TT"
-						onChange={(value) => setPhone(value ?? '')}
-						inputClass="w-full rounded-md border-none bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					/>
-				</div>
-				{attemptedNextStep && phoneError && (
-					<p className="text-bold mt-1 text-left text-red-500">{phoneError}</p>
+				<DatePicker
+					variant='underlined'
+					onChange={(date) => {
+						setFormData({ ...formData, birthday: date.toString() });
+						setBirthday(date.toString());
+					}}
+					className={`${styles.nextuiInput} w-full rounded-md border bg-white text-black border-none border-gray-300 px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
+					showMonthAndYearPickers
+					classNames={{
+						base: "text-black",
+						selectorIcon: "text-black",
+						input: "text-black"
+					}}
+				/>
+				{attemptedNextStep && birthdayError && (
+					<p className="text-bold mt-1 text-left text-red-500">{birthdayError}</p>
 				)}
 			</div>
-			
-			<div className="mb-4">
-				<div className="relative">
-					<input
-						type="password"
-						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="Password"
-						onChange={(e) => setPassword(e.target.value)}
-						required
-					/>
+
+			<div className="mb-4 flex flex-col gap-4 md:flex-row md:gap-10">
+				<div className="w-full md:w-1/2">
+					<div className="relative">
+						<input
+							type="password"
+							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+							placeholder="Password"
+							onChange={(e) => {
+								const newPassword = e.target.value;
+								setFormData({ ...formData, password: newPassword });
+								setPassword(newPassword);
+							}}
+							required
+						/>
+						{attemptedNextStep && passwordError && (
+							<p className="text-bold mt-1 text-left text-red-500">{passwordError}</p>
+						)}
+					</div>
 				</div>
-				{attemptedNextStep && passwordError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{passwordError}
-					</p>
-				)}
-			</div>
-			<div className="mb-4">
-				<div className="relative">
-					<input
-						type="password"
-						className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-						placeholder="Confirm Password"
-						onChange={(e) => setConfirmPassword(e.target.value)}
-						required
-					/>
+				<div className="w-full md:w-1/2">
+					<div className="relative">
+						<input
+							type="password"
+							className="w-full rounded-md border border-none border-gray-300 px-4 py-2 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+							placeholder="Confirm Password"
+							onChange={(e) => {
+								const confirmPwd = e.target.value;
+								setFormData({ ...formData, confirmPassword: confirmPwd });
+								setConfirmPassword(confirmPwd); // Changed this line to pass the actual value
+							}}
+							required
+						/>
+						{attemptedNextStep && confirmPasswordError && (
+							<p className="text-bold mt-1 text-left text-red-500">{confirmPasswordError}</p>
+						)}
+					</div>
 				</div>
-				{attemptedNextStep && confirmPasswordError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{confirmPasswordError}
-					</p>
-				)}
 			</div>
 
 			<div className="justify-center items-center md:flex flex-col w-full">
-				<p className="text-sm font-bold text-white">
-					<Checkbox className="hidden md:inline" color="success"></Checkbox>
-					By creating your account, you agree to our
-				</p>
+				<div className="flex items-center justify-between mb-2">
+					<p className="text-sm font-bold text-white flex-grow">
+						I accept Ourlime
+						<span className="font-bold text-greenTheme">
+							<button
+								onClick={() => setIsTermsOpen(true)}
+								className="text-greenTheme underline ml-1"
+							>
+								Terms and Conditions
+							</button>
+						</span>
+					</p>
+					<Checkbox
+						isSelected={isTermsAccepted}
+						onChange={() => setIsTermsAccepted(!isTermsAccepted)}
+						color="success"
+						className="ml-2"
+					/>
+				</div>
 
-				<div>
-					<Checkbox className="md:hidden" color="success"></Checkbox>
-					<span className="font-bold text-greenTheme">Terms and Condition</span>
+				<div className="flex items-center justify-between">
+					<p className="text-sm font-bold text-white flex-grow">
+						I accept Ourlime
+						<span className="font-bold text-greenTheme">
+							<button
+								onClick={() => setIsPrivacyOpen(true)}
+								className="text-greenTheme underline ml-1"
+							>
+								Privacy Policy
+							</button>
+						</span>
+					</p>
+					<Checkbox
+						isSelected={isPrivacyAccepted}
+						onChange={() => setIsPrivacyAccepted(!isPrivacyAccepted)}
+						color="success"
+						className="ml-2"
+					/>
 				</div>
 			</div>
+
+			{termsError && <p className="text-red-500">{termsError}</p>}
+			{privacyError && <p className="text-red-500">{privacyError}</p>}
 
 			<Button
 				onClick={handleNextStep}
 				type="button"
-				className="submit my-4 w-full rounded-full bg-greenTheme px-4 py-2 text-white hover:bg-green-600"
+				disabled={!isFormValid}
+				className={`submit mt-6 mb-8 w-full rounded-full px-4 py-2 text-white ${isFormValid ? 'bg-greenTheme hover:bg-green-600' : 'bg-gray-400 cursor-not-allowed'
+					}`}
 			>
 				Next Step!
 			</Button>
+
+
+			<TermsModal
+				isOpen={isTermsOpen}
+				onClose={() => setIsTermsOpen(false)}
+			/>
+			<PrivacyModal
+				isOpen={isPrivacyOpen}
+				onClose={() => setIsPrivacyOpen(false)}
+			/>
 		</div>
 	);
+
+
 }

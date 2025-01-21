@@ -1,196 +1,233 @@
 'use client';
 import { Dispatch, SetStateAction, useEffect, useState } from 'react';
-import { Button, DatePicker, Select, SelectItem } from '@nextui-org/react';
-import styles from "./register.module.css"
+import { Button, Select, SelectItem } from '@nextui-org/react';
+import styles from "./register.module.css";
+import { countries } from 'countries-list';
+import PhoneInput from 'react-phone-number-input';
+import transparentLogo from 'public/images/transparentLogo.png';
+import Image from 'next/image';
+import { isValidPhoneNumber } from 'react-phone-number-input';
 
 type ThirdStepProps = {
-	verificationMessage: string;
 	setStep: Dispatch<SetStateAction<number>>;
-	setFirstName: Dispatch<SetStateAction<string>>;
-	setLastName: Dispatch<SetStateAction<string>>;
 	setCountry: Dispatch<SetStateAction<string>>;
-	setGender: Dispatch<SetStateAction<string>>;
-	setBirthday: Dispatch<SetStateAction<string>>;
+	setPhone: Dispatch<SetStateAction<string>>;
+	phoneError?: string;
 	isStepValid: boolean;
 	validateStep: () => boolean;
-	handleSubmit: (e: React.FormEvent) => void;
-	firstNameError: string;
-	lastNameError: string;
 	countryError: string;
-	genderError: string;
-	birthdayError: string;
 	error: string;
+	setCity: Dispatch<SetStateAction<string>>;
+	cityError: string;
+	setPostalCode: Dispatch<SetStateAction<string>>;
+	postalCodeError: string;
+	setAddress: Dispatch<SetStateAction<string>>;
+	AddressError: string;
+	phone?: string;
+	setZipCode: Dispatch<SetStateAction<string>>;
+	zipCodeError: string;
 };
 
+const totalSteps = 5;
+const currentStep = 3;
+const progressPercentage = (currentStep / totalSteps) * 100;
+
 const ThirdStep: React.FC<ThirdStepProps> = ({
-	verificationMessage,
 	setStep,
-	setFirstName,
-	setLastName,
 	setCountry,
-	setGender,
-	setBirthday,
 	isStepValid,
 	validateStep,
-	handleSubmit,
-	firstNameError,
-	lastNameError,
 	countryError,
-	genderError,
-	birthdayError,
-	error
+	setPhone,
+	phoneError,
+	phone,
+	error,
+	setCity,
+	cityError,
+	setPostalCode,
+	postalCodeError,
+	setAddress,
+	AddressError,
+	setZipCode,
+	zipCodeError,
 }) => {
-	const [attemptedNextStep, setAttemptedNextStep] = useState(false);
+	const [selectedCountry, setSelectedCountry] = useState("");
 
 	useEffect(() => {
 		validateStep();
-	}, [
-		setFirstName,
-		setLastName,
-		setCountry,
-		setGender,
-		setBirthday,
-		validateStep,
-	]);
+	}, [setCountry, validateStep]);
 
-	useEffect(() => {
-		const monthElement = document.querySelector(
-			'[data-type="month"]'
-		) as HTMLElement;
-		const dayElement = document.querySelector(
-			'[data-type="day"]'
-		) as HTMLElement;
-		const yearElement = document.querySelector(
-			'[data-type="year"]'
-		) as HTMLElement;
+	const countryList = Object.entries(countries).map(([code, country]) => ({
+		code,
+		name: country.name,
+	}));
 
-		if (monthElement) {
-			monthElement.style.color = 'white';
-		}
-		if (dayElement) {
-			dayElement.style.color = 'white';
-		}
-		if (yearElement) {
-			yearElement.style.color = 'white';
-		}
-	}, []);
+	// Add this state at the top of your component
+	const [attemptedSubmit, setAttemptedSubmit] = useState(false);
 
-	const handleFormSubmit = (e: React.FormEvent) => {
+	const handleNextStep = (e: React.MouseEvent) => {
 		e.preventDefault();
-		setAttemptedNextStep(true);
-		console.log('submitted');
-		if (isStepValid) {
-			handleSubmit(e);
-			console.log('validated');
+		// Since we already validate with isFormValid, we can directly progress
+		if (phone && selectedCountry && isValidPhoneNumber(phone)) {
+			setStep(4);
 		}
 	};
+	
+
+	const handlePhoneChange = (value: string | undefined) => {
+		setPhone(value ?? '');
+	};
+
+	const isFormValid = phone && selectedCountry && isValidPhoneNumber(phone);
+
 
 	return (
-		<div className="step-3 mx-auto">
-			<h1 className="text-2xl font-bold text-white">
-				Let the community know about you
-			</h1>
-			{error && <p className="text-red-500">{error}</p>}
-			{attemptedNextStep && !isStepValid && (
-				<h2 className="text-bold text-bold mt-1 text-left text-red-500">
-					Oops, you forgot to input some data {`:'(`}
-				</h2>
-			)}
-			{verificationMessage && (
-				<p className="text-bold mt-4 text-left text-red-500">
-					{verificationMessage}
-				</p>
-			)}
-			<form onSubmit={handleFormSubmit} className="mt-4 flex flex-col gap-4">
-				<input
-					type="text"
-					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="First Name"
-					onChange={(e) => setFirstName(e.target.value)}
-				/>
-				{attemptedNextStep && firstNameError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{firstNameError}
-					</p>
-				)}
-				<input
-					type="text"
-					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="Last Name"
-					onChange={(e) => setLastName(e.target.value)}
-				/>
-				{attemptedNextStep && lastNameError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{lastNameError}
-					</p>
-				)}
-				<input
-					type="text"
-					className="w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500"
-					placeholder="Country"
-					onChange={(e) => setCountry(e.target.value)}
-				/>
-				{attemptedNextStep && countryError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{countryError}
-					</p>
-				)}
-				<Select
-					placeholder="Gender"
-					onChange={(e) => setGender(e.target.value)}
-					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 text-white placeholder-white focus:border-green-500 focus:outline-none focus:ring-green-500`}
-					classNames={{
-						base: "text-white",
-						trigger: "text-white",
-						value: "text-white"
-					}}
+		<div className="step-3 mt-5 flex flex-col justify-center relative">
+			<div className="absolute top-0 left-0 right-0 h-1 bg-gray-300">
+				<div
+					className="h-full bg-greenTheme transition-all duration-700 ease-in-out relative progress-bar"
+					style={{ width: `${progressPercentage}%` }}
 				>
-					<SelectItem className="greenForm" key="male" value="male">
-						Male
-					</SelectItem>
-					<SelectItem className="greenForm" key="female" value="female">
-						Female
-					</SelectItem>
-					<SelectItem className="greenForm" key="other" value="other">
-						Other
-					</SelectItem>
-				</Select>
-				{attemptedNextStep && genderError && (
-					<p className="text-bold mt-1 text-left text-red-500">{genderError}</p>
-				)}
-				<DatePicker
-					variant='underlined'
-					onChange={(date) => setBirthday(date.toString())}
-					className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-greenForm px-4 py-2 focus:border-green-500 focus:outline-none focus:ring-green-500`}
-					classNames={{
-						base: "text-white",
-						selectorIcon: "text-white",
-						input: "text-white"
-					}}
-				/>
-				{attemptedNextStep && birthdayError && (
-					<p className="text-bold mt-1 text-left text-red-500">
-						{birthdayError}
-					</p>
-				)}
-				<div className="flex w-full flex-col gap-1 md:flex-row md:px-20">
-					<Button
-						onClick={() => setStep(2)}
-						type="button"
-						className="submit my-4 w-full rounded-full bg-white px-4 py-2 text-greenTheme hover:bg-gray-300"
-					>
-						Previous Step
-					</Button>
-					<Button
-						type="submit"
-						className="submit my-4 w-full rounded-full bg-greenTheme px-4 py-2 text-white hover:bg-green-600"
-					>
-						Register!
-					</Button>
+					<Image
+						src={transparentLogo}
+						alt="Logo"
+						className="absolute -top-2 right-0 transform translate-x-1/2"
+						width={20}
+						height={20}
+					/>
 				</div>
-			</form>
+			</div>
+
+			<div className="mx-auto w-full border-none bg-black bg-opacity-[50%] px-5 py-4">
+				<h1 className="text-2xl font-bold text-white text-center mt-8">
+					Let the community know about you
+				</h1>
+				<div className='w-3/4 mx-auto'>
+					<form className="mt-4 flex flex-col gap-4">
+						<div className='flex flex-col gap-4 md:flex-row md:gap-10'>
+							<div className="w-full md:w-1/2">
+								<div className="relative">
+									<input
+										type="text"
+										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+										placeholder="City (Optional)"
+										onChange={(e) => setCity(e.target.value)}
+									/>
+								</div>
+							</div>
+							<div className="w-full md:w-1/2">
+								<div className="relative">
+									<input
+										type="text"
+										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+										placeholder="Region (Optional)"
+										onChange={(e) => setAddress(e.target.value)}
+									/>
+								</div>
+							</div>
+						</div>
+
+						<Select
+							placeholder="Country"
+							onChange={(e) => {
+								setCountry(e.target.value);
+								setSelectedCountry(e.target.value);
+							}}
+							className={`${styles.nextuiInput} w-full rounded-md border border-none border-gray-300 bg-white text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500`}
+							classNames={{
+								base: "text-black",
+								trigger: "text-black",
+								value: "text-black"
+							}}
+							required
+						>
+							{countryList.map((country) => (
+								<SelectItem key={country.code} value={country.name}>
+									{country.name}
+								</SelectItem>
+							))}
+						</Select>
+						{attemptedSubmit && countryError && (
+							<p className="text-bold mt-1 text-left text-red-500">
+								{countryError}
+							</p>
+						)}
+
+						<input
+							type="text"
+							className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+							placeholder="Address (Optional)"
+							onChange={(e) => setAddress(e.target.value)}
+						/>
+
+						<PhoneInput
+							value={phone}
+							className="phone rounded-md overflow-hidden"
+							defaultCountry="TT"
+							onChange={handlePhoneChange}
+							international
+							withCountryCallingCode
+							inputClass="w-full border-none text-black placeholder-black focus:outline-none bg-white"
+							autoComplete="off"
+							required
+							numberInputProps={{
+								maxLength: 15
+							}}
+							placeholder="Enter your phone number"
+						/>
+
+						{attemptedSubmit && phoneError && (
+							<p className="text-bold mt-1 text-left text-red-500">
+								{phoneError}
+							</p>
+						)}
+
+						<div className='flex flex-col gap-4 md:flex-row md:gap-10'>
+							<div className="w-full md:w-1/2">
+								<div className="relative">
+									<input
+										type="text"
+										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+										placeholder="Zip Code (Optional)"
+										onChange={(e) => setZipCode(e.target.value)}
+									/>
+								</div>
+							</div>
+							<div className="w-full md:w-1/2">
+								<div className="relative">
+									<input
+										type="text"
+										className="w-full rounded-md border border-none border-gray-300 text-black placeholder-black focus:border-green-500 focus:outline-none focus:ring-green-500"
+										placeholder="Postal Code (Optional)"
+										onChange={(e) => setPostalCode(e.target.value)}
+									/>
+								</div>
+							</div>
+						</div>
+
+						<div className="flex w-full flex-col gap-1 md:gap-12 md:flex-row">
+							<Button
+								onClick={() => setStep(2)}
+								type="button"
+								className="submit my-4 w-full md:w-2/5 mx-auto rounded-full bg-white px-8 py-3 text-greenTheme hover:bg-gray-300 text-lg font-semibold"
+							>
+								Previous Step
+							</Button>
+							<Button
+								onClick={handleNextStep}
+								type="button"
+								disabled={!isFormValid}
+								className="submit my-4 w-full md:w-2/5 mx-auto rounded-full bg-greenTheme px-8 py-3 text-white hover:bg-green-600 text-lg font-semibold disabled:opacity-50 disabled:cursor-not-allowed"
+							>
+								Confirm
+							</Button>
+						</div>
+					</form>
+				</div>
+			</div>
 		</div>
 	);
 };
 
 export default ThirdStep;
+

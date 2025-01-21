@@ -9,9 +9,11 @@ export function middleware(request: NextRequest) {
 
     const allowedCountries = ['TT']
 
-    if (!allowedCountries.includes(country ?? '')) {
+    if (request.nextUrl.hostname === 'localhost' || allowedCountries.includes(country ?? '')) {
+      console.log('Allowing access for country:', country);
+    } else {
       console.log('Blocking access for country:', country);
-      return NextResponse.redirect(new URL('/blocked', request.url))
+      return NextResponse.redirect(new URL('/blocked', request.url));
     }
 
     console.log('Allowing access for country:', country);
