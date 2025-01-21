@@ -561,8 +561,8 @@ export default function Page() {
 		<div className="min-h-screen w-full bg-gray-100">
 
 			{/* Main content with three-column layout */}
-			<main className="pt-36 w-full px-2 md:px-8">
-				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
+			<main className="pt-36 w-full 2xl:w-9/12 2xl:mx-auto tvScreen:w-7/12 px-2 md:px-8">
+				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] gap-4 lg:gap-4">
 					<div>
 						{/* Section 1: Profile Details - Fixed */}
 						<LeftSection
