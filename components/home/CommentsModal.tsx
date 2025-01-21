@@ -19,44 +19,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 
   // Static data for post details and comments
 
-  const staticComments = [
-    {
-      id: 1,
-      user: "Jane Doe",
-      username: "@janedoe",
-      text: "This event sounds amazing!",
-      avatar: "https://via.placeholder.com/40",
-      timestamp: "2h ago",
-      replies: [
-        {
-          id: 11,
-          user: "John Smith",
-          username: "@johnsmith",
-          text: "I agree with you!",
-          avatar: "https://via.placeholder.com/40",
-          timestamp: "1h ago",
-        },
-        {
-          id: 12,
-          user: "Emily Johnson",
-          username: "@emilyj",
-          text: "Looking forward to it as well!",
-          avatar: "https://via.placeholder.com/40",
-          timestamp: "30m ago",
-        },
-      ],
-    },
-    {
-      id: 2,
-      user: "John Smith",
-      username: "@johnsmith",
-      text: "Can't wait to attend!",
-      avatar: "https://via.placeholder.com/40",
-      timestamp: "3h ago",
-      replies: [],
-    },
-  ];
-
+ 
   const [postDetails, setPostDetails] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
 	const [isLoadingComments, setIsLoadingComments] = useState(false);
@@ -65,14 +28,20 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
   
   useEffect(() => {
     const loadPostDetails = async () => {
-      const fetchedPosts = await fetchPosts(); // Fetch all posts
-      const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
-      setPostDetails(specificPost || null); // Set the specific post or null if not found
-      setIsLoading(false);
+      try {
+        const fetchedPosts = await fetchPosts(); // Fetch all posts
+        const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
+        console.log("Fetched Posts: ", specificPost);
+        setPostDetails(specificPost || null); // Set the specific post or null if not found
+      } catch (error) {
+        console.error("Error fetching post details:", error);
+      } finally {
+        setIsLoading(false);
+      }
     };
-
+  
     loadPostDetails();
-}, [postId, postDetails]);
+  }, [postId]);
 
 		useEffect(() => {
 			const fetchComments = async () => {
@@ -114,97 +83,156 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
       }
     }
   };
+  
+  const PostMedia = ({ media }) => {
+    const [activeIndex, setActiveIndex] = useState(0);
+  
+    if (!media || media.length === 0) {
+      return <p>No media available.</p>;
+    }
+  
+    return (
+      <div className="relative h-[400px] w-full mb-4 flex flex-col items-center">
+        {/* Main Media */}
+        <div className="relative h-[400px] w-full flex items-center justify-center bg-gray-100">
+          {media[activeIndex].type === 'image' ? (
+            <Image
+              src={media[activeIndex].typeUrl}
+              alt="Post content"
+              width={400}
+              height={400}
+              className="object-cover rounded-lg"
+            />
+          ) : (
+            <video
+              controls
+              className="rounded-lg"
+              style={{ maxHeight: '400px', maxWidth: '100%' }}
+            >
+              <source src={media[activeIndex].typeUrl} type="video/mp4" />
+            </video>
+          )}
+        </div>
+  
+        {/* Thumbnails */}
+        <div className="absolute bottom-4 left-0 right-0 flex gap-4 px-4 overflow-x-auto">
+          {media.map((item, index) => (
+            <div
+              key={index}
+              onClick={() => setActiveIndex(index)}
+              className={`relative w-20 h-20 rounded-lg cursor-pointer transition-all ${
+                activeIndex === index ? 'opacity-100 ring-2 ring-green-500' : 'opacity-50'
+              }`}
+            >
+              {item.type === 'image' ? (
+                <Image
+                  src={item.typeUrl}
+                  alt={`Preview ${index + 1}`}
+                  width={80}
+                  height={80}
+                  className="object-cover rounded-lg"
+                />
+              ) : (
+                <video className="object-cover rounded-lg" style={{ width: '100%', height: '100%' }}>
+                  <source src={item.typeUrl} type="video/mp4" />
+                </video>
+              )}
+            </div>
+          ))}
+        </div>
+      </div>
+    );
+  };
+  
+  
+  
+  
+  
+
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white w-full max-w-4xl mx-4 rounded-lg shadow-lg flex flex-col md:flex-row relative">
-        {/* Close Button */}
-        <button className="absolute top-2 right-2" aria-label="Close modal" onClick={onClose}>X</button>
+  <div className="bg-white w-full max-w-4xl mx-4 rounded-lg shadow-lg flex flex-col md:flex-row relative">
+    {/* Close Button */}
+    <button className="absolute top-2 right-2" aria-label="Close modal" onClick={onClose}>
+      X
+    </button>
 
-        {/* Post Rectangle */}
-        <div className="bg-gray-200 md:w-1/2 w-full h-48 md:h-auto flex items-center justify-center">
-          <div className="w-full h-full bg-gray-300"></div>
+    {/* Post Rectangle */}
+    {postDetails && postDetails.media && postDetails.media.length > 0 && (
+      <div className="md:w-1/2 w-full h-auto flex items-center justify-center">
+        <PostMedia media={postDetails.media} />
+      </div>
+    )}
+
+    {/* Comments Section */}
+    <div
+      className={`${
+        postDetails && postDetails.media && postDetails.media.length > 0
+          ? 'md:w-1/2' // Half-width when media is present
+          : 'w-full'   // Full-width when no media
+      } w-full flex flex-col`}
+    >
+      {/* Top Section: Post Details */}
+      {postDetails ? (
+        <div>
+          {postDetails.user ? (
+            <p className="text-sm font-medium">
+              {postDetails.user.firstName} {postDetails.user.lastName}{' '}
+              <span className="text-gray-400">@{postDetails.user.userName}</span>
+            </p>
+          ) : (
+            <p>User information not available.</p>
+          )}
+          <p className="text-gray-600 text-sm mt-2">{postDetails.caption}</p>
         </div>
+      ) : (
+        <p>Post details not available.</p>
+      )}
 
-        {/* Comments Section */}
-        <div className="md:w-1/2 w-full flex flex-col">
-          {/* Top Section: Post Details */}
-          {postDetails ? (
-                        <div>
-                            {postDetails.user ? ( // Check if user exists
-                                <p className="text-sm font-medium">
-                                    {postDetails.user.firstName} {postDetails.user.lastName} <span className="text-gray-400">@{postDetails.user.userName}</span>
-                                </p>
-                            ) : (
-                                <p>User information not available.</p> // Fallback message
-                            )}
-                            <p className="text-gray-600 text-sm mt-2">{postDetails.caption}</p>
-                        </div>
-                    ) : (
-                        <p>Post details not available.</p> // Fallback message
-                    )}
-
-          
-          {/* Scrollable Comments */}
-          <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-            {comments.map((c) => (
-              <div key={c.id}>
-                {/* Parent Comment */}
-                <div className="flex items-start space-x-3">
-                  <img
-                    src={c.userData?.profileImage}
-                    alt={`${c}'s avatar`}
-                    className="w-10 h-10 rounded-full"
-                  />
-                  <div className="flex-1">
-                    <p className="text-sm font-medium">{c.userData?.firstName} {c.userData?.lastName} <span className="text-gray-400">@{c.userData?.userName}</span></p>
-                    <p className="text-gray-600 text-sm">{c.comment}</p>
-                    <p className="text-xs text-gray-400 mt-1">{}</p>
-                  </div>
-                </div>
-                {/* Replies */}
-                <div className="pl-12 mt-2 space-y-2">
-                  {/* {c.replies.map((r) => (
-                    <div key={r.id} className="flex items-start space-x-3">
-                      <img
-                        src={r.avatar}
-                        alt={`${r.user}'s avatar`}
-                        className="w-8 h-8 rounded-full"
-                      />
-                      <div>
-                        <p className="text-sm font-medium">
-                          {r.user} <span className="text-gray-400">{r.username}</span>
-                        </p>
-                        <p className="text-gray-600 text-sm">{r.text}</p>
-                        <p className="text-xs text-gray-400">{r.timestamp}</p>
-                      </div>
-                    </div>
-                  ))} */}
-                </div>
-              </div>
-            ))}
-          </div>
-
-          {/* Comment Input Box */}
-          <div className="p-4 border-t">
-            <form onSubmit={handleSubmit} className="flex items-center space-x-2">
-              <textarea
-                className="flex-1 border rounded-md p-2 text-sm resize-none"
-                placeholder="Write your comment..."
-                value={comment}
-                onChange={(e) => setComment(e.target.value)}
+      {/* Scrollable Comments */}
+      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
+        {comments.map((c) => (
+          <div key={c.id}>
+            <div className="flex items-start space-x-3">
+              <img
+                src={c.userData?.profileImage}
+                alt={`${c}'s avatar`}
+                className="w-10 h-10 rounded-full"
               />
-              <button
-                type="submit"
-                className="px-4 py-2 bg-blue-500 text-white rounded-md"
-              >
-                Post
-              </button>
-            </form>
+              <div className="flex-1">
+                <p className="text-sm font-medium">
+                  {c.userData?.firstName} {c.userData?.lastName}{' '}
+                  <span className="text-gray-400">@{c.userData?.userName}</span>
+                </p>
+                <p className="text-gray-600 text-sm">{c.comment}</p>
+              </div>
+            </div>
           </div>
-        </div>
+        ))}
+      </div>
+
+      {/* Comment Input Box */}
+      <div className="p-4 border-t">
+        <form onSubmit={handleSubmit} className="flex items-center space-x-2">
+          <textarea
+            className="flex-1 border rounded-md p-2 text-sm resize-none"
+            placeholder="Write your comment..."
+            value={comment}
+            onChange={(e) => setComment(e.target.value)}
+          />
+          <button
+            type="submit"
+            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+          >
+            Post
+          </button>
+        </form>
       </div>
     </div>
+  </div>
+</div>
+
   );
 };
 
