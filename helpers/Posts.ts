@@ -138,7 +138,7 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
 
             return {
                 id: commentDoc.id,
-                comments: data.comments,
+                comment: data.comment,
                 createdAt: new Date(data.createdAt), // Convert Firestore timestamp to Date
                 updatedAt: new Date(data.updatedAt), // Convert Firestore timestamp to Date
                 feedsPostId: data.feedsPostId,

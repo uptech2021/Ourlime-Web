@@ -224,7 +224,7 @@ export type User = {
 
 export type Comment = {
   id: string;
-  comments: string;
+  comment: string;
   createdAt: Date;
   updatedAt: Date;
   feedsPostId: string;

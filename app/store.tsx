@@ -879,7 +879,7 @@ export default function Page() {
 			};
 
 			fetchComments();
-		}, [post?.id, hasFetched]);
+		}, [post?.id]);
 
 		return (
 			<div className="comments-section">
@@ -888,7 +888,7 @@ export default function Page() {
 				) : comments.length > 0 ? (
 					<ul>
 						{comments.map((comment) => (
-							<li key={comment.id}>{comment.text}</li>
+							<li key={comment.id}>{comment.comment}</li>
 						))}
 					</ul>
 				) : (
@@ -1953,7 +1953,7 @@ export default function Page() {
 								</div>
 								<div className="flex-1">
 									<div className="border rounded-full px-4 py-2 text-gray-500 hover:bg-gray-50">
-										<span className="text-sm md:text-base">Tell us what's on your mind</span>
+										<span className="text-sm md:text-base">Tell us what&apos;s on your mind</span>
 									</div>
 								</div>
 							</div>

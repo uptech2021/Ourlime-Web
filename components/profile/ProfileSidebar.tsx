@@ -135,7 +135,7 @@ export default function ProfileSidebar({
         });
 
         return () => unsubscribe();
-    }, []);
+    }, [setUserData]);
 
     return (
         <>

@@ -137,7 +137,7 @@ export default function MiddleSection({
 					</div>
 					<div className="flex-1">
 						<div className="border rounded-full px-4 py-2 text-gray-500 hover:bg-gray-50">
-							<span className="text-sm md:text-base">Tell us what's on your mind</span>
+							<span className="text-sm md:text-base">Tell us what&apos;s on your mind</span>
 						</div>
 					</div>
 				</div>

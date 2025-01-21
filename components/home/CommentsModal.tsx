@@ -4,12 +4,13 @@ import { db } from "@/lib/firebaseConfig";
 import { Comment, Post } from '@/types/global';
 import { fetchCommentsForPost, fetchPosts } from '@/helpers/Posts';
 import { UserData, ProfileImage } from "@/types/userTypes";
+import Image from "next/image";
 
 
 interface CommentModalProps {
   postId: string;
   userId: string;
-  profilePicture: string;
+  // profilePicture: string;
   onClose: () => void;
 }
 
@@ -76,7 +77,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
     console.log("post details: ",postDetails);
 
     loadPostDetails();
-}, [postId]);
+}, [postId, postDetails]);
 
 		useEffect(() => {
 			const fetchComments = async () => {
@@ -96,16 +97,16 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 			};
       console.log("Comments: ", comments);
 			fetchComments();
-		}, [postId, hasFetched]);
+		}, [postId, hasFetched, comments]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (comment.trim()) {
       const commentData = {
-        comments: comment,
+        comment,
         createdAt: serverTimestamp(),
         feedsPostId: postId,
-        userId: userId,
+        userId,
       };
 
       console.log("Submitting comment with userId:", userId);
@@ -153,14 +154,14 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
               <div key={c.id}>
                 {/* Parent Comment */}
                 <div className="flex items-start space-x-3">
-                  <img
+                  <Image
                     src={c.userData?.profileImage}
                     alt={`${c}'s avatar`}
                     className="w-10 h-10 rounded-full"
                   />
                   <div className="flex-1">
                     <p className="text-sm font-medium">{c.userData?.firstName} {c.userData?.lastName} <span className="text-gray-400">@{c.userData?.userName}</span></p>
-                    <p className="text-gray-600 text-sm">{c.comments}</p>
+                    <p className="text-gray-600 text-sm">{c.comment}</p>
                     <p className="text-xs text-gray-400 mt-1">{}</p>
                   </div>
                 </div>

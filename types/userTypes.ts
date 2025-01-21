@@ -12,6 +12,7 @@ type UserData = {
 	userTier: number;
 	createdAt: Date;
     profileImage?: string;
+	bio?:string;
 };
 
 type ProfileImage = {
