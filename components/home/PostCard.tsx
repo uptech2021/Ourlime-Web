@@ -189,7 +189,6 @@ const PostCard = ({ post }: { post: Post }) => {
     };
 
 
-
     // LIKED USERS IMAGE WHICH IS BEING FETCHED
     // STARTS HERE
 
@@ -344,36 +343,41 @@ const PostCard = ({ post }: { post: Post }) => {
                 </div>
 
                 {/* Likes Avatars Row with Enhanced Hover Effects */}
-                <div className="flex -space-x-2 hover:space-x-2 transition-all duration-300">
-                    {likedUsers.slice(0, 3).map((user, index) => (
-                        <div
-                            key={user.id}
-                            className="w-8 h-8 rounded-full relative group"
-                            style={{ zIndex: 3 - index }}
-                        >
-                            <div className="absolute inset-0 bg-gradient-to-r from-greenTheme to-emerald-400 rounded-full animate-pulse group-hover:animate-none" />
-                            <div className="absolute inset-[2px] bg-white rounded-full" />
-                            <div className="absolute inset-[2px] rounded-full overflow-hidden transform transition-all duration-300 group-hover:scale-110 group-hover:shadow-xl">
-                                {user.profileImage ? (
-                                    <Image
-                                        src={user.profileImage}
-                                        alt={`${user.firstName}'s profile`}
-                                        width={32}
-                                        height={32}
-                                        className="w-full h-full object-cover transition-transform duration-300 group-hover:scale-110"
-                                        loader={({ src }) => src}
-                                        unoptimized
-                                    />
-                                ) : (
-                                    <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
-                                        <span className="text-xs font-medium text-gray-500">
-                                            {user.firstName?.charAt(0)}
-                                        </span>
-                                    </div>
-                                )}
+                <div className="flex items-center">
+                    <div className="flex -space-x-3">
+                        {likedUsers.slice(0, 3).map((user, index) => (
+                            <div
+                                key={user.id}
+                                className="w-8 h-8 rounded-full relative hover:z-10"
+                                style={{ zIndex: 1 }}
+                            >
+                                <div className="absolute inset-0 bg-gradient-to-r from-greenTheme to-emerald-400 rounded-full animate-pulse group-hover:animate-none" />
+                                <div className="absolute inset-[2px] bg-white rounded-full" />
+                                <div className="absolute inset-[2px] rounded-full overflow-hidden transform transition-all duration-300 hover:scale-110">
+                                    {user.profileImage ? (
+                                        <Image
+                                            src={user.profileImage}
+                                            alt={`${user.firstName}'s profile`}
+                                            width={32}
+                                            height={32}
+                                            className="w-full h-full object-cover"
+                                            loader={({ src }) => src}
+                                            unoptimized
+                                        />
+                                    ) : (
+                                        <div className="w-full h-full bg-gradient-to-br from-gray-100 to-gray-200 flex items-center justify-center">
+                                            <span className="text-xs font-medium text-gray-500">
+                                                {user.firstName?.charAt(0)}
+                                            </span>
+                                        </div>
+                                    )}
+                                </div>
                             </div>
-                        </div>
-                    ))}
+                        ))}
+                    </div>
+                    <span className="ml-2 text-sm font-medium text-gray-600 flex-shrink-0">
+                        {likeCount} {likeCount === 1 ? 'like' : 'likes'}
+                    </span>
                 </div>
             </div>
 

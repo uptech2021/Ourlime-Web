@@ -440,9 +440,6 @@ export default function LeftSection({
 
     // END HERE
 
-
-
-
     return (
         <>
             {/* Wrapper for entire section */}

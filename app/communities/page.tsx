@@ -172,7 +172,7 @@ export default function CommunitiesPage() {
 
   const handleCommunityAction = async (communityId: string, isPrivate: boolean) => {
     if (!auth.currentUser) return;
-  
+
     try {
       if (isPrivate) {
         // Check if request already exists
@@ -182,7 +182,7 @@ export default function CommunitiesPage() {
           where('communityVariantId', '==', communityId)
         );
         const requestSnapshot = await getDocs(existingRequestRef);
-        
+
         if (requestSnapshot.empty) {
           await addDoc(collection(db, 'communityRequests'), {
             userId: auth.currentUser.uid,
@@ -200,7 +200,7 @@ export default function CommunitiesPage() {
           where('isMember', '==', true)
         );
         const membershipSnapshot = await getDocs(existingMembershipRef);
-  
+
         if (membershipSnapshot.empty) {
           // Add to communityVariantMembership
           await addDoc(collection(db, 'communityVariantMembership'), {
@@ -210,11 +210,11 @@ export default function CommunitiesPage() {
             from: serverTimestamp(),
             to: null
           });
-  
+
           // Create or update communityVariantMembershipAndLikeCount
           const countRef = doc(db, 'communityVariantMembershipAndLikeCount', communityId);
           const countDoc = await getDoc(countRef);
-  
+
           if (countDoc.exists()) {
             await updateDoc(countRef, {
               membershipCount: increment(1)
@@ -226,16 +226,16 @@ export default function CommunitiesPage() {
               communityVariantId: communityId
             });
           }
-  
+
           // Update local state
           setCommunities(prevCommunities =>
             prevCommunities.map(community =>
               community.id === communityId
                 ? {
-                    ...community,
-                    isMember: true,
-                    membershipCount: (community.membershipCount || 0) + 1
-                  }
+                  ...community,
+                  isMember: true,
+                  membershipCount: (community.membershipCount || 0) + 1
+                }
                 : community
             )
           );
@@ -245,7 +245,7 @@ export default function CommunitiesPage() {
       console.error('Error updating membership:', error);
     }
   };
-  
+
 
 
   useEffect(() => {
@@ -262,12 +262,12 @@ export default function CommunitiesPage() {
       const communitySnapshot = await getDocs(communityRef);
       const communityData = await Promise.all(communitySnapshot.docs.map(async doc => {
         const data = doc.data();
-      
+
         // Fetch user details
         const userDoc = await getDoc(firestoreDoc(db, 'users', data.userId));
         const userData = userDoc.data();
         const creatorName = `${userData?.firstName} ${userData?.lastName}`;
-      
+
         // Try communityProfile first
         let profileSetAsRef = query(
           collection(db, 'profileImageSetAs'),
@@ -276,7 +276,7 @@ export default function CommunitiesPage() {
         );
         let profileSetAsSnapshot = await getDocs(profileSetAsRef);
         console.log('Found communityProfile:', !profileSetAsSnapshot.empty);
-      
+
         // If no communityProfile, try profile
         if (profileSetAsSnapshot.empty) {
           profileSetAsRef = query(
@@ -287,7 +287,7 @@ export default function CommunitiesPage() {
           profileSetAsSnapshot = await getDocs(profileSetAsRef);
           console.log('Found profile:', !profileSetAsSnapshot.empty);
         }
-      
+
         let profileImageUrl = null;
         if (!profileSetAsSnapshot.empty) {
           const imageId = profileSetAsSnapshot.docs[0].data().profileImageId;
@@ -298,7 +298,7 @@ export default function CommunitiesPage() {
           profileImageUrl = imageDoc.data()?.imageURL;
           console.log('Final Image URL:', profileImageUrl);
         }
-      
+
         // Check membership status
         const membershipRef = query(
           collection(db, 'communityVariantMembership'),
@@ -308,7 +308,7 @@ export default function CommunitiesPage() {
         );
         const membershipSnapshot = await getDocs(membershipRef);
         const isMember = !membershipSnapshot.empty;
-      
+
         // Get membership count
         const countRef = query(
           collection(db, 'communityVariantMembershipAndLikeCount'),
@@ -316,7 +316,7 @@ export default function CommunitiesPage() {
         );
         const countSnapshot = await getDocs(countRef);
         const countData = countSnapshot.docs[0]?.data();
-      
+
         // Check request status for private communities
         const requestRef = query(
           collection(db, 'communityRequests'),
@@ -325,7 +325,7 @@ export default function CommunitiesPage() {
         );
         const requestSnapshot = await getDocs(requestRef);
         const requestStatus = !requestSnapshot.empty ? requestSnapshot.docs[0].data().status : null;
-      
+
         return {
           id: doc.id,
           ...data,
@@ -337,7 +337,7 @@ export default function CommunitiesPage() {
           membershipLikes: countData?.membershipLikes || 0
         } as Community;
       }));
-      
+
 
       setCommunities(communityData);
     };
@@ -361,56 +361,56 @@ export default function CommunitiesPage() {
 
 
     const handleSubmit = async (e: React.FormEvent) => {
-  e.preventDefault();
+      e.preventDefault();
 
-  if (!auth.currentUser?.uid) {
-    return;
-  }
+      if (!auth.currentUser?.uid) {
+        return;
+      }
 
-  const newCommunity = {
-    title: title,
-    description: description,
-    imageUrl: imageUrl,
-    categoryId: selectedCategory,
-    isPrivate: isPrivate,
-    userId: auth.currentUser.uid,
-    createdAt: serverTimestamp()
-  };
+      const newCommunity = {
+        title: title,
+        description: description,
+        imageUrl: imageUrl,
+        categoryId: selectedCategory,
+        isPrivate: isPrivate,
+        userId: auth.currentUser.uid,
+        createdAt: serverTimestamp()
+      };
 
-  try {
-    // Create the community document
-    const docRef = await addDoc(collection(db, 'communityVariant'), newCommunity);
+      try {
+        // Create the community document
+        const docRef = await addDoc(collection(db, 'communityVariant'), newCommunity);
 
-    // Initialize membership and like counts
-    await setDoc(doc(db, 'communityVariantMembershipAndLikeCount', docRef.id), {
-      membershipCount: 1,
-      membershipLikes: 0,
-      communityVariantId: docRef.id
-    });
+        // Initialize membership and like counts
+        await setDoc(doc(db, 'communityVariantMembershipAndLikeCount', docRef.id), {
+          membershipCount: 1,
+          membershipLikes: 0,
+          communityVariantId: docRef.id
+        });
 
-    // Add creator as first member
-    await addDoc(collection(db, 'communityVariantMembership'), {
-      isMember: true,
-      from: serverTimestamp(),
-      to: null,
-      userId: auth.currentUser.uid,
-      communityVariantId: docRef.id
-    });
+        // Add creator as first member
+        await addDoc(collection(db, 'communityVariantMembership'), {
+          isMember: true,
+          from: serverTimestamp(),
+          to: null,
+          userId: auth.currentUser.uid,
+          communityVariantId: docRef.id
+        });
 
-    // Reset form and close modal
-    setTitle('');
-    setDescription('');
-    setImageUrl('');
-    setSelectedCategory('');
-    setIsPrivate(false);
-    setIsModalOpen(false);
+        // Reset form and close modal
+        setTitle('');
+        setDescription('');
+        setImageUrl('');
+        setSelectedCategory('');
+        setIsPrivate(false);
+        setIsModalOpen(false);
 
-    // Refresh communities list
-    window.location.reload();
-  } catch (error) {
-    console.error('Error creating community:', error);
-  }
-};
+        // Refresh communities list
+        window.location.reload();
+      } catch (error) {
+        console.error('Error creating community:', error);
+      }
+    };
 
 
 
@@ -518,7 +518,7 @@ export default function CommunitiesPage() {
       {isModalOpen && <CreateCommunityModal />}
 
       <div className="min-h-screen bg-gray-50">
-      
+
 
         {/* Main content*/}
         <main className="container mx-auto px-4 pt-36">
@@ -672,8 +672,8 @@ export default function CommunitiesPage() {
                       {auth.currentUser?.uid !== community.userId && (
                         <Button
                           className={`rounded-full px-3 py-1 text-sm flex-shrink-0 ${community.requestStatus === 'pending' || community.requestStatus === 'declined'
-                              ? 'bg-gray-400'
-                              : 'bg-greenTheme'
+                            ? 'bg-gray-400'
+                            : 'bg-greenTheme'
                             } text-white`}
                           disabled={community.requestStatus === 'pending' || community.requestStatus === 'declined'}
                           onClick={() => {
@@ -747,4 +747,5 @@ export default function CommunitiesPage() {
       </div>
 
     </>
-  );}
+  );
+}

@@ -28,47 +28,47 @@ export default function Page() {
 	const [isUserModalVisible, setIsUserModalVisible] = useState(false);
 	const [topCommunities, setTopCommunities] = useState([]);
 
-    useEffect(() => {
+	useEffect(() => {
 		const fetchTopCommunities = async () => {
-		  try {
-			//  Get all memberships from communityVariantMembership
-			const membershipRef = collection(db, "communityVariantMembership");
-			const membershipSnapshot = await getDocs(membershipRef);
-	
-			const membershipCounts = membershipSnapshot.docs.reduce((acc, doc) => {
-			  const data = doc.data();
-			  const communityId = data.communityVariantId;
-	
-			  if (communityId) {
-				acc[communityId] = (acc[communityId] || 0) + 1;
-			  }
-			  return acc;
-			}, {} as Record<string, number>);
-	
-			//  Fetch community details for the top communities
-			const communitiesRef = collection(db, "communityVariant");
-			const communitySnapshot = await getDocs(communitiesRef);
-	
-			const communities = communitySnapshot.docs.map((doc) => ({
-			  id: doc.id,
-			  ...doc.data(),
-			  membershipCount: membershipCounts[doc.id] || 0,
-			}));
-	
-			//  Sort communities by membership count and get the top 4
-			const topCommunities = communities
-			  .sort((a, b) => b.membershipCount - a.membershipCount)
-			  .slice(0, 4);
-	
-			setTopCommunities(topCommunities);
-		  } catch (error) {
-			console.error("Error fetching top communities:", error);
-		  }
+			try {
+				//  Get all memberships from communityVariantMembership
+				const membershipRef = collection(db, "communityVariantMembership");
+				const membershipSnapshot = await getDocs(membershipRef);
+
+				const membershipCounts = membershipSnapshot.docs.reduce((acc, doc) => {
+					const data = doc.data();
+					const communityId = data.communityVariantId;
+
+					if (communityId) {
+						acc[communityId] = (acc[communityId] || 0) + 1;
+					}
+					return acc;
+				}, {} as Record<string, number>);
+
+				//  Fetch community details for the top communities
+				const communitiesRef = collection(db, "communityVariant");
+				const communitySnapshot = await getDocs(communitiesRef);
+
+				const communities = communitySnapshot.docs.map((doc) => ({
+					id: doc.id,
+					...doc.data(),
+					membershipCount: membershipCounts[doc.id] || 0,
+				}));
+
+				//  Sort communities by membership count and get the top 4
+				const topCommunities = communities
+					.sort((a, b) => b.membershipCount - a.membershipCount)
+					.slice(0, 4);
+
+				setTopCommunities(topCommunities);
+			} catch (error) {
+				console.error("Error fetching top communities:", error);
+			}
 		};
-	
+
 		fetchTopCommunities();
-	  }, []);
-	
+	}, []);
+
 
 	const fetchAllUsers = async () => {
 		const usersRef = collection(db, 'users');
@@ -559,32 +559,32 @@ export default function Page() {
 	};
 	return (
 		<div className="min-h-screen w-full bg-gray-100">
-			
-  {/* Main content with three-column layout */}
-  <main className="pt-36 w-full px-2 md:px-8">
-    <div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
-      <div>
-        {/* Section 1: Profile Details - Fixed */}
-        <LeftSection
-          profileImage={profileImage}
-          userData={userData}
-          searchTerm={searchTerm}
-          handleSearch={handleSearch}
-          filteredUsers={filteredUsers}
-          handleUserClick={handleUserClick}
-          selectedUser={selectedUser}
-		  setShowUserModal={setIsUserModalVisible}
-        />
-      </div>
-      <div>
-        {/* Section 2: Middle Section - New Component */}
-        <MiddleSection posts={posts} user={userData} profileImage={profileImage} />
-      </div>
-      <div>
-        {/* Section 3: Right Section */}
-        <RightSection topCommunities={topCommunities}/>
-      </div>
-    </div>
+
+			{/* Main content with three-column layout */}
+			<main className="pt-36 w-full px-2 md:px-8">
+				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
+					<div>
+						{/* Section 1: Profile Details - Fixed */}
+						<LeftSection
+							profileImage={profileImage}
+							userData={userData}
+							searchTerm={searchTerm}
+							handleSearch={handleSearch}
+							filteredUsers={filteredUsers}
+							handleUserClick={handleUserClick}
+							selectedUser={selectedUser}
+							setShowUserModal={setIsUserModalVisible}
+						/>
+					</div>
+					<div>
+						{/* Section 2: Middle Section - New Component */}
+						<MiddleSection posts={posts} user={userData} profileImage={profileImage} />
+					</div>
+					<div>
+						{/* Section 3: Right Section */}
+						<RightSection topCommunities={topCommunities} />
+					</div>
+				</div>
 
 				<MobileNavigation />
 			</main>

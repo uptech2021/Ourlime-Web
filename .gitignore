@@ -39,3 +39,6 @@ next-env.d.ts
 .idx/
 
 firebase
+pnpm-lock.yaml
+package.json
+package.json

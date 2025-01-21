@@ -10,6 +10,7 @@ import { useState, useRef, useEffect } from 'react';
 import { collection, getDocs, query, where } from 'firebase/firestore';
 import { fetchUser } from '@/helpers/Auth';
 import { usePathname } from 'next/navigation';
+import { useProfileStore } from 'src/store/useProfileStore';
 
 const noHeaderPages = ['/login', '/register', '/forgot-password', '/reset-password'];
 
@@ -17,7 +18,8 @@ export default function Header(): JSX.Element {
     const pathname = usePathname();
     const router = useRouter();
     const [userData, setUserData] = useState(null);
-    const [profileImage, setProfileImage] = useState(null);
+    // const [profileImage, setProfileImage] = useState(null);
+    const { profileImage } = useProfileStore();
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const dropdownRef = useRef(null);
@@ -32,38 +34,48 @@ export default function Header(): JSX.Element {
     ];
   
     useEffect(() => {
-      const unsubscribe = onAuthStateChanged(auth, async (user) => {
-        if (user) {
-          const userSnap = await fetchUser(user.uid);
-          const userData = userSnap?.data();
-          setUserData(userData);
-  
-          const profileImagesQuery = query(
-            collection(db, 'profileImages'),
-            where('userId', '==', user.uid)
-          );
-          const profileImagesSnapshot = await getDocs(profileImagesQuery);
-  
-          const profileSetAsQuery = query(
-            collection(db, 'profileImageSetAs'),
-            where('userId', '==', user.uid),
-            where('setAs', '==', 'profile')
-          );
-          const setAsSnapshot = await getDocs(profileSetAsQuery);
-  
-          if (!setAsSnapshot.empty) {
-            const setAsDoc = setAsSnapshot.docs[0].data();
-            const matchingImage = profileImagesSnapshot.docs
-              .find(img => img.id === setAsDoc.profileImageId);
-            if (matchingImage) {
-              setProfileImage(matchingImage.data());
-            }
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
+          if (user) {
+            const userSnap = await fetchUser(user.uid);
+            const userData = userSnap?.data();
+            setUserData(userData);
+      
+            const profileImagesQuery = query(
+              collection(db, 'profileImages'),
+              where('userId', '==', user.uid)
+            );
+            const profileImagesSnapshot = await getDocs(profileImagesQuery);
+      
+            const profileSetAsQuery = query(
+              collection(db, 'profileImageSetAs'),
+              where('userId', '==', user.uid),
+              where('setAs', '==', 'profile')
+            );
+            const setAsSnapshot = await getDocs(profileSetAsQuery);
+      
+            if (!setAsSnapshot.empty) {
+                const setAsDoc = setAsSnapshot.docs[0].data();
+                const matchingImage = profileImagesSnapshot.docs
+                  .find(img => img.id === setAsDoc.profileImageId);
+                if (matchingImage) {
+                  const imageData = matchingImage.data();
+                  useProfileStore.getState().setProfileImage({
+                    id: matchingImage.id,
+                    imageURL: imageData.imageURL,
+                    userId: imageData.userId,
+                    typeOfImage: 'profile',
+                    createdAt: new Date(),
+                    updatedAt: new Date()
+                  });
+                }
+              }
+              
           }
-        }
-      });
-  
-      return () => unsubscribe();
-    }, []);
+        });
+      
+        return () => unsubscribe();
+      }, []);
+      
   
     if (noHeaderPages.includes(pathname)) {
       return null;
