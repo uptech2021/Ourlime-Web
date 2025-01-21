@@ -2,7 +2,6 @@ import { UserData, Post, ProfileImage } from '@/types/userTypes';
 import CreatePost from './CreatePost';
 import PostCard from './PostCard';
 import MemoriesSection from './MemoriesSection';
-import { fetchCommentsForPost } from '@/helpers/Posts';
 import { useState, useEffect, useRef } from 'react';
 import { Smile } from 'lucide-react';
 import {
@@ -12,7 +11,6 @@ import {
 	Bookmark
 } from 'lucide-react';
 import Image from 'next/image';
-import { Comment } from '@/types/global';
 
 export default function MiddleSection({
 	posts,
@@ -50,46 +48,7 @@ export default function MiddleSection({
 		{ name: 'Favorites', icon: Star },
 		{ name: 'Saved', icon: Bookmark }
 	];
-	const [comments, setComments] = useState<Comment[]>([]);
-	const [isLoadingComments, setIsLoadingComments] = useState(false);
-	const [hasFetched, setHasFetched] = useState(false);
-	const CommentsFetcher = ({ post }: { post: Post }) => {
-
-		useEffect(() => {
-			const fetchComments = async () => {
-				if (!post?.id || hasFetched) return;
-				setIsLoadingComments(true);
-
-				try {
-					const fetchedComments = await fetchCommentsForPost(post.id);
-					setComments(fetchedComments);
-					setHasFetched(true);
-				} catch (error) {
-					console.error('Error fetching comments:', error);
-				} finally {
-					setIsLoadingComments(false);
-				}
-			};
-
-			fetchComments();
-		}, [post?.id, hasFetched]);
-
-		return (
-			<div className="comments-section">
-				{isLoadingComments ? (
-					<p>Loading comments...</p>
-				) : comments.length > 0 ? (
-					<ul>
-						{comments.map((comment) => (
-							<li key={comment.id}>{comment.text}</li>
-						))}
-					</ul>
-				) : (
-					<p>No comments available.</p>
-				)}
-			</div>
-		);
-	};
+	
 
 	return (
 		<section className="
@@ -209,7 +168,7 @@ export default function MiddleSection({
 				{posts.map((post) => (
 					<div key={post.id}>
 						<PostCard post={post} />
-						<CommentsFetcher post={post} />
+						{/* <CommentsFetcher post={post} /> */}
 					</div>
 
 				))}

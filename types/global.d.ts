@@ -1,6 +1,5 @@
 import { StaticImageData } from "next/image";
 
-
 export type Articles = {
   id: string;
   title: string;
@@ -225,10 +224,16 @@ export type User = {
 
 export type Comment = {
   id: string;
-  text: string;
+  comments: string;
   createdAt: Date;
   updatedAt: Date;
   feedsPostId: string;
   userId: string;
   replies: Comment[];
+  userData: {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    profileImage?: string;
+  };
 };

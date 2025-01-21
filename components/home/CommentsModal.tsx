@@ -1,10 +1,15 @@
-import React, { useState } from "react";
-import { addDoc, serverTimestamp, collection } from "firebase/firestore";
+import React, { useEffect, useState } from "react";
+import { addDoc, serverTimestamp, collection, getDoc, query, getDocs, where, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
+import { Comment, Post } from '@/types/global';
+import { fetchCommentsForPost, fetchPosts } from '@/helpers/Posts';
+import { UserData, ProfileImage } from "@/types/userTypes";
+
 
 interface CommentModalProps {
   postId: string;
   userId: string;
+  profilePicture: string;
   onClose: () => void;
 }
 
@@ -12,11 +17,6 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
   const [comment, setComment] = useState("");
 
   // Static data for post details and comments
-  const postDetails = {
-    username: "@janedoe",
-    user: "Jane Doe",
-    caption: "Excited about this amazing event happening soon! #Culture #Creativity",
-  };
 
   const staticComments = [
     {
@@ -49,12 +49,54 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
       id: 2,
       user: "John Smith",
       username: "@johnsmith",
-      text: "Can’t wait to attend!",
+      text: "Can't wait to attend!",
       avatar: "https://via.placeholder.com/40",
       timestamp: "3h ago",
       replies: [],
     },
   ];
+
+  const [postDetails, setPostDetails] = useState<Post | null>(null);
+  const [comments, setComments] = useState<Comment[]>([]);
+	const [isLoadingComments, setIsLoadingComments] = useState(false);
+	const [hasFetched, setHasFetched] = useState(false);
+  const [isLoading, setIsLoading] = useState(true);
+  const [profileImage, setProfileImage] = useState<ProfileImage | null>(null);
+	const [commentUserData, setCommentUserData] = useState<UserData | null>(null);
+  
+  useEffect(() => {
+    const loadPostDetails = async () => {
+      console.log("Fetching post with ID: ", postId);
+      const fetchedPosts = await fetchPosts(); // Fetch all posts
+      const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
+      setPostDetails(specificPost || null); // Set the specific post or null if not found
+      setIsLoading(false);
+    };
+
+    console.log("post details: ",postDetails);
+
+    loadPostDetails();
+}, [postId]);
+
+		useEffect(() => {
+			const fetchComments = async () => {
+				if (!postId || hasFetched) return;
+				setIsLoadingComments(true);
+
+				try {
+					const fetchedComments = await fetchCommentsForPost(postId);
+					setComments(fetchedComments);
+					setHasFetched(true);
+				} catch (error) {
+					console.error('Error fetching comments:', error);
+				} finally {
+					setIsLoadingComments(false);
+				}
+        
+			};
+      console.log("Comments: ", comments);
+			fetchComments();
+		}, [postId, hasFetched]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -65,6 +107,8 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
         feedsPostId: postId,
         userId: userId,
       };
+
+      console.log("Submitting comment with userId:", userId);
 
       try {
         await addDoc(collection(db, "feedsPostComments"), commentData);
@@ -86,34 +130,43 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
         {/* Comments Section */}
         <div className="md:w-1/2 w-full flex flex-col">
           {/* Top Section: Post Details */}
-          <div className="p-4 border-b">
-            <p className="text-sm font-medium">
-              {postDetails.user} <span className="text-gray-400">{postDetails.username}</span>
-            </p>
-            <p className="text-gray-600 text-sm mt-2">{postDetails.caption}</p>
-          </div>
+          {postDetails ? (
+                        <div>
+                            {postDetails.user ? ( // Check if user exists
+                                <p className="text-sm font-medium">
+                                    {postDetails.user.firstName} {postDetails.user.lastName} <span className="text-gray-400">@{postDetails.user.userName}</span>
+                                </p>
+                            ) : (
+                                <p>User information not available.</p> // Fallback message
+                            )}
+                            <p className="text-gray-600 text-sm mt-2">{postDetails.caption}</p>
+                        </div>
+                    ) : (
+                        <p>Post details not available.</p> // Fallback message
+                    )}
+         <button className="ml-auto" aria-label="Close modal" onClick={onClose}>X</button>
 
+          
           {/* Scrollable Comments */}
           <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-            {staticComments.map((c) => (
+            {comments.map((c) => (
               <div key={c.id}>
                 {/* Parent Comment */}
                 <div className="flex items-start space-x-3">
                   <img
-                    src={c.avatar}
-                    alt={`${c.user}'s avatar`}
+                    src={c.userData?.profileImage}
+                    alt={`${c}'s avatar`}
                     className="w-10 h-10 rounded-full"
                   />
                   <div className="flex-1">
-                    <p className="text-sm font-medium">{c.user} <span className="text-gray-400">{c.username}</span></p>
-                    <p className="text-gray-600 text-sm">{c.text}</p>
-                    <p className="text-xs text-gray-400 mt-1">{c.timestamp}</p>
+                    <p className="text-sm font-medium">{c.userData?.firstName} {c.userData?.lastName} <span className="text-gray-400">@{c.userData?.userName}</span></p>
+                    <p className="text-gray-600 text-sm">{c.comments}</p>
+                    <p className="text-xs text-gray-400 mt-1">{}</p>
                   </div>
                 </div>
-
                 {/* Replies */}
                 <div className="pl-12 mt-2 space-y-2">
-                  {c.replies.map((r) => (
+                  {/* {c.replies.map((r) => (
                     <div key={r.id} className="flex items-start space-x-3">
                       <img
                         src={r.avatar}
@@ -128,7 +181,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                         <p className="text-xs text-gray-400">{r.timestamp}</p>
                       </div>
                     </div>
-                  ))}
+                  ))} */}
                 </div>
               </div>
             ))}
