@@ -145,10 +145,12 @@ export default function SecondStep({
                 <>
                   <div className="w-full h-full flex items-center justify-center relative">
                     <NextImage
+                      width={150}
+                      height={150}
                       src={selectedImages[index]}
                       alt={`Uploaded ${index + 1}`}
                       className="absolute inset-0 w-full h-full object-cover" // Changed from object-contain
-                      fill
+                      // fill
                       sizes="(max-width: 768px) 40vw, (max-width: 1200px) 20vw"
                       priority
                     />
@@ -220,6 +222,8 @@ export default function SecondStep({
                 className="max-w-full max-h-full"
               >
                 <NextImage
+                  width={150}
+                  height={150}
                   ref={(img) => setImgRef(img)}
                   src={selectedImages[cropperVisible]}
                   alt="Crop me"
