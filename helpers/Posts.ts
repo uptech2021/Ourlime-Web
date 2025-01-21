@@ -136,6 +136,33 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
                 console.log("No user document found for userId:", userId);
             }
 
+            // Get user's profile image
+            const profileImagesQuery = query(
+                collection(db, 'profileImages'),
+                where('userId', '==', data.userId)
+            );
+            const profileImagesSnapshot = await getDocs(profileImagesQuery);
+            const profileSetAsQuery = query(
+                collection(db, 'profileImageSetAs'),
+                where('userId', '==', data.userId),
+                where('setAs', '==', 'profile')
+            );
+            const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+            let profileImage = null;
+            if (!setAsSnapshot.empty) {
+                const setAsDoc = setAsSnapshot.docs[0].data();
+                const matchingImage = profileImagesSnapshot.docs
+                    .find(img => img.id === setAsDoc.profileImageId);
+                if (matchingImage) {
+                    profileImage = matchingImage.data();
+                }else{
+                    console.log("No matching profile image found for userId: ", userId);
+                }
+            }else{
+                console.log("No profile image set for userId: ", userId);
+            }
+
             return {
                 id: commentDoc.id,
                 comment: data.comment,
@@ -143,7 +170,12 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
                 updatedAt: new Date(data.updatedAt), // Convert Firestore timestamp to Date
                 feedsPostId: data.feedsPostId,
                 userId: userId,
-                userData: commentUserData, // Include userData in the comment object
+                userData: {
+                    firstName: commentUserData?.firstName || '',
+                    lastName: commentUserData?.lastName || '',
+                    userName: commentUserData?.userName || '',
+                    profileImage: profileImage?.imageURL || null, // Include profileImage in userData
+                }, // Include userData in the comment object
                 replies: [], // Initialize replies as an empty array
             } as Comment;
         }));

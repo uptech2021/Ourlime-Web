@@ -62,19 +62,14 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 	const [isLoadingComments, setIsLoadingComments] = useState(false);
 	const [hasFetched, setHasFetched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  const [profileImage, setProfileImage] = useState<ProfileImage | null>(null);
-	const [commentUserData, setCommentUserData] = useState<UserData | null>(null);
   
   useEffect(() => {
     const loadPostDetails = async () => {
-      console.log("Fetching post with ID: ", postId);
       const fetchedPosts = await fetchPosts(); // Fetch all posts
       const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
       setPostDetails(specificPost || null); // Set the specific post or null if not found
       setIsLoading(false);
     };
-
-    console.log("post details: ",postDetails);
 
     loadPostDetails();
 }, [postId, postDetails]);
@@ -122,7 +117,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 
   return (
     <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
-      <div className="bg-white w-full max-w-4xl mx-4 rounded-lg shadow-lg flex flex-col md:flex-row">
+      <div className="bg-white w-full max-w-4xl mx-4 rounded-lg shadow-lg flex flex-col md:flex-row relative">
+        {/* Close Button */}
+        <button className="absolute top-2 right-2" aria-label="Close modal" onClick={onClose}>X</button>
+
         {/* Post Rectangle */}
         <div className="bg-gray-200 md:w-1/2 w-full h-48 md:h-auto flex items-center justify-center">
           <div className="w-full h-full bg-gray-300"></div>
@@ -145,7 +143,6 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                     ) : (
                         <p>Post details not available.</p> // Fallback message
                     )}
-         <button className="ml-auto" aria-label="Close modal" onClick={onClose}>X</button>
 
           
           {/* Scrollable Comments */}
@@ -154,7 +151,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
               <div key={c.id}>
                 {/* Parent Comment */}
                 <div className="flex items-start space-x-3">
-                  <Image
+                  <img
                     src={c.userData?.profileImage}
                     alt={`${c}'s avatar`}
                     className="w-10 h-10 rounded-full"
