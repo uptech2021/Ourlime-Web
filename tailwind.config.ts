@@ -23,6 +23,10 @@ const config = {
 			},
 		},
 		extend: {
+			screens: {
+				'tvScreen': '2560px',
+			  },
+
 			scrollbar: {
 				none: 'none',
 			},
@@ -105,6 +109,8 @@ const config = {
 		nextui(),
 		require('flowbite/plugin'),
 	],
+
+
 } satisfies Config;
 
 export default config
