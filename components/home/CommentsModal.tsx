@@ -34,7 +34,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
       try {
         const fetchedPosts = await fetchPosts(); // Fetch all posts
         const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
-        console.log("Fetched Posts: ", specificPost);
+        console.log("Fetched Post: ", specificPost);
         setPostDetails(specificPost || null); // Set the specific post or null if not found
       } catch (error) {
         console.error("Error fetching post details:", error);
