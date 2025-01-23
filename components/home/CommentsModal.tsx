@@ -4,6 +4,7 @@ import { db } from "@/lib/firebaseConfig";
 import { Comment, Post, Reply } from '@/types/global';
 import { fetchCommentsForPost, fetchPosts } from '@/helpers/Posts';
 import { UserData, ProfileImage } from "@/types/userTypes";
+import { MessageCircle } from "lucide-react";
 import Image from "next/image";
 
 
@@ -24,10 +25,10 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
   const [postDetails, setPostDetails] = useState<Post | null>(null);
   const [comments, setComments] = useState<Comment[]>([]);
 	const [isLoadingComments, setIsLoadingComments] = useState(false);
-	const [replies, setReplies] = useState<Reply[]>([]);
   const [hasFetched, setHasFetched] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
-  
+  const [replyingTo, setReplyingTo] = useState<string | null>(null);
+
   useEffect(() => {
     const loadPostDetails = async () => {
       try {
@@ -236,7 +237,29 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                 </p>
                 <p className="text-gray-600 text-sm">{c.comment}</p>
               </div>
+                <button 
+                className="flex items-center gap-2 text-gray-600 hover:text-greenTheme" 
+                onClick={() => setReplyingTo(c.id === replyingTo ? null: c.id)}>
+                  <MessageCircle/>
+                  <span>Reply</span>
+                </button>
             </div>
+            {replyingTo === c.id && (
+          <form onSubmit={(e)=> handleReply(e, c.id)} className="flex items-center space-x-2 mt-20">
+            <textarea 
+              className="flex-1 border rounded-md p-2 text-sm resize-none"
+              placeholder="Write youre reply..."
+              value={reply}
+              onChange={(e)=> setReply(e.target.value)}
+            />
+            <button 
+              type="submit"
+              className="px-4 py-2 bg-blue-500 text-white rounder-md">
+                Send Reply
+              </button>
+          </form>
+        )}
+
           </div>
         ))}
       </div>
