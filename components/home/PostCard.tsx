@@ -1,6 +1,6 @@
 // import { Post } from '@/types/userTypes'; // Adjust the import based on your project structure
 import Image from 'next/image';
-import { Heart, MessageCircle, Share } from 'lucide-react';
+import { Heart, MessageCircle, Share, UserPlus } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import CommentModal from './CommentsModal';
 
@@ -64,7 +64,7 @@ const PostMedia = ({ media }) => {
 };
 
 
-const PostCard = ({ post }: { post: Post }) => {
+const PostCard = ({ post, onAddFriend }: { post: Post, onAddFriend: (userId: string) => Promise<void> }) => {
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [activePostId, setActivePostId] = useState<string | null>(null);
     const currentUserId = auth.currentUser?.uid; 
@@ -248,6 +248,15 @@ const PostCard = ({ post }: { post: Post }) => {
 
     // ENDS HERE
 
+    const [isLikesModalOpen, setIsLikesModalOpen] = useState(false);
+
+    const handleLikesModalOpen = () => {
+        setIsLikesModalOpen(true);
+    };
+
+    const handleLikesModalClose = () => {
+        setIsLikesModalOpen(false);
+    };
 
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-4">
@@ -376,12 +385,57 @@ const PostCard = ({ post }: { post: Post }) => {
                             </div>
                         ))}
                     </div>
-                    <span className="ml-2 text-sm font-medium text-gray-600 flex-shrink-0">
+                    <span
+                        className="ml-2 text-sm font-medium text-gray-600 flex-shrink-0 cursor-pointer"
+                        onClick={handleLikesModalOpen}
+                    >
                         {likeCount} {likeCount === 1 ? 'like' : 'likes'}
                     </span>
                 </div>
             </div>
 
+            {isLikesModalOpen && (
+                <div className="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center w-full">
+                    <div className="bg-white rounded-lg p-4 max-w-sm w-1/4">
+                        <h2 className="text-lg font-semibold mb-4">Liked by</h2>
+                        <ul>
+                            {likedUsers.map(user => (
+                                <li key={user.id} className="flex items-center mb-2">
+                                    <div className="w-8 h-8 rounded-full overflow-hidden mr-2">
+                                        {user.profileImage ? (
+                                            <Image
+                                                src={user.profileImage}
+                                                alt={`${user.firstName}'s profile`}
+                                                width={32}
+                                                height={32}
+                                                className="w-full h-full object-cover"
+                                                loader={({ src }) => src}
+                                                unoptimized
+                                            />
+                                        ) : (
+                                            <div className="w-full h-full bg-gray-200" />
+                                        )}
+                                    </div>
+                                    <span className="flex-1">{user.userName}</span>
+                                    <button
+                                        onClick={() => onAddFriend(user.id)}
+                                        className="p-1 text-greenTheme hover:bg-green-50 rounded-full transition-colors"
+                                        title="Add Friend"
+                                    >
+                                        <UserPlus size={16} />
+                                    </button>
+                                </li>
+                            ))}
+                        </ul>
+                        <button
+                            className="mt-4 bg-greenTheme text-white py-1 px-3 rounded"
+                            onClick={handleLikesModalClose}
+                        >
+                            Close
+                        </button>
+                    </div>
+                </div>
+            )}
 
             {isCommentModalOpen && activePostId && (
                 <CommentModal
