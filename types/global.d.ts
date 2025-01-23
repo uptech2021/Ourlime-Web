@@ -121,6 +121,7 @@ export type UserData = {
   last_loggedIn: Firebase.Timestamp;
   userName: string;
   photoURL: string;
+  bio: string;
 };
 
 export type Communities = {
@@ -168,6 +169,7 @@ export type UserData = {
 	last_loggedIn: Date;
 	userTier: number;
 	createdAt: Date;
+  bio: string;
 }
 
 export type ProfileImage = {
@@ -202,6 +204,8 @@ export type Post = {
 		lastName: string;
 		userName: string;
 		profileImage?: string;
+    isFollowing: boolean;
+    isFriend: boolean;
 	};
 }
 
@@ -219,12 +223,14 @@ export type User = {
 	firstName: string;
 	lastName: string;
 	userName: string;
-	profileImage?: string;
+  profileImage?: string;
+  isFollowing?: boolean;
+  isFriend?: boolean;
 }
 
 export type Comment = {
   id: string;
-  comment: string;
+  comments: string;
   createdAt: Date;
   updatedAt: Date;
   feedsPostId: string;

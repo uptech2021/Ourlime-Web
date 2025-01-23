@@ -1,4 +1,4 @@
-import { Post } from '@/types/userTypes'; // Adjust the import based on your project structure
+// import { Post } from '@/types/userTypes'; // Adjust the import based on your project structure
 import Image from 'next/image';
 import { Heart, MessageCircle, Share } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
@@ -8,7 +8,7 @@ import { collection, query, where, getDocs, addDoc, updateDoc, onSnapshot, delet
 import { auth, db } from '@/lib/firebaseConfig';
 import debounce from 'lodash/debounce';
 
-import { User } from "@/types/global"
+import { User, Post } from "@/types/global"
 
 const PostMedia = ({ media }) => {
     const [activeIndex, setActiveIndex] = useState(0);

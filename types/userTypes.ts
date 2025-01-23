@@ -12,7 +12,7 @@ type UserData = {
 	userTier: number;
 	createdAt: Date;
     profileImage?: string;
-	bio?:string;
+	bio: string;
 };
 
 type ProfileImage = {
@@ -34,24 +34,29 @@ type SearchUser = {
 };
 
 
+// In types/userTypes.ts
 type Post = {
-	id: string;
-	caption: string;
-	description: string;
-	visibility: string;
-	createdAt: Date;
-	userId: string;
-
-	hashtags: Array<string>;
+    id: string;
+    caption: string;
+    description: string;
+    visibility: string;
+    createdAt: Date;
+    userId: string;
+    hashtags: Array<string>;
+    mediaTypes: Array<string>;  // Add this line
 	media: string;
-	userReferences: Array<string>;
-	user: {
-		firstName: string;
-		lastName: string;
-		userName: string;
-		profileImage?: string;
-	};
+    userReferences: Array<string>;
+    user: {
+        firstName: string;
+        lastName: string;
+        userName: string;
+        profileImage?: string;
+        isFollowing?: boolean;
+        isFriend?: boolean;
+    };
 };
+
+
 
 type PostData = {
 	userId: string;

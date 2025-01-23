@@ -120,7 +120,6 @@ export default function Page() {
 	const fetchUserData = async (userId: string) => {
 		setIsLoading(true);
 		try {
-			console.log('Starting data fetch for user:', userId);
 
 			const userDoc = await getDoc(doc(db, 'users', userId));
 			if (!userDoc.exists()) {
@@ -130,8 +129,6 @@ export default function Page() {
 			}
 
 			const userDataFromDb = userDoc.data();
-			console.log('User data retrieved:', userDataFromDb);
-
 			const profileImagesQuery = query(
 				collection(db, 'profileImages'),
 				where('userId', '==', userId)
@@ -141,7 +138,6 @@ export default function Page() {
 				id: doc.id,
 				...doc.data()
 			}));
-			console.log('All user profile images:', userProfileImages);
 
 			const profileSetAsQuery = query(
 				collection(db, 'profileImageSetAs'),
@@ -149,8 +145,6 @@ export default function Page() {
 				where('setAs', '==', 'profile')
 			);
 			const setAsSnapshot = await getDocs(profileSetAsQuery);
-			console.log('Profile SetAs documents:', setAsSnapshot.docs.map(doc => doc.data()));
-
 			let profileImageData = null;
 
 			if (!setAsSnapshot.empty) {
@@ -161,8 +155,6 @@ export default function Page() {
 
 				if (matchingImage) {
 					profileImageData = matchingImage;
-					console.log('Matched profile image:', profileImageData);
-					console.log('Direct imageURL check:', profileImageData.imageURL);
 					setProfileImage(profileImageData);
 				}
 			}
@@ -214,55 +206,96 @@ export default function Page() {
 		setFilteredUsers(filtered);
 	};
 
-
+	// useEffect code:
 	useEffect(() => {
 		const fetchPosts = async () => {
 			const postsRef = collection(db, 'feedPosts');
 			const q = query(postsRef, orderBy('createdAt', 'desc'));
 			const snapshot = await getDocs(q);
+			const currentUserId = auth.currentUser?.uid;
+	
 			const postsWithUserData = await Promise.all(
 				snapshot.docs.map(async (postDoc) => {
 					const postData = postDoc.data();
-
+	
 					// Fetch user data
 					const userDocRef = doc(db, 'users', postData.userId);
 					const userDocSnap = await getDoc(userDocRef);
 					const userData = userDocSnap.data();
-
-					// Get user's profile image
+	
+					// Check friendship status
+					const friendshipQuery = query(
+						collection(db, 'friendship'),
+						where('userId1', 'in', [currentUserId, postData.userId]),
+						where('userId2', 'in', [currentUserId, postData.userId]),
+						where('friendshipStatus', '==', 'accepted')
+					);
+					const friendshipSnapshot = await getDocs(friendshipQuery);
+					const isFriend = !friendshipSnapshot.empty;
+	
+					// Check if I am following them (currentUserId is followerId)
+					const amIFollowingQuery = query(
+						collection(db, 'followers'),
+						where('followerId', '==', currentUserId),
+						where('followeeId', '==', postData.userId)
+					);
+					const amIFollowingSnapshot = await getDocs(amIFollowingQuery);
+					const isFollowing = !amIFollowingSnapshot.empty;
+		
+					// Get user's profile images
 					const profileImagesQuery = query(
 						collection(db, 'profileImages'),
 						where('userId', '==', postData.userId)
 					);
 					const profileImagesSnapshot = await getDocs(profileImagesQuery);
-					const profileSetAsQuery = query(
+	
+					// Try to get post profile image first
+					const postProfileQuery = query(
 						collection(db, 'profileImageSetAs'),
 						where('userId', '==', postData.userId),
-						where('setAs', '==', 'profile')
+						where('setAs', '==', 'postProfile')
 					);
-					const setAsSnapshot = await getDocs(profileSetAsQuery);
-
+					const postProfileSnapshot = await getDocs(postProfileQuery);
+	
 					let profileImage = null;
-					if (!setAsSnapshot.empty) {
-						const setAsDoc = setAsSnapshot.docs[0].data();
+					if (!postProfileSnapshot.empty) {
+						const postProfileDoc = postProfileSnapshot.docs[0].data();
 						const matchingImage = profileImagesSnapshot.docs
-							.find(img => img.id === setAsDoc.profileImageId);
+							.find(img => img.id === postProfileDoc.profileImageId);
 						if (matchingImage) {
 							profileImage = matchingImage.data();
 						}
+					} else {
+						const profileQuery = query(
+							collection(db, 'profileImageSetAs'),
+							where('userId', '==', postData.userId),
+							where('setAs', '==', 'profile')
+						);
+						const profileSnapshot = await getDocs(profileQuery);
+						
+						if (!profileSnapshot.empty) {
+							const profileDoc = profileSnapshot.docs[0].data();
+							const matchingImage = profileImagesSnapshot.docs
+								.find(img => img.id === profileDoc.profileImageId);
+							if (matchingImage) {
+								profileImage = matchingImage.data();
+							}
+						}
 					}
-
+	
 					// Fetch media for this post
 					const mediaQuery = query(
 						collection(db, 'feedsPostSummary'),
-						where('feedsPostId', '==', postDoc.id)
+						where('feedsPostId', '==', postDoc.id),
+						orderBy('displayOrder', 'asc')
 					);
+					
 					const mediaSnapshot = await getDocs(mediaQuery);
 					const media = mediaSnapshot.docs.map(doc => ({
 						id: doc.id,
 						...doc.data()
 					}));
-
+	
 					return {
 						id: postDoc.id,
 						caption: postData.caption,
@@ -271,22 +304,26 @@ export default function Page() {
 						createdAt: postData.createdAt.toDate(),
 						userId: postData.userId,
 						hashtags: postData.hashtags || [],
+						mediaTypes: postData.mediaTypes || [], // Add this line
 						media,
+						userReferences: postData.userReferences || [],
 						user: {
 							...userData,
 							profileImage: profileImage?.imageURL,
+							isFriend,
+							isFollowing
 						},
 					} as unknown as Post;
+					
 				})
 			);
-
+	
 			setPosts(postsWithUserData);
 		};
-
+	
 		fetchPosts();
 	}, []);
-
-
+	
 	useEffect(() => {
 		const handleClickOutside = (event) => {
 			if (dropdownRef.current && !dropdownRef.current.contains(event.target)) {
@@ -557,12 +594,13 @@ export default function Page() {
 			</>
 		);
 	};
+	
 	return (
 		<div className="min-h-screen w-full bg-gray-100">
 
 			{/* Main content with three-column layout */}
-			<main className="pt-36 w-full 2xl:w-9/12 2xl:mx-auto tvScreen:w-7/12 px-2 md:px-8">
-				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] gap-4 lg:gap-4">
+			<main className="pt-36 w-full px-2 md:px-8">
+				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] 2xl:grid-cols-[1fr_minmax(0,3fr)_1fr] gap-4 lg:gap-4">
 					<div>
 						{/* Section 1: Profile Details - Fixed */}
 						<LeftSection
