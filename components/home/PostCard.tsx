@@ -1,6 +1,6 @@
 import { Post } from '@/types/userTypes'; // Adjust the import based on your project structure
 import Image from 'next/image';
-import { Heart, MessageCircle, Share } from 'lucide-react';
+import { Check, Heart, Loader2, MessageCircle, MoreVertical, Share, UserPlus } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import CommentModal from './CommentsModal';
 
@@ -9,6 +9,7 @@ import { auth, db } from '@/lib/firebaseConfig';
 import debounce from 'lodash/debounce';
 
 import { User } from "@/types/global"
+
 
 const PostMedia = ({ media }) => {
     const [activeIndex, setActiveIndex] = useState(0);
@@ -63,11 +64,10 @@ const PostMedia = ({ media }) => {
     );
 };
 
-
 const PostCard = ({ post }: { post: Post }) => {
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [activePostId, setActivePostId] = useState<string | null>(null);
-    const currentUserId = auth.currentUser?.uid; 
+    const currentUserId = auth.currentUser?.uid;
 
     const handleOpenCommentModal = (postId: string) => {
         setActivePostId(postId); // Set the current postId
@@ -249,29 +249,131 @@ const PostCard = ({ post }: { post: Post }) => {
     // ENDS HERE
 
 
+    // Add state for follow status
+    const [followStatus, setFollowStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+    // Modify handleFollow function
+    const handleFollow = async () => {
+        setFollowStatus('loading');
+
+        // Simulate API call
+        setTimeout(() => {
+            setFollowStatus('success');
+            // Reset after showing success
+            setTimeout(() => {
+                setFollowStatus('idle');
+            }, 2000);
+        }, 1500);
+    };
+
+
+    // Add this state to track button status
+    const [addFriendStatus, setAddFriendStatus] = useState<'idle' | 'loading' | 'success'>('idle');
+
+    const handleAddFriend = async () => {
+        setAddFriendStatus('loading');
+
+        // Simulate API call with setTimeout
+        setTimeout(() => {
+            setAddFriendStatus('success');
+            // Reset after showing success
+            setTimeout(() => {
+                setAddFriendStatus('idle');
+            }, 2000);
+        }, 1500);
+    };
+
+    const [isDropdownOpen, setIsDropdownOpen] = useState(false);
+
+
     return (
         <div className="bg-white rounded-lg shadow-md p-4 mb-4">
             {/* User Info Header */}
-            <div className="flex items-center gap-3 mb-4">
-                <div className="w-10 h-10 rounded-full overflow-hidden">
-                    {post.user.profileImage ? (
-                        <Image
-                            src={post.user.profileImage}
-                            alt={`${post.user.firstName}'s profile`}
-                            width={40}
-                            height={40}
-                            className="w-full h-full object-cover"
-                            priority
-                            unoptimized={true}
-                            loader={({ src }) => src}
-                        />
-                    ) : (
-                        <div className="w-full h-full bg-gray-200" />
-                    )}
+            <div className="flex items-center justify-between mb-4">
+                <div className="flex items-center gap-3 flex-1">
+                    <div className="w-10 h-10 rounded-full overflow-hidden">
+                        {post.user.profileImage ? (
+                            <Image
+                                src={post.user.profileImage}
+                                alt={`${post.user.firstName}'s profile`}
+                                width={40}
+                                height={40}
+                                className="w-full h-full object-cover"
+                                priority
+                                unoptimized={true}
+                                loader={({ src }) => src}
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gray-200" />
+                        )}
+                    </div>
+                    <div className="flex-1">
+                        <div className="flex items-center justify-between gap-2">
+                            <div className="flex flex-col gap-0.1">
+                                <div className="flex items-center gap-2">
+                                    <h3 className="font-semibold">{post.user.firstName} {post.user.lastName}</h3>
+                                    {currentUserId !== post.userId && !post.user.isFollowing && !post.user.isFriend && (
+                                        <button
+                                            onClick={handleFollow}
+                                            className="flex items-center gap-1 text-sm text-greenTheme hover:underline"
+                                            disabled={followStatus !== 'idle'}
+                                        >
+                                            {followStatus === 'idle' && 'Follow'}
+                                            {followStatus === 'loading' && (
+                                                <Loader2 size={16} className="animate-spin" />
+                                            )}
+                                            {followStatus === 'success' && (
+                                                <Check size={16} className="text-green-500 animate-bounce" />
+                                            )}
+                                        </button>
+                                    )}
+                                </div>
+                                <span className="text-sm text-gray-500">@{post.user.userName}</span>
+                            </div>
+                        </div>
+                    </div>
                 </div>
-                <div>
-                    <h3 className="font-semibold">{post.user.firstName} {post.user.lastName}</h3>
-                    <span className="text-sm text-gray-500">@{post.user.userName}</span>
+                <div className="flex items-center gap-2 ml-auto">
+                    {currentUserId !== post.userId && !post.user.isFriend && (
+                        <button
+                            onClick={handleAddFriend}
+                            className="p-2 text-greenTheme hover:bg-green-50 rounded-full transition-all"
+                            title="Add Friend"
+                            disabled={addFriendStatus !== 'idle'}
+                        >
+                            {addFriendStatus === 'idle' && <UserPlus size={24} />}
+                            {addFriendStatus === 'loading' && (
+                                <Loader2 size={24} className="animate-spin" />
+                            )}
+                            {addFriendStatus === 'success' && (
+                                <Check size={24} className="text-green-500 animate-bounce" />
+                            )}
+                        </button>
+                    )}
+
+                    <div className="relative">
+                        <button
+                            onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                            className="p-2 text-gray-500 hover:bg-gray-100 rounded-full transition-all"
+                            title='More'
+                        >
+                            <MoreVertical size={20} />
+                        </button>
+
+                        {isDropdownOpen && (
+                            <div className="absolute right-0 mt-2 w-48 bg-white rounded-lg shadow-lg py-1 z-50">
+                                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                                    Share Profile
+                                </button>
+                                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100">
+                                    Report User
+                                </button>
+                                <button className="w-full px-4 py-2 text-left text-sm hover:bg-gray-100 text-red-500">
+                                    Block User
+                                </button>
+                            </div>
+                        )}
+                    </div>
                 </div>
             </div>
 
