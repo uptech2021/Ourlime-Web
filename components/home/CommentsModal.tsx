@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { addDoc, serverTimestamp, collection, getDoc, query, getDocs, where, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Comment, Post, Reply } from '@/types/global';
-import { fetchCommentsForPost, fetchPosts } from '@/helpers/Posts';
-import { UserData, ProfileImage } from "@/types/userTypes";
+import { fetchCommentsForPost, fetchRepliesForComments, fetchPosts } from '@/helpers/Posts';
 import { MessageCircle } from "lucide-react";
 import Image from "next/image";
 
@@ -18,6 +17,7 @@ interface CommentModalProps {
 const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) => {
   const [comment, setComment] = useState("");
   const [reply, setReply] = useState("");
+  const [replies, setReplies] = useState< {[key: string]: Reply[]}>({});
 
   // Static data for post details and comments
 
@@ -55,8 +55,16 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 					const fetchedComments = await fetchCommentsForPost(postId);
 					setComments(fetchedComments);
 					setHasFetched(true);
+
+          const repliesData: { [key: string]: Reply[]} = {};
+          for(const comment of fetchedComments){
+            const fetchedReplies = await fetchRepliesForComments(comment.id);
+            repliesData[comment.id] = fetchedReplies;
+          }
+          setReplies(repliesData);
+          console.log("Fetched replies", repliesData);
 				} catch (error) {
-					console.error('Error fetching comments:', error);
+					console.error('Error fetching comments and replies:', error);
 				} finally {
 					setIsLoadingComments(false);
 				}
@@ -224,6 +232,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
       <div className="flex-1 p-4 space-y-4 overflow-y-auto">
         {comments.map((c) => (
           <div key={c.id}>
+            {/* Parent Comment */}
             <div className="flex items-start space-x-3">
               <img
                 src={c.userData?.profileImage}
@@ -244,6 +253,8 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                   <span>Reply</span>
                 </button>
             </div>
+
+            {/* Reply Form */}
             {replyingTo === c.id && (
           <form onSubmit={(e)=> handleReply(e, c.id)} className="flex items-center space-x-2 mt-20">
             <textarea 
@@ -258,8 +269,26 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                 Send Reply
               </button>
           </form>
-        )}
+            )}
 
+                 {/* Display Replies */}
+                 {replies[c.id] && replies[c.id].length > 0 && (
+                  <div className="mt-2 pl-4">
+                    {replies[c.id].map((reply) => (
+                      <div key={reply.id} className="flex items-start space-x-3">
+                        <img
+                          src={reply.userData?.profileImage || "/default-avatar.png"}
+                          alt={`${reply.userData?.firstName}'s avatar`}
+                          className="w-8 h-8 rounded-full"
+                        />
+                        <div className="flex-1">
+                          <p className="text-sm font-medium">{reply.userData?.firstName} {reply.userData?.lastName} <span className="text-gray-400">@{reply.userData?.userName}</span></p>
+                          <p className="text-gray-600 text-sm">{reply.reply}</p>
+                        </div>
+                      </div>
+                    ))}
+                    </div>
+                 )}
           </div>
         ))}
       </div>

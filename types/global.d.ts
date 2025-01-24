@@ -239,9 +239,17 @@ export type Comment = {
 };
 
 export type Reply = {
+  id: string;
   reply: string;
   feedsPostCommentId: string;
-  feedsPostCommentReplyId: string;
+  // feedsPostCommentReplyId: string;
   userId: string;
   createdAt: Date;
+  userData: {
+    firstName: string;
+    lastName: string;
+    userName: string;
+    profileImage?: string;
+  };
+
 };
