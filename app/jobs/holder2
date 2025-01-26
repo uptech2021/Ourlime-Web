@@ -19,13 +19,137 @@ import { ProfessionalJobsList } from '@/components/jobs/ProfessionalJobsList';
 import { QuickTasksList } from '@/components/jobs/QuickTasksList';
 import { FreelanceProjectsList } from '@/components/jobs/FreelanceProjectsList';
 import JobCreationModal from '@/components/jobs/createJobsModel/jobCreationModal';
-import { ProfessionalJob, QuickTask, FreelanceProject } from '@/types/jobTypes';
 
 export type JobTypeItem = {
     id: 'professional' | 'quicktasks' | 'freelance';
     label: string;
     icon: LucideIcon;
 }
+
+export type JobType = {
+    id: string;
+    jobCategory: string;
+};
+
+export type Job = {
+    id: string;
+    title: string;
+    company: string;
+    location: string;
+    salaryRange: string;
+    type: JobType;
+    skills: string[];
+    postedDate: string;
+    logo: string;
+}
+
+export type ProfessionalJob = {
+    id: string;
+    jobTitle: string;
+    jobDescription: string;
+    userId: string;
+    jobId: string;
+    company: {
+        name: string;
+        logo: string;
+    };
+    requirements: {
+        id: string;
+        description: string[];
+    };
+    skills: {
+        id: string;
+        skillsNeeded: string[];
+    };
+    qualifications: {
+        id: string;
+        qualificationsNeeded: string[];
+    };
+    questions: Array<{
+        id: string;
+        question: string;
+        answerType: 'text' | 'multiple' | 'single';
+        answerOptions?: string[];
+    }>;
+    createdAt: string;
+    location: string;
+    priceRange: {
+        from: string;
+        to: string;
+    };
+    type: 'Full-time' | 'Part-time' | 'Contract';
+    userImage: string | null;
+    userName: string;
+};
+
+export type QuickTask = {
+    id: string;
+    jobTitle: string;
+    jobDescription: string;
+    userId: string;
+    jobId: string;
+    requirements: {
+        id: string;
+        description: string[];
+    };
+    skills: {
+        id: string;
+        skillsNeeded: string[];
+    };
+    budget: string;
+    duration: string;
+    location: string;
+    createdAt: string;
+    taskProvider: {
+        name: string;
+        avatar: string;
+        rating: number;
+        tasksCompleted: number;
+    };
+    priceRange: {
+        from: string;
+        to: string;
+    };
+};
+
+export type FreelanceProject = {
+    id: string;
+    jobTitle: string;
+    jobDescription: string;
+    userId: string;
+    jobId: string;
+    requirements: {
+        id: string;
+        description: string[];
+    };
+    skills: {
+        id: string;
+        skillsNeeded: string[];
+    };
+    qualifications: {
+        id: string;
+        qualificationsNeeded: string[];
+    };
+    budget: {
+        range: string;
+        type: 'Fixed' | 'Hourly';
+    };
+    duration: string;
+    clientInfo: {
+        name: string;
+        avatar: string;
+        rating: number;
+        projectsPosted: number;
+        successRate: number;
+    };
+    proposalCount: number;
+    deadline: string;
+    createdAt: string;
+    priceRange: {
+        from: string;
+        to: string;
+    };
+};
 
 export default function JobsPage() {
     const [activeJobType, setActiveJobType] = useState<JobTypeItem['id']>('professional');
@@ -34,7 +158,6 @@ export default function JobsPage() {
     const [freelanceProjects, setFreelanceProjects] = useState<FreelanceProject[]>([]);
     const [isJobModalOpen, setIsJobModalOpen] = useState(false);
 
-    
     const jobTypes: Array<{ id: 'professional' | 'quicktasks' | 'freelance', label: string, icon: LucideIcon }> = [
         { id: 'professional', label: 'Professional Jobs', icon: Briefcase },
         { id: 'quicktasks', label: 'Quick Tasks', icon: Clock },
@@ -62,7 +185,7 @@ export default function JobsPage() {
                     getDocs(collection(db, 'jobs')),
                     getDocs(query(
                         collection(db, 'jobsVariant'),
-                        orderBy('createdAt', 'desc')
+                        orderBy('createdAt', 'desc') // This ensures newest jobs appear first
                     ))
                 ]);
 
@@ -74,12 +197,14 @@ export default function JobsPage() {
                 const quickTasks: QuickTask[] = [];
                 const freelanceProjects: FreelanceProject[] = [];
 
+                // Batch process jobs
                 await Promise.all(jobsSnapshot.docs.map(async (doc) => {
                     const baseData = doc.data();
                     const jobCategory = jobTypesMap.get(baseData.jobId);
 
                     if (!jobCategory || !baseData.jobId) return;
 
+                    // Fetch all related data in parallel
                     const [
                         userDoc,
                         profileSetAsSnapshot,
@@ -103,6 +228,7 @@ export default function JobsPage() {
                     const userData = userDoc.data();
                     const creatorName = userData ? `${userData.firstName} ${userData.lastName}` : '';
 
+                    // Handle profile image with fallback
                     let profileImageUrl = null;
                     if (profileSetAsSnapshot.empty) {
                         const regularProfileSnapshot = await getDocs(query(
@@ -121,21 +247,6 @@ export default function JobsPage() {
                         const imageDoc = await getDoc(firestoreDoc(db, 'profileImages', imageId));
                         profileImageUrl = imageDoc.data()?.imageURL;
                     }
-
-                    const questions = await Promise.all(
-                        questionsSnapshot.docs.map(async (questionDoc) => {
-                            const optionsSnapshot = await getDocs(
-                                query(collection(db, 'jobAnswerOptions'),
-                                    where('jobProfessionalQuestionsId', '==', questionDoc.id))
-                            );
-                            return {
-                                id: questionDoc.id,
-                                question: questionDoc.data().question,
-                                answerType: questionDoc.data().answerType as 'text' | 'multiple' | 'single',
-                                answerOptions: optionsSnapshot.docs.map(opt => opt.data().optionText)
-                            };
-                        })
-                    );
 
                     const commonData = {
                         id: doc.id,
@@ -171,11 +282,11 @@ export default function JobsPage() {
                                     id: qualificationsSnapshot.docs[0]?.id || '',
                                     qualificationsNeeded: qualificationsSnapshot.docs[0]?.data()?.qualificationsNeeded || []
                                 },
-                                questions
+                                // questions
                             } as ProfessionalJob);
                             break;
-
-                        case 'quicktasks':
+                    
+                        case 'quickTask':
                             quickTasks.push({
                                 ...commonData,
                                 budget: baseData.budget || '',
@@ -190,7 +301,7 @@ export default function JobsPage() {
                                 }
                             } as QuickTask);
                             break;
-
+                    
                         case 'freelance':
                             freelanceProjects.push({
                                 ...commonData,
@@ -213,6 +324,13 @@ export default function JobsPage() {
                             } as FreelanceProject);
                             break;
                     }
+                    
+                }));
+
+                // Cache the results
+                localStorage.setItem('jobsCache', JSON.stringify({
+                    data: { professionalJobs, quickTasks, freelanceProjects },
+                    timestamp: Date.now()
                 }));
 
                 setProfessionalJobs(professionalJobs);
@@ -226,6 +344,8 @@ export default function JobsPage() {
 
         fetchJobs();
     }, []);
+
+
 
     // Render Function
     const renderJobContent = () => {

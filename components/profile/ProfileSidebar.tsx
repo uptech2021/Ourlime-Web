@@ -5,10 +5,11 @@ import { auth, db } from '@/lib/firebaseConfig';
 import { collection, doc, getDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import Image from 'next/image';
 import Link from 'next/link';
-import { Settings, Users, Globe, Bookmark, ChevronLeft, ChevronRight, Camera, Video, UsersRound, Calendar, User, ImageIcon, CircleDot, Share2, Twitter, Instagram, Linkedin } from 'lucide-react';
+import { Settings, Users, Globe, Bookmark, ChevronLeft, ChevronRight, Camera, Video, UsersRound, Calendar, User, ImageIcon, CircleDot, Share2, Twitter, Instagram, Linkedin, Package, ChevronUp, ChevronDown, Briefcase } from 'lucide-react';
 import { ProfileImage, UserData } from '@/types/userTypes';
 import { onAuthStateChanged } from 'firebase/auth';
 import { useProfileStore } from 'src/store/useProfileStore';
+import { usePathname } from 'next/navigation';
 
 type ProfileSidebarProps = {
     activeTab: string;
@@ -22,6 +23,26 @@ type ProfileSidebarProps = {
 
 export const sidebarItems = [
     { id: 'profile', label: 'Profile', icon: User, href: '/profile' },
+    {
+        id: 'products',
+        label: 'Products',
+        icon: Package,
+        href: '#',
+        subItems: [
+            { id: 'add-product', label: 'Add Product', href: '/profile/products/add' },
+            { id: 'update-product', label: 'Update Product', href: '/profile/products/update' }
+        ]
+    },
+    {
+        id: 'jobs',
+        label: 'Jobs',
+        icon: Briefcase,
+        href: '#',
+        subItems: [
+            { id: 'add-job', label: 'Post New Job', href: '/profile/jobs/add' },
+            { id: 'manage-jobs', label: 'Manage Jobs', href: '/profile/jobs/manage' }
+        ]
+    },
     { id: 'posts', label: 'Posts', icon: ImageIcon, href: '/profile/posts' },
     { id: 'friends', label: 'Friends', icon: Users, href: '/profile/friends' },
     { id: 'photos', label: 'Photos', icon: Camera, href: '/profile/photos' },
@@ -45,6 +66,8 @@ export default function ProfileSidebar({
     const [friendsCount, setFriendsCount] = useState(0);
     const [postsCount, setPostsCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
+    const pathname = usePathname();
+    const [expandedItem, setExpandedItem] = useState<string | null>(null);
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -137,6 +160,26 @@ export default function ProfileSidebar({
         return () => unsubscribe();
     }, [setUserData]);
 
+    useEffect(() => {
+        const currentSection = sidebarItems.find(item =>
+            item.subItems?.some(subItem => pathname === subItem.href)
+        );
+        if (currentSection) {
+            setExpandedItem(currentSection.id);
+        }
+    }, [pathname]);
+
+
+    const handleItemClick = (item) => {
+        if (item.subItems) {
+            setExpandedItem(expandedItem === item.id ? null : item.id);
+        } else {
+            setActiveTab(item.id);
+        }
+    };
+
+
+
     return (
         <>
             <button
@@ -204,21 +247,64 @@ export default function ProfileSidebar({
 
                 <nav className="p-4 overflow-y-auto flex-1 h-[calc(100vh-160px)]">
                     {sidebarItems.map((item) => (
-                        <Link
-                            key={item.id}
-                            href={item.href}
-                            onClick={() => {
-                                setActiveTab(item.id);
-                                setIsSidebarOpen(false);
-                            }}
-                            className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-colors
-                            ${activeTab === item.id
-                                    ? 'bg-greenTheme text-white'
-                                    : 'text-gray-600 hover:bg-gray-50'}`}
-                        >
-                            <item.icon size={20} className="flex-shrink-0" />
-                            {item.label}
-                        </Link>
+                        <div key={item.id} className="mb-1">
+                            {item.subItems ? (
+                                <div>
+                                    <button
+                                        onClick={() => setExpandedItem(expandedItem === item.id ? null : item.id)}
+                                        className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                            ${pathname.includes(item.id)
+                                                ? 'bg-green-50 text-greenTheme border-l-4 border-greenTheme'
+                                                : 'text-gray-600 hover:bg-gray-50'}`}
+                                    >
+                                        <div className="flex items-center gap-3">
+                                            <item.icon size={20}
+                                                className={`flex-shrink-0 ${pathname.includes(item.id) ? 'text-greenTheme' : 'text-gray-400'}`}
+                                            />
+                                            {item.label}
+                                        </div>
+                                        <ChevronDown
+                                            size={16}
+                                            className={`transform transition-transform duration-200 
+                            ${expandedItem === item.id ? 'rotate-180' : ''}`}
+                                        />
+                                    </button>
+
+                                    <div className={`ml-8 mt-2 space-y-1 overflow-hidden transition-all duration-200
+                        ${expandedItem === item.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        {item.subItems.map((subItem) => (
+                                            <Link
+                                                key={subItem.id}
+                                                href={subItem.href}
+                                                className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
+                                    ${pathname === subItem.href
+                                                        ? 'text-greenTheme bg-green-50/50'
+                                                        : 'text-gray-500 hover:bg-gray-50'}`}
+                                            >
+                                                <div className="flex items-center w-full">
+                                                    <span className={`w-1 h-6 rounded-full mr-3 transition-all duration-200
+                                        ${pathname === subItem.href ? 'bg-greenTheme' : 'bg-transparent'}`} />
+                                                    {subItem.label}
+                                                </div>
+                                            </Link>
+                                        ))}
+                                    </div>
+                                </div>
+                            ) : (
+                                <Link
+                                    href={item.href}
+                                    className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
+                        ${pathname === item.href
+                                            ? 'bg-green-50 text-greenTheme border-l-4 border-greenTheme'
+                                            : 'text-gray-600 hover:bg-gray-50'}`}
+                                >
+                                    <item.icon size={20}
+                                        className={`flex-shrink-0 ${pathname === item.href ? 'text-greenTheme' : 'text-gray-400'}`}
+                                    />
+                                    {item.label}
+                                </Link>
+                            )}
+                        </div>
                     ))}
                 </nav>
 
@@ -251,7 +337,5 @@ export default function ProfileSidebar({
             </div>
         </>
     );
-
-
 
 }

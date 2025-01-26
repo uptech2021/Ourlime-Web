@@ -240,34 +240,51 @@
 
 import { useEffect, useState } from 'react';
 import ProfileSidebar from '@/components/profile/ProfileSidebar';
+<<<<<<< Updated upstream
 import { Bookmark, Calendar, Camera, CircleUser, ImageIcon, Info, Users, UsersRound, Video } from 'lucide-react';
 import Image from 'next/image';
 import { UserData, ProfileImage } from '@/types/userTypes';
 import ChangeProfileImageModal from '@/components/profile/ChangeProfileImageModal';
 import { addDoc, collection, doc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+=======
+import {
+  Bookmark, Calendar, CircleUser, ImageIcon,
+  Info, Users, UsersRound, Video, Palette
+} from 'lucide-react';
+import { UserData, ProfileImage } from '@/types/userTypes';
+import { addDoc, collection, doc, getDoc, getDocs, query, serverTimestamp, updateDoc, where } from 'firebase/firestore';
+>>>>>>> Stashed changes
 import { auth, db, storage } from '@/lib/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
 import { getDownloadURL, ref, uploadBytes } from 'firebase/storage';
 import { useProfileStore } from 'src/store/useProfileStore';
-import ChangeCoverImageModal from '@/components/profile/ChangeCoverImageModal';
 import TimelineContent from '@/components/profile/links/TimelineContent';
 import AboutContent from '@/components/profile/links/AboutContent';
 import FriendsContent from '@/components/profile/links/FriendsContent';
 import PhotosContent from '@/components/profile/links/PhotosContent';
 import VideosContent from '@/components/profile/links/VideosContent';
+<<<<<<< Updated upstream
+=======
+import { motion, AnimatePresence } from 'framer-motion';
+import ProfileCustomizationContent from '@/components/profile/ProfileCustomizationContent';
+import ProfileHeader from '@/components/commonProfileHeader/ProfileHeader';
+>>>>>>> Stashed changes
 
 export default function ProfilePage() {
   const [activeTab, setActiveTab] = useState('timeline');
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [userData, setUserData] = useState<UserData | null>(null);
   const { profileImage } = useProfileStore();
-  const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
   const [userImages, setUserImages] = useState<ProfileImage[]>([]);
+<<<<<<< Updated upstream
   const [isChangeCoverModalOpen, setIsChangeCoverModalOpen] = useState(false);
   const [selectedCoverImage, setSelectedCoverImage] = useState<ProfileImage | null>(null);
   const [coverImage, setCoverImage] = useState<ProfileImage | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
+=======
+  const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
+>>>>>>> Stashed changes
 
   const handleImageSelect = async (selectedImage: ProfileImage) => {
     const user = auth.currentUser;
@@ -332,6 +349,7 @@ export default function ProfilePage() {
     setIsChangeImageModalOpen(false);
   };
 
+<<<<<<< Updated upstream
   const handleCoverImageSelect = (selectedImage: ProfileImage) => {
     setSelectedCoverImage(selectedImage);
   };
@@ -400,6 +418,8 @@ export default function ProfilePage() {
     setUserImages(prev => [...prev, newCoverImage]);
   };
 
+=======
+>>>>>>> Stashed changes
   useEffect(() => {
     const unsubscribe = onAuthStateChanged(auth, async (user) => {
       if (user) {
@@ -437,6 +457,40 @@ export default function ProfilePage() {
     return () => unsubscribe();
   }, []);
 
+<<<<<<< Updated upstream
+=======
+  const pageVariants = {
+    initial: {
+      opacity: 0,
+      scale: 0.98,
+      y: 20
+    },
+    animate: {
+      opacity: 1,
+      scale: 1,
+      y: 0,
+      transition: {
+        duration: 0.4,
+        ease: [0.4, 0, 0.2, 1],
+        staggerChildren: 0.1
+      }
+    },
+    exit: {
+      opacity: 0,
+      scale: 0.96,
+      y: -20,
+      transition: {
+        duration: 0.3,
+        ease: [0.4, 0, 1, 1]
+      }
+    }
+  };
+
+  const cardVariants = {
+    initial: { opacity: 0, y: 20 },
+    animate: { opacity: 1, y: 0 }
+  };
+>>>>>>> Stashed changes
 
   return (
     <div className="min-h-screen w-full bg-gray-50">
@@ -456,26 +510,114 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex-1 bg-white rounded-lg shadow-sm overflow-y-auto">
-              <div className="flex-shrink-0">
-                {/* Cover Image Section */}
-                <div className="relative h-40 md:h-48 lg:h-60">
-                  <div className="absolute inset-0">
-                    {isLoading && (
-                      <div className="w-full h-full bg-gray-200 animate-pulse" />
-                    )}
-                    {coverImage?.imageURL && (
-                      <Image
-                        src={coverImage.imageURL}
-                        alt="Cover"
-                        fill
-                        className="object-cover"
-                        priority
-                        loader={({ src }) => src}
-                        unoptimized={true}
-                        onLoadingComplete={() => setIsLoading(false)}
-                      />
-                    )}
+
+              <ProfileHeader />
+
+              {/* Navigation */}
+              <div className="border-b" id="profile-nav">
+                <div className="max-w-[2000px] mx-auto px-4 md:px-8">
+                  <div className="flex gap-x-4 md:gap-x-6 overflow-x-auto scrollbar-hide">
+                    <button
+                      onClick={() => setActiveTab('timeline')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'timeline'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <CircleUser size={18} />
+                      <span>Timeline</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('profileCustomization')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'profileCustomization'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <Palette size={18} />
+                      <span>Profile Customization</span>
+                    </button>
+
+
+                    <button
+                      onClick={() => setActiveTab('about')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'about'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <Info size={18} />
+                      <span>About</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('friends')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'friends'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <Users size={18} />
+                      <span>Friends</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('photos')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'photos'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <ImageIcon size={18} />
+                      <span>Photos</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('videos')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'videos'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <Video size={18} />
+                      <span>Videos</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('groups')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'groups'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <UsersRound size={18} />
+                      <span>Groups</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('events')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'events'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <Calendar size={18} />
+                      <span>Events</span>
+                    </button>
+
+                    <button
+                      onClick={() => setActiveTab('saved')}
+                      className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'saved'
+                        ? 'text-greenTheme border-b-2 border-greenTheme'
+                        : 'text-gray-600 hover:text-greenTheme'
+                        }`}
+                    >
+                      <Bookmark size={18} />
+                      <span>Saved</span>
+                    </button>
                   </div>
+<<<<<<< Updated upstream
 
                   <button
                     onClick={() => setIsChangeCoverModalOpen(true)}
@@ -655,6 +797,8 @@ export default function ProfilePage() {
                       </button>
                     </div>
                   </div>
+=======
+>>>>>>> Stashed changes
                 </div>
               </div>
 
@@ -684,6 +828,4 @@ export default function ProfilePage() {
       </main>
     </div>
   );
-
 }
-
