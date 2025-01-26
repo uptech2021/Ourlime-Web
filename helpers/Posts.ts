@@ -26,7 +26,14 @@ export const formatDate = (timestamp: any) => {
 		return 'Invalid Date';
 	}
 
-	return date.toLocaleString();
+	// Format the date as "23 January at 12:59"
+	const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
+	const formattedDate = date.toLocaleDateString('en-GB', options);
+	
+	const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+	const formattedTime = date.toLocaleTimeString([], timeOptions); // Remove colon for formatting
+
+	return `${formattedDate} at ${formattedTime}`;
 };
 
 // Function to fetch all feed posts
@@ -241,7 +248,7 @@ export const fetchRepliesForComments = async (commentId: string): Promise<Reply[
                 reply: data.reply,
                 feedsPostCommentId: data.feedsPostCommentId,
                 userId: data.userId,
-                createdAt: data.createdAt,
+                createdAt: data.createdAt.toDate(),
                 userData : {
                     firstName: replyUserData?.firstName || '',
                     lastName: replyUserData?.lastName || '',

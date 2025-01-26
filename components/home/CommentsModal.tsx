@@ -2,8 +2,7 @@ import React, { useEffect, useState } from "react";
 import { addDoc, serverTimestamp, collection, getDoc, query, getDocs, where, doc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { Comment, Post, Reply } from '@/types/global';
-import { fetchCommentsForPost, fetchRepliesForComments, fetchPosts } from '@/helpers/Posts';
-import { MessageCircle } from "lucide-react";
+import { fetchCommentsForPost, fetchRepliesForComments, fetchPosts, formatDate } from '@/helpers/Posts';
 import Image from "next/image";
 
 
@@ -53,12 +52,21 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 
 				try {
 					const fetchedComments = await fetchCommentsForPost(postId);
+
+          fetchedComments.sort((a, b) => {
+            return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+          });
 					setComments(fetchedComments);
 					setHasFetched(true);
 
           const repliesData: { [key: string]: Reply[]} = {};
           for(const comment of fetchedComments){
             const fetchedReplies = await fetchRepliesForComments(comment.id);
+
+            fetchedReplies.sort((c, d) => {
+              return new Date(d.createdAt).getTime() - new Date(c.createdAt).getTime();
+            });
+
             repliesData[comment.id] = fetchedReplies;
           }
           setReplies(repliesData);
@@ -92,7 +100,15 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 
         //Refetch comments after creating a new comment
         const fetchedComments = await fetchCommentsForPost(postId);
+
+         // Sort comments by createdAt in descending order
+        fetchedComments.sort((a, b) => {
+          return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+        });
+
         setComments(fetchedComments);
+
+        
 
       } catch (e) {
         console.error("Error adding comment:", e);
@@ -116,6 +132,21 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 
         const fetchedComments = await fetchCommentsForPost(postId);
         setComments(fetchedComments);
+
+         // Refetch replies for the specific comment
+         const fetchedReplies = await fetchRepliesForComments(commentId);
+         fetchedReplies.sort((a, b) => {
+             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
+         });
+
+         // Update the replies state
+         setReplies((prevReplies) => ({
+             ...prevReplies,
+             [commentId]: fetchedReplies,
+         }));
+
+         setReplyingTo(null);
+
       }catch (error){
         console.error("Error adding reply: ", error);
       }
@@ -228,44 +259,49 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
         <p>Post details not available.</p>
       )}
 
-      {/* Scrollable Comments */}
-      <div className="flex-1 p-4 space-y-4 overflow-y-auto">
-        {comments.map((c) => (
-          <div key={c.id}>
-            {/* Parent Comment */}
-            <div className="flex items-start space-x-3">
-              <img
-                src={c.userData?.profileImage}
-                alt={`${c}'s avatar`}
-                className="w-10 h-10 rounded-full"
-              />
-              <div className="flex-1">
-                <p className="text-sm font-medium">
-                  {c.userData?.firstName} {c.userData?.lastName}{' '}
-                  <span className="text-gray-400">@{c.userData?.userName}</span>
-                </p>
-                <p className="text-gray-600 text-sm">{c.comment}</p>
+       {/* Comments Section */}
+       <div className="flex-1 p-4 space-y-4 overflow-y-auto max-h-96">
+          {comments.map((c) => (
+            <div key={c.id} className="border-b pb-2">
+              {/* Parent Comment */}
+              <div className="flex items-start space-x-3">
+                <img
+                  src={c.userData?.profileImage || "/default-avatar.png"}
+                  alt={`${c.userData?.firstName}'s avatar`}
+                  className="w-10 h-10 rounded-full"
+                />
+                <div className="flex-1">
+                  <div className="flex flex-row gap-2">
+                    <p className="text-sm font-medium">
+                      {c.userData?.firstName} {c.userData?.lastName} 
+                      <span className="text-gray-400">@{c.userData?.userName}</span>
+                    </p>
+                    <p className="text-xs text-gray-400 mt-1">
+                      {formatDate(c.createdAt)}
+                    </p>
+                  </div>
+                  <p className="text-gray-600 text-sm">{c.comment}</p>
+                  <button
+                    className="text-blue-500 text-sm"
+                    onClick={() => setReplyingTo(c.id === replyingTo ? null : c.id)} // Toggle reply form
+                  >
+                    Reply
+                  </button>
+                </div>
               </div>
-                <button 
-                className="flex items-center gap-2 text-gray-600 hover:text-greenTheme" 
-                onClick={() => setReplyingTo(c.id === replyingTo ? null: c.id)}>
-                  <MessageCircle/>
-                  <span>Reply</span>
-                </button>
-            </div>
 
             {/* Reply Form */}
             {replyingTo === c.id && (
-          <form onSubmit={(e)=> handleReply(e, c.id)} className="flex items-center space-x-2 mt-20">
+          <form onSubmit={(e)=> handleReply(e, c.id)} className="flex items-center space-x-2 mt-2">
             <textarea 
               className="flex-1 border rounded-md p-2 text-sm resize-none"
-              placeholder="Write youre reply..."
+              placeholder="Write your reply..."
               value={reply}
               onChange={(e)=> setReply(e.target.value)}
             />
             <button 
               type="submit"
-              className="px-4 py-2 bg-blue-500 text-white rounder-md">
+              className="px-4 py-2 bg-greenTheme text-white rounder-md">
                 Send Reply
               </button>
           </form>
@@ -274,7 +310,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                  {/* Display Replies */}
                  {replies[c.id] && replies[c.id].length > 0 && (
                   <div className="mt-2 pl-4">
-                    {replies[c.id].map((reply) => (
+                    {replies[c.id]?.map((reply) => (
                       <div key={reply.id} className="flex items-start space-x-3">
                         <img
                           src={reply.userData?.profileImage || "/default-avatar.png"}
@@ -282,7 +318,13 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                           className="w-8 h-8 rounded-full"
                         />
                         <div className="flex-1">
-                          <p className="text-sm font-medium">{reply.userData?.firstName} {reply.userData?.lastName} <span className="text-gray-400">@{reply.userData?.userName}</span></p>
+                          <div className="flex flex-row gap-2">
+                            <p className="text-sm font-medium">
+                              {reply.userData?.firstName} {reply.userData?.lastName} 
+                              <span className="text-gray-400">@{reply.userData?.userName}</span>
+                            </p>
+                            <p className="text-xs text-gray-400 mt-1">{formatDate(reply.createdAt)}</p>
+                          </div>
                           <p className="text-gray-600 text-sm">{reply.reply}</p>
                         </div>
                       </div>
@@ -304,7 +346,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
           />
           <button
             type="submit"
-            className="px-4 py-2 bg-blue-500 text-white rounded-md"
+            className="px-4 py-2 bg-greenTheme text-white rounded-md"
           >
             Post
           </button>
