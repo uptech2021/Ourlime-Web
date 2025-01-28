@@ -1,6 +1,6 @@
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDoc, getDocs, query, Timestamp, where, doc, orderBy } from "firebase/firestore";
-import { Comment } from '@/types/global';
+import { Comment, Reply } from '@/types/global';
 import { UserData } from "@/types/userTypes";
 import { Post } from "@/types/userTypes";
 // Function to format the Firebase timestamp into a readable format
@@ -26,7 +26,14 @@ export const formatDate = (timestamp: any) => {
 		return 'Invalid Date';
 	}
 
-	return date.toLocaleString();
+	// Format the date as "23 January at 12:59"
+	const options: Intl.DateTimeFormatOptions = { day: 'numeric', month: 'long' };
+	const formattedDate = date.toLocaleDateString('en-GB', options);
+	
+	const timeOptions: Intl.DateTimeFormatOptions = { hour: '2-digit', minute: '2-digit' };
+	const formattedTime = date.toLocaleTimeString([], timeOptions); // Remove colon for formatting
+
+	return `${formattedDate} at ${formattedTime}`;
 };
 
 // Function to fetch all feed posts
@@ -136,14 +143,45 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
                 console.log("No user document found for userId:", userId);
             }
 
+            // Get user's profile image
+            const profileImagesQuery = query(
+                collection(db, 'profileImages'),
+                where('userId', '==', data.userId)
+            );
+            const profileImagesSnapshot = await getDocs(profileImagesQuery);
+            const profileSetAsQuery = query(
+                collection(db, 'profileImageSetAs'),
+                where('userId', '==', data.userId),
+                where('setAs', '==', 'profile')
+            );
+            const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+            let profileImage = null;
+            if (!setAsSnapshot.empty) {
+                const setAsDoc = setAsSnapshot.docs[0].data();
+                const matchingImage = profileImagesSnapshot.docs
+                    .find(img => img.id === setAsDoc.profileImageId);
+                if (matchingImage) {
+                    profileImage = matchingImage.data();
+                }else{
+                    console.log("No matching profile image found for userId: ", userId);
+                }
+            }else{
+                console.log("No profile image set for userId: ", userId);
+            }
+
             return {
                 id: commentDoc.id,
                 comment: data.comment,
-                createdAt: new Date(data.createdAt), // Convert Firestore timestamp to Date
-                updatedAt: new Date(data.updatedAt), // Convert Firestore timestamp to Date
+                createdAt: data.createdAt.toDate(), // Convert Firestore timestamp to Date
                 feedsPostId: data.feedsPostId,
                 userId: userId,
-                userData: commentUserData, // Include userData in the comment object
+                userData: {
+                    firstName: commentUserData?.firstName || '',
+                    lastName: commentUserData?.lastName || '',
+                    userName: commentUserData?.userName || '',
+                    profileImage: profileImage?.imageURL || null, // Include profileImage in userData
+                }, // Include userData in the comment object
                 replies: [], // Initialize replies as an empty array
             } as Comment;
         }));
@@ -153,5 +191,77 @@ export const fetchCommentsForPost = async (postId: string): Promise<Comment[]> =
     } catch (error) {
         console.error('Error fetching comments:', error);
         return [];
+    }
+};
+
+export const fetchRepliesForComments = async (commentId: string): Promise<Reply[]> => {
+    const repliesRef = collection(db, "feedsPostCommentsReplies"); // Reference to the replies collection
+    const q = query(repliesRef, where("feedsPostCommentId", "==", commentId)); // Query to get replies for the specific comment
+
+    try {
+        const snapshot = await getDocs(q); // Fetch the documents
+        const repliesData = await Promise.all(snapshot.docs.map(async (replyDoc) => {
+            const data = replyDoc.data();
+            const userId = data.userId; // Get the userId from the reply data
+
+            // Fetch user data for the reply
+            const userDoc = await getDoc(doc(db, "users", userId));
+            let replyUserData: UserData | null = null;
+
+            if (userDoc.exists()) {
+                replyUserData = userDoc.data() as UserData; // Correctly call data() method
+            } else {
+                console.log("No user document found for userId:", userId);
+            }
+
+                    // Get user's profile image
+                    const profileImagesQuery = query(
+                            collection(db, 'profileImages'),
+                            where('userId', '==', data.userId)
+                    );
+                    const profileImagesSnapshot = await getDocs(profileImagesQuery);
+                    const profileSetAsQuery = query(
+                            collection(db, 'profileImageSetAs'),
+                            where('userId', '==', data.userId),
+                            where('setAs', '==', 'profile')
+                    );
+                    const setAsSnapshot = await getDocs(profileSetAsQuery);
+            
+
+                    let profileImage = null;
+                        if (!setAsSnapshot.empty) {
+                            const setAsDoc = setAsSnapshot.docs[0].data();
+                            const matchingImage = profileImagesSnapshot.docs
+                                .find(img => img.id === setAsDoc.profileImageId);
+                            if (matchingImage) {
+                                profileImage = matchingImage.data();
+                            }else{
+                                console.log("No matching profile image found for userId: ", userId);
+                            }
+                        }else{
+                            console.log("No profile image set for userId: ", userId);
+                        }
+            
+
+            return {
+                id: replyDoc.id,
+                reply: data.reply,
+                feedsPostCommentId: data.feedsPostCommentId,
+                userId: data.userId,
+                createdAt: data.createdAt.toDate(),
+                userData : {
+                    firstName: replyUserData?.firstName || '',
+                    lastName: replyUserData?.lastName || '',
+                    userName: replyUserData?.userName || '',
+                    profileImage: profileImage?.imageURL || null, // Include profileImage in userData
+                },
+            } as Reply;
+        }));
+
+        console.log(`Fetched ${repliesData.length} replies for comment ID: ${commentId}`);
+        return repliesData; // Return the fetched replies
+    } catch (error) {
+        console.error('Error fetching replies:', error);
+        return []; // Return an empty array in case of error
     }
 };
