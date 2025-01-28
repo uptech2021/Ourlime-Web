@@ -14,7 +14,13 @@ import { useProfileStore } from 'src/store/useProfileStore';
 import ChangeCoverImageModal from '@/components/profile/ChangeCoverImageModal';
 import { onAuthStateChanged } from 'firebase/auth';
 
-export default function ProfileHeader() {
+interface ProfileHeaderProps {
+    onCustomizationSelect: (selectedImage: ProfileImage) => void;
+    userImages: ProfileImage[];
+}
+
+
+export default function ProfileHeader({ onCustomizationSelect }: ProfileHeaderProps) {
     const [userData, setUserData] = useState<UserData | null>(null);
     const { profileImage } = useProfileStore();
     const [isChangeImageModalOpen, setIsChangeImageModalOpen] = useState(false);
@@ -25,6 +31,9 @@ export default function ProfileHeader() {
     const [isLoading, setIsLoading] = useState(true);
     const [isEditingBio, setIsEditingBio] = useState(false);
     const [newBio, setNewBio] = useState(userData?.bio || '');
+    const { firstName, lastName, userName } = useProfileStore();
+
+
 
     const handleImageSelect = async (selectedImage: ProfileImage) => {
         const user = auth.currentUser;
@@ -156,56 +165,61 @@ export default function ProfileHeader() {
     };
 
     useEffect(() => {
-        fetchUserData();
-        fetchUserImages();
-    }, []);
-
-    useEffect(() => {
-        const handleBio = onAuthStateChanged(auth, async (user) => {
+        const unsubscribe = onAuthStateChanged(auth, async (user) => {
             if (user) {
-                const userRef = doc(db, 'users', user.uid);
-                const userDoc = await getDoc(userRef);
-
-                if (userDoc.exists()) {
-                    const userData = userDoc.data();
-                    setNewBio(userData.bio || '');
-                    setUserData(prev => prev ? { ...prev, bio: userData.bio } : null);
+                try {
+                    // Fetch user profile data
+                    const userDoc = await getDoc(doc(db, 'users', user.uid));
+                    if (userDoc.exists()) {
+                        const userData = userDoc.data() as UserData;
+                        setUserData(userData);
+                        setNewBio(userData.bio || '');
+                    }
+    
+                    // Fetch all profile images and their assignments
+                    const [imagesSnapshot, setAsSnapshot] = await Promise.all([
+                        getDocs(query(collection(db, 'profileImages'), 
+                            where('userId', '==', user.uid))),
+                        getDocs(query(collection(db, 'profileImageSetAs'), 
+                            where('userId', '==', user.uid)))
+                    ]);
+    
+                    const images = imagesSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data(),
+                        createdAt: doc.data().createdAt?.toDate(),
+                        updatedAt: doc.data().updatedAt?.toDate()
+                    })) as ProfileImage[];
+    
+                    setUserImages(images);
+    
+                    // Process image assignments
+                    setAsSnapshot.docs.forEach(doc => {
+                        const setAsData = doc.data();
+                        const matchingImage = images.find(img => img.id === setAsData.profileImageId);
+                        
+                        if (matchingImage) {
+                            if (setAsData.setAs === 'profile') {
+                                useProfileStore.getState().setProfileImage(matchingImage);
+                            } else if (setAsData.setAs === 'coverProfile') {
+                                useProfileStore.getState().setCoverImage(matchingImage);
+                            }
+                        }
+                    });
+    
+                    setIsLoading(false);
+                } catch (error) {
+                    console.error('Error fetching user data:', error);
+                    setIsLoading(false);
                 }
             }
         });
-
-        return () => handleBio();
+    
+        return () => unsubscribe();
     }, []);
+    
 
-    const fetchUserData = async () => {
-        const user = auth.currentUser;
-        if (user) {
-            const userDoc = await getDoc(doc(db, 'users', user.uid));
-            const userData = userDoc.data() as UserData;
-            setUserData(userData);
-            setNewBio(userData?.bio || '');
-        }
-    };
-
-    const fetchUserImages = async () => {
-        const user = auth.currentUser;
-        if (user) {
-            const imagesSnapshot = await getDocs(
-                query(collection(db, 'profileImages'),
-                    where('userId', '==', user.uid))
-            );
-
-            const images = imagesSnapshot.docs.map(doc => ({
-                id: doc.id,
-                ...doc.data(),
-                createdAt: doc.data().createdAt?.toDate(),
-                updatedAt: doc.data().updatedAt?.toDate()
-            })) as ProfileImage[];
-
-            setUserImages(images);
-        }
-    };
-
+    
     return (
         <div className="flex-shrink-0">
             {/* Cover Image Section */}
@@ -286,14 +300,14 @@ export default function ProfileHeader() {
                         <div>
                             <div className="flex flex-wrap items-center gap-2">
                                 <h1 className="text-xl sm:text-2xl font-bold text-gray-900">
-                                    {userData?.firstName} {userData?.lastName}
+                                    {firstName || userData?.firstName} {lastName || userData?.lastName}
                                 </h1>
                                 <span className="inline-flex items-center px-2.5 py-0.5 rounded-full text-xs font-medium bg-green-100 text-green-800">
                                     <span className="w-1.5 h-1.5 bg-green-500 rounded-full mr-1.5"></span>
                                     Online
                                 </span>
                             </div>
-                            <p className="text-gray-600 text-sm">@{userData?.userName}</p>
+                            <p className="text-gray-600 text-sm">@{userName || userData?.userName}</p>
                         </div>
 
                         <div className="flex gap-2 mt-3 md:mt-0">

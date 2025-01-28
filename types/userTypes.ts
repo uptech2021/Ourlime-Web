@@ -1,3 +1,5 @@
+import { Timestamp } from "firebase/firestore";
+
 type UserData = {
 	id: string;
 	firstName: string;
@@ -41,7 +43,6 @@ type Post = {
 	visibility: string;
 	createdAt: Date;
 	userId: string;
-
 	hashtags: Array<string>;
 	media: string;
 	userReferences: Array<string>;
@@ -69,11 +70,56 @@ type AppUser = {
 	userName: string;
 	profileImage?: string;
 }; 
+
+type Contact = {
+    id: string;
+    contactNumber: string;
+    createdAt: Date;
+    isVerified: boolean;
+    updatedAt: Date;
+    userId: string;
+    settings: Array<{
+        id: string;
+        contactId: string;
+        setAs: string;
+    }>;
+}
+
+type ContactSectionProps = {
+    userData: UserData;
+}
+
+type AddressSetAs = {
+    id: string;
+    addressId: string;
+    setAs: string;
+}
+
+type Address = {
+    id: string;
+    address: string;
+    city: string;
+    postalCode: string;
+    zipCode: string;
+    createdAt: Timestamp;
+    updatedAt: Timestamp;
+    userId: string;
+    settings: AddressSetAs[];
+}
+
+type AddressSectionProps = {
+    userData: UserData;
+}
 export type {
 	UserData, 
 	ProfileImage,
 	SearchUser,
 	Post,
 	PostData,
-	AppUser 
+	AppUser,
+	Contact,
+	ContactSectionProps,
+	AddressSetAs,
+	Address,
+	AddressSectionProps
 }

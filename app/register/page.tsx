@@ -400,10 +400,6 @@ export default function Page() {
 				userId: user.uid // Add userId for security
 			});
 		};
-		
-
-
-		
 
 		const createContactDocument = async (user: User) => {
 			console.log('Creating contact documents...');

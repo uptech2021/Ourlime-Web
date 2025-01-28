@@ -62,7 +62,7 @@ export default function ProfileSidebar({
     setProfileImage
 }: ProfileSidebarProps) {
     const [userData, setLocalUserData] = useState<UserData | null>(null);
-    const { profileImage } = useProfileStore();
+    const { profileImage, firstName, lastName, userName } = useProfileStore();
     const [friendsCount, setFriendsCount] = useState(0);
     const [postsCount, setPostsCount] = useState(0);
     const [followingCount, setFollowingCount] = useState(0);
@@ -110,7 +110,6 @@ export default function ProfileSidebar({
 
         return () => unsubscribe();
     }, [setUserData, setProfileImage]);
-
 
     useEffect(() => {
         const unsubscribe = onAuthStateChanged(auth, async (user) => {
@@ -169,7 +168,6 @@ export default function ProfileSidebar({
         }
     }, [pathname]);
 
-
     const handleItemClick = (item) => {
         if (item.subItems) {
             setExpandedItem(expandedItem === item.id ? null : item.id);
@@ -224,9 +222,9 @@ export default function ProfileSidebar({
                         </div>
                         <div>
                             <h3 className="font-semibold text-gray-900">
-                                {userData?.firstName} {userData?.lastName}
+                            {firstName || userData?.firstName} {lastName || userData?.lastName}
                             </h3>
-                            <p className="text-sm text-gray-500 mb-2">@{userData?.userName}</p>
+                            <p className="text-sm text-gray-500 mb-2">@{userName || userData?.userName}</p>
                             <div className="flex gap-2">
                                 <Link href="#" className="text-gray-400 hover:text-greenTheme transition-colors">
                                     <Twitter size={16} />
@@ -253,7 +251,7 @@ export default function ProfileSidebar({
                                     <button
                                         onClick={() => setExpandedItem(expandedItem === item.id ? null : item.id)}
                                         className={`w-full flex items-center justify-between px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                            ${pathname.includes(item.id)
+                                            ${pathname.includes(item.id)
                                                 ? 'bg-green-50 text-greenTheme border-l-4 border-greenTheme'
                                                 : 'text-gray-600 hover:bg-gray-50'}`}
                                     >
@@ -266,24 +264,24 @@ export default function ProfileSidebar({
                                         <ChevronDown
                                             size={16}
                                             className={`transform transition-transform duration-200 
-                            ${expandedItem === item.id ? 'rotate-180' : ''}`}
+                                            ${expandedItem === item.id ? 'rotate-180' : ''}`}
                                         />
                                     </button>
 
                                     <div className={`ml-8 mt-2 space-y-1 overflow-hidden transition-all duration-200
-                        ${expandedItem === item.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
+                                        ${expandedItem === item.id ? 'max-h-96 opacity-100' : 'max-h-0 opacity-0'}`}>
                                         {item.subItems.map((subItem) => (
                                             <Link
                                                 key={subItem.id}
                                                 href={subItem.href}
                                                 className={`w-full flex items-center px-4 py-2.5 rounded-lg text-sm font-medium transition-all duration-200
-                                    ${pathname === subItem.href
+                                                    ${pathname === subItem.href
                                                         ? 'text-greenTheme bg-green-50/50'
                                                         : 'text-gray-500 hover:bg-gray-50'}`}
                                             >
                                                 <div className="flex items-center w-full">
                                                     <span className={`w-1 h-6 rounded-full mr-3 transition-all duration-200
-                                        ${pathname === subItem.href ? 'bg-greenTheme' : 'bg-transparent'}`} />
+                                                    ${pathname === subItem.href ? 'bg-greenTheme' : 'bg-transparent'}`} />
                                                     {subItem.label}
                                                 </div>
                                             </Link>
@@ -294,7 +292,7 @@ export default function ProfileSidebar({
                                 <Link
                                     href={item.href}
                                     className={`w-full flex items-center gap-3 px-4 py-3 rounded-lg text-sm font-medium transition-all duration-200
-                        ${pathname === item.href
+                                        ${pathname === item.href
                                             ? 'bg-green-50 text-greenTheme border-l-4 border-greenTheme'
                                             : 'text-gray-600 hover:bg-gray-50'}`}
                                 >

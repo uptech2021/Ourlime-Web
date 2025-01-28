@@ -18,12 +18,11 @@ export default function Header(): JSX.Element {
     const pathname = usePathname();
     const router = useRouter();
     const [userData, setUserData] = useState(null);
-    // const [profileImage, setProfileImage] = useState(null);
-    const { profileImage } = useProfileStore();
+    const { profileImage, firstName, lastName, userName } = useProfileStore();
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
     const dropdownRef = useRef(null);
-  
+
     const navLinks = [
       { name: 'Home', href: '/' },
       { name: 'Blogs', href: '/blogs' },
@@ -114,8 +113,12 @@ export default function Header(): JSX.Element {
             {isProfileDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl py-2 z-[1000] transform transition-all duration-200 ease-out">
                     <div className="px-6 py-4 border-b border-gray-100">
-                        <p className="text-lg font-semibold text-gray-800">{userData?.firstName} {userData?.lastName}</p>
-                        <p className="text-sm text-gray-500">@{userData?.userName}</p>
+                        <p className="text-lg font-semibold text-gray-800">
+                            {firstName || userData?.firstName} {lastName || userData?.lastName}
+                        </p>
+                        <p className="text-sm text-gray-500">
+                            @{userName || userData?.userName}
+                        </p>
                         <div className="mt-2 flex gap-4">
                             <span className="text-sm"><b>245</b> Friends</span>
                             <span className="text-sm"><b>128</b> Posts</span>

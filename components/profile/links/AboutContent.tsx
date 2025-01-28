@@ -6,6 +6,9 @@ import { useEffect, useState } from 'react';
 import { collection, query, where, getDocs, Timestamp } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
 import { onAuthStateChanged } from 'firebase/auth';
+import ContactSection from './abouts/ContactSection';
+import AddressSection from './abouts/AddressSection';
+import BasicInformationSection from './abouts/BasicInfoSection';
 
 type AboutContentProps = {
   userData: UserData;
@@ -13,163 +16,18 @@ type AboutContentProps = {
 }
 
 export default function AboutContent({ userData, profileImage }: AboutContentProps) {
-  const [contactInfo, setContactInfo] = useState([]);
-  const [addressInfo, setAddressInfo] = useState([]);
 
-  useEffect(() => {
-    const unsubscribe = onAuthStateChanged(auth, async (user) => {
-      if (user) {
-        // Fetch Contacts
-        const contactsQuery = query(
-          collection(db, 'contact'),
-          where('userId', '==', user.uid)
-        );
-        const contactsSnapshot = await getDocs(contactsQuery);
-        const contacts = contactsSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        // Get contact settings
-        const contactsWithSettings = await Promise.all(
-          contacts.map(async (contact) => {
-            const setAsQuery = query(
-              collection(db, 'contactSetAs'),
-              where('contactId', '==', contact.id)
-            );
-            const setAsSnapshot = await getDocs(setAsQuery);
-            return {
-              ...contact,
-              settings: setAsSnapshot.docs.map(doc => doc.data())
-            };
-          })
-        );
-        setContactInfo(contactsWithSettings);
-
-        // Fetch Addresses
-        const addressesQuery = query(
-          collection(db, 'addresses'),
-          where('userId', '==', user.uid)
-        );
-        const addressesSnapshot = await getDocs(addressesQuery);
-        const addresses = addressesSnapshot.docs.map(doc => ({
-          id: doc.id,
-          ...doc.data()
-        }));
-
-        // Get address settings
-        const addressesWithSettings = await Promise.all(
-          addresses.map(async (address) => {
-            const setAsQuery = query(
-              collection(db, 'addressSetAs'),
-              where('addressId', '==', address.id)
-            );
-            const setAsSnapshot = await getDocs(setAsQuery);
-            return {
-              ...address,
-              settings: setAsSnapshot.docs.map(doc => doc.data())
-            };
-          })
-        );
-        setAddressInfo(addressesWithSettings);
-      }
-    });
-
-    return () => unsubscribe();
-  }, []);
 
   return (
     <div className="max-w-4xl mx-auto space-y-6 p-4">
       {/* Contact Information */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-gray-900">
-          <Phone className="text-greenTheme" />
-          Contact Numbers
-        </h3>
-        <div className="space-y-3">
-          {contactInfo.map((contact, index) => (
-            contact.settings.map((setting, settingIndex) => (
-              <div
-                key={`${index}-${settingIndex}`}
-                className="flex items-center gap-3 p-4 bg-gray-50 rounded-xl hover:bg-green-50 transition-all"
-              >
-                <Phone className="w-5 h-5 text-greenTheme" />
-                <div className="flex-1">
-                  <p className="text-gray-900">{contact.contactNumber}</p>
-                  <p className="text-sm text-gray-500 capitalize">{setting.setAs}</p>
-                </div>
-              </div>
-            ))
-          ))}
-        </div>
-      </div>
+      <ContactSection userData={userData} />
 
       {/* Address Information */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-gray-900">
-          <MapPinned className="text-greenTheme" />
-          Addresses
-        </h3>
-        <div className="space-y-3">
-          {addressInfo.map((address, index) => (
-            address.settings.map((setting, settingIndex) => (
-              <div
-                key={`${index}-${settingIndex}`}
-                className="flex items-start gap-3 p-4 bg-gray-50 rounded-xl hover:bg-green-50 transition-all"
-              >
-                <MapPin className="w-5 h-5 text-greenTheme flex-shrink-0 mt-1" />
-                <div className="flex-1">
-                  <p className="text-gray-900">{address.address}</p>
-                  <p className="text-gray-700">{address.city}, {address.postalCode}</p>
-                  <p className="text-sm text-gray-500 capitalize mt-1">{setting.setAs}</p>
-                </div>
-              </div>
-            ))
-          ))}
-        </div>
-      </div>
+      <AddressSection userData={userData} />
 
       {/* Basic Information */}
-      <div className="bg-white rounded-2xl shadow-sm p-6">
-        <h3 className="text-lg font-semibold mb-6 flex items-center gap-2 text-gray-900">
-          <User className="text-greenTheme" />
-          Basic Information
-        </h3>
-        <div className="grid md:grid-cols-2 gap-6">
-          <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-sm text-gray-500">Email</p>
-              <p className="text-gray-900">{userData?.email}</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-sm text-gray-500">Username</p>
-              <p className="text-gray-900">@{userData?.userName}</p>
-            </div>
-          </div>
-          <div className="space-y-4">
-            <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-sm text-gray-500">Full Name</p>
-              <p className="text-gray-900">{userData?.firstName} {userData?.lastName}</p>
-            </div>
-            <div className="p-4 bg-gray-50 rounded-xl">
-              <p className="text-sm text-gray-500">Joined</p>
-              {userData?.createdAt instanceof Timestamp
-                ? userData.createdAt.toDate().toLocaleString('en-US', {
-                  month: 'long',
-                  day: 'numeric',
-                  year: 'numeric',
-                  hour: 'numeric',
-                  minute: 'numeric',
-                  hour12: true,
-                  timeZone: 'UTC'
-                })
-                : 'Not available'
-              }
-            </div>
-
-          </div>
-        </div>
-      </div>
+      <BasicInformationSection userData={userData} />
 
       {/* Work Experience */}
       <div className="bg-white rounded-2xl shadow-sm p-6">
