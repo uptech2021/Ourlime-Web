@@ -4,9 +4,13 @@ import { useState, useEffect } from 'react';
 import { Phone, Plus, X, Check, Loader2, PhoneCall, MessageSquare } from 'lucide-react';
 import { collection, query, where, getDocs, addDoc, updateDoc, doc, deleteDoc, getDoc } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
-import { onAuthStateChanged } from 'firebase/auth';
+import { onAuthStateChanged, signInWithCredential } from 'firebase/auth';
 import PhoneInput from 'react-phone-number-input';
 import { ContactSectionProps, Contact } from '@/types/userTypes';
+
+
+// Add these imports
+import { RecaptchaVerifier, PhoneAuthProvider, signInWithPhoneNumber } from 'firebase/auth';
 
 const contactTypes = [
     { value: 'personal', label: 'Personal' },
@@ -42,6 +46,9 @@ export default function ContactSection({ userData }: ContactSectionProps) {
     const [deleteCountdown, setDeleteCountdown] = useState(10);
     const [deleteTimer, setDeleteTimer] = useState<NodeJS.Timeout | null>(null);
     const [deletingContactId, setDeletingContactId] = useState<string | null>(null);
+
+    const [verificationId, setVerificationId] = useState<string>('');
+    const [currentContact, setCurrentContact] = useState<Contact | null>(null);
 
 
     useEffect(() => {
@@ -304,20 +311,54 @@ export default function ContactSection({ userData }: ContactSectionProps) {
         setDeleteCountdown(10);
     };
 
+
+
     const handleStartVerification = (contactId: string) => {
+        const contact = contacts.find(c => c.id === contactId);
+        if (!contact) return;
+
+        setCurrentContact(contact);
         setShowVerification(contactId);
         setVerificationError('');
         setVerificationCode('');
         setVerificationMethod(null);
     };
 
-    const handleSelectVerificationMethod = (method: 'sms' | 'call') => {
+    const handleSelectVerificationMethod = async (method: 'sms' | 'call') => {
+        if (!currentContact) return;
+        
         setVerificationMethod(method);
         setIsTimerRunning(true);
         setTimer(60);
-        // Placeholder for actual verification sending logic
-        console.log(`Sending verification via ${method}`);
+    
+        try {
+            console.log('Starting verification process for:', currentContact.contactNumber);
+            
+            const verifier = new RecaptchaVerifier(auth, 'recaptcha-container', {
+                size: 'invisible',
+                callback: () => {
+                    console.log('reCAPTCHA solved successfully');
+                }
+            });
+    
+            console.log('reCAPTCHA initialized');
+    
+            const confirmationResult = await signInWithPhoneNumber(
+                auth,
+                currentContact.contactNumber,
+                verifier
+            );
+    
+            console.log('Verification code sent successfully');
+            setVerificationId(confirmationResult.verificationId);
+    
+        } catch (error) {
+            console.log('Detailed error:', error);
+            setVerificationError(`Verification failed: ${error.message}`);
+            setIsTimerRunning(false);
+        }
     };
+    
 
     const handleVerifyCode = async (contactId: string) => {
         if (!verificationCode) {
@@ -326,68 +367,70 @@ export default function ContactSection({ userData }: ContactSectionProps) {
         }
 
         try {
-            // Placeholder for actual verification logic
-            const isValid = verificationCode === '123456'; // This will be replaced with actual verification
+            const credential = PhoneAuthProvider.credential(
+                verificationId,
+                verificationCode
+            );
 
-            if (isValid) {
-                const contactRef = doc(db, 'contact', contactId);
-                await updateDoc(contactRef, {
-                    isVerified: true,
-                    updatedAt: new Date()
-                });
+            // Verify the code
+            await signInWithCredential(auth, credential);
 
-                // Refresh contacts to show verified status
-                const user = auth.currentUser;
-                if (user) {
-                    const updatedContactsQuery = query(
-                        collection(db, 'contact'),
-                        where('userId', '==', user.uid)
-                    );
-                    const updatedSnapshot = await getDocs(updatedContactsQuery);
-                    const updatedContacts = updatedSnapshot.docs.map(doc => ({
-                        id: doc.id,
-                        ...doc.data()
-                    }));
 
-                    const updatedContactsWithSettings = await Promise.all(
-                        updatedContacts.map(async (contact) => {
-                            const contactData = {
-                                id: contact.id,
-                                ...contact
-                            };
+            // Update contact as verified
+            const contactRef = doc(db, 'contact', contactId);
+            await updateDoc(contactRef, {
+                isVerified: true,
+                updatedAt: new Date()
+            });
 
-                            const setAsQuery = query(
-                                collection(db, 'contactSetAs'),
-                                where('contactId', '==', contactData.id)
-                            );
-                            const setAsSnapshot = await getDocs(setAsQuery);
+            // Refresh contacts list
+            const user = auth.currentUser;
+            if (user) {
+                const updatedContactsQuery = query(
+                    collection(db, 'contact'),
+                    where('userId', '==', user.uid)
+                );
+                const updatedSnapshot = await getDocs(updatedContactsQuery);
+                const updatedContacts = await Promise.all(
+                    updatedSnapshot.docs.map(async (doc) => {
+                        const contactData = {
+                            id: doc.id,
+                            ...doc.data()
+                        };
 
-                            return {
-                                ...contactData,
-                                settings: setAsSnapshot.docs.map(doc => ({
-                                    contactId: doc.data().contactId,
-                                    setAs: doc.data().setAs
-                                }))
-                            } as Contact;
-                        })
-                    );
+                        const setAsQuery = query(
+                            collection(db, 'contactSetAs'),
+                            where('contactId', '==', contactData.id)
+                        );
+                        const setAsSnapshot = await getDocs(setAsQuery);
 
-                    setContacts(updatedContactsWithSettings);
-                }
+                        return {
+                            ...contactData,
+                            settings: setAsSnapshot.docs.map(doc => ({
+                                id: doc.id,
+                                contactId: doc.data().contactId,
+                                setAs: doc.data().setAs
+                            }))
+                        } as Contact;
+                    })
+                );
 
-                setShowVerification(null);
-                setVerificationMethod(null);
-                setVerificationCode('');
-                setIsTimerRunning(false);
-                setTimer(60);
-            } else {
-                setVerificationError('Invalid verification code');
+                setContacts(updatedContacts);
             }
+
+            setShowVerification(null);
+            setVerificationMethod(null);
+            setVerificationCode('');
+            setIsTimerRunning(false);
+            setTimer(60);
+            setCurrentContact(null);
+
         } catch (error) {
-            console.error('Error verifying code:', error);
-            setVerificationError('Failed to verify code. Please try again.');
+            console.error('Verification error:', error);
+            setVerificationError('Invalid verification code');
         }
     };
+
 
     const formatTime = (seconds: number) => {
         const mins = Math.floor(seconds / 60);
@@ -402,6 +445,8 @@ export default function ContactSection({ userData }: ContactSectionProps) {
 
     return (
         <div className="bg-white rounded-2xl shadow-sm p-6">
+            <div id="recaptcha-container"></div>  {/* Add it here */}
+
             <div className="flex justify-between items-center mb-6">
                 <h3 className="text-lg font-semibold flex items-center gap-2 text-gray-900">
                     <Phone className="text-greenTheme" />

@@ -176,8 +176,6 @@ export default function ProfileSidebar({
         }
     };
 
-
-
     return (
         <>
             <button

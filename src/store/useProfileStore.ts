@@ -1,5 +1,6 @@
 import { create } from 'zustand';
 import { ProfileImage } from '@/types/userTypes';
+import { FollowerWithDetails, FriendWithDetails } from '@/types/friendTypes';
 
 type ProfileStore = {
     // State (data storage)
@@ -26,6 +27,18 @@ type ProfileStore = {
   setCountry: (country: string) => void;
 };
 
+
+type FriendsStore = {
+  friends: FriendWithDetails[];
+  followers: FollowerWithDetails[];
+  following: FollowerWithDetails[];
+  loading: boolean;
+  setFriends: (friends: FriendWithDetails[]) => void;
+  setFollowers: (followers: FollowerWithDetails[]) => void;
+  setFollowing: (following: FollowerWithDetails[]) => void;
+  setLoading: (loading: boolean) => void;
+}
+
 export const useProfileStore = create<ProfileStore>((set) => ({
   profileImage: null,
   coverImage: null,
@@ -47,4 +60,16 @@ export const useProfileStore = create<ProfileStore>((set) => ({
   setFirstName: (firstName) => set({ firstName }),
   setLastName: (lastName) => set({ lastName }),
   setCountry: (country) => set({ country }),
+}));
+
+
+export const useFriendsStore = create<FriendsStore>((set) => ({
+  friends: [],
+  followers: [],
+  following: [],
+  loading: true,
+  setFriends: (friends) => set({ friends }),
+  setFollowers: (followers) => set({ followers }),
+  setFollowing: (following) => set({ following }),
+  setLoading: (loading) => set({ loading }),
 }));
