@@ -364,7 +364,7 @@ export default function LeftSection({
             await addDoc(friendshipRef, {
                 userId1: userData.id,
                 userId2: selectedUser.id,
-                friendshipStatus: 'accepted',
+                friendshipStatus: 'pending',
                 typeOfFriendship: 'friend',
                 createdAt: timestamp,
                 updatedAt: timestamp

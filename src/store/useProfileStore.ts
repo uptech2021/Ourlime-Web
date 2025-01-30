@@ -1,9 +1,18 @@
 import { create } from 'zustand';
 import { ProfileImage } from '@/types/userTypes';
-import { FollowerWithDetails, FriendWithDetails } from '@/types/friendTypes';
+
+interface Notification {
+  id: string;
+  type: 'friendRequest' | 'postTag' | 'comment' | 'like' | 'share' | 'message' | 'groupInvite';
+  fromUserId: string;
+  content: string;
+  timestamp: Date;
+  isRead: boolean;
+  metadata?: any;
+}
 
 type ProfileStore = {
-    // State (data storage)
+  // Existing states
   profileImage: ProfileImage | null;
   coverImage: ProfileImage | null;
   postProfileImage: ProfileImage | null;
@@ -13,9 +22,13 @@ type ProfileStore = {
   firstName: string | null;
   lastName: string | null;
   country: string | null;
-  
-  
-  // Actions (ways to update the data)
+
+  // New notification states
+  notifications: Notification[];
+  unreadCount: number;
+  lastCheckedAt: Date | null;
+
+  // Existing setters
   setProfileImage: (profileImage: ProfileImage) => void;
   setCoverImage: (coverImage: ProfileImage) => void;
   setPostProfileImage: (postProfileImage: ProfileImage) => void;
@@ -25,21 +38,18 @@ type ProfileStore = {
   setFirstName: (firstName: string) => void;
   setLastName: (lastName: string) => void;
   setCountry: (country: string) => void;
+
+  // New notification setters
+  setNotifications: (notifications: Notification[]) => void;
+  addNotification: (notification: Notification) => void;
+  markAsRead: (notificationId: string) => void;
+  markAllAsRead: () => void;
+  removeNotification: (notificationId: string) => void;
+  updateLastChecked: () => void;
 };
 
-
-type FriendsStore = {
-  friends: FriendWithDetails[];
-  followers: FollowerWithDetails[];
-  following: FollowerWithDetails[];
-  loading: boolean;
-  setFriends: (friends: FriendWithDetails[]) => void;
-  setFollowers: (followers: FollowerWithDetails[]) => void;
-  setFollowing: (following: FollowerWithDetails[]) => void;
-  setLoading: (loading: boolean) => void;
-}
-
 export const useProfileStore = create<ProfileStore>((set) => ({
+  // Existing state values
   profileImage: null,
   coverImage: null,
   postProfileImage: null,
@@ -49,8 +59,13 @@ export const useProfileStore = create<ProfileStore>((set) => ({
   firstName: null,
   lastName: null,
   country: null,
-  
-  // Existing setters
+
+  // New notification state values
+  notifications: [],
+  unreadCount: 0,
+  lastCheckedAt: null,
+
+  // Existing setters remain the same
   setProfileImage: (profileImage) => set({ profileImage }),
   setCoverImage: (coverImage) => set({ coverImage }),
   setPostProfileImage: (postProfileImage) => set({ postProfileImage }),
@@ -60,16 +75,40 @@ export const useProfileStore = create<ProfileStore>((set) => ({
   setFirstName: (firstName) => set({ firstName }),
   setLastName: (lastName) => set({ lastName }),
   setCountry: (country) => set({ country }),
-}));
 
+  // New notification setters
+  setNotifications: (notifications) => 
+    set({ 
+      notifications,
+      unreadCount: notifications.filter(n => !n.isRead).length 
+    }),
 
-export const useFriendsStore = create<FriendsStore>((set) => ({
-  friends: [],
-  followers: [],
-  following: [],
-  loading: true,
-  setFriends: (friends) => set({ friends }),
-  setFollowers: (followers) => set({ followers }),
-  setFollowing: (following) => set({ following }),
-  setLoading: (loading) => set({ loading }),
+  addNotification: (notification) =>
+    set((state) => ({
+      notifications: [notification, ...state.notifications],
+      unreadCount: state.unreadCount + (notification.isRead ? 0 : 1)
+    })),
+
+  markAsRead: (notificationId) =>
+    set((state) => ({
+      notifications: state.notifications.map(n =>
+        n.id === notificationId ? { ...n, isRead: true } : n
+      ),
+      unreadCount: state.unreadCount - 1
+    })),
+
+  markAllAsRead: () =>
+    set((state) => ({
+      notifications: state.notifications.map(n => ({ ...n, isRead: true })),
+      unreadCount: 0
+    })),
+
+  removeNotification: (notificationId) =>
+    set((state) => ({
+      notifications: state.notifications.filter(n => n.id !== notificationId),
+      unreadCount: state.unreadCount - (state.notifications.find(n => n.id === notificationId)?.isRead ? 0 : 1)
+    })),
+
+  updateLastChecked: () =>
+    set({ lastCheckedAt: new Date() })
 }));
