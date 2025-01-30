@@ -3,180 +3,105 @@ import { auth, db } from '@/lib/firebaseConfig';
 import { doc, getDoc, collection, query, where, getDocs } from 'firebase/firestore';
 import { AppRouterInstance } from 'next/dist/shared/lib/app-router-context.shared-runtime';
 
-// Check if user is logged in and email is verified on page load
-// export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
-// 	return new Promise((resolve) => {
-// 		onAuthStateChanged(auth, (user) => {
-// 			if (user) {
-// 				if (user.emailVerified) {
-// 					// console.log('Already Logged In and Verified, Redirecting...');
-// 					router.push('/');
-// 					resolve(true);
-// 				} else {
-// 					console.log(
-// 						'Email not verified, Redirecting to login...'
-// 					);
-// 					router.push('/login');
-// 					resolve(false);
-// 				}
-// 			} else {
-// 				// console.log('No user');
-// 				resolve(false);
-// 			}
-// 		});
-// 	});
-// };
-
-export const homeRedirect = (router: AppRouterInstance): Promise<boolean> => {
-    return new Promise((resolve) => {
-        onAuthStateChanged(auth, (user) => {
-            if (user) {
-                router.push('/');
-                resolve(true);
-            } else {
-                resolve(false);
-            }
-        });
-    });
-};
-
-
-
-
-
-
-// export const loginRedirect = (
-// 	router: AppRouterInstance,
-// 	authorized: boolean = true
-// ): Promise<User | null> => {
-// 	return new Promise((resolve, reject) => {
-// 		onAuthStateChanged(auth, async (user) => {
-// 			if (!user) {
-// 				// console.log('Redirecting to login');
-// 				router.push('/login');
-// 			} else if (!authorized) {
-// 				try {
-// 					const userDoc = await getDoc(doc(db, 'users', user.uid));
-// 					if (!userDoc.exists() || !userDoc.data().isAdmin) {
-// 						console.warn('Unauthorized user');
-// 						router.push('/');
-// 						// console.log('Unauthorized user');
-// 					}
-// 				} catch (error) {
-// 					console.error('Error checking user authorization:', error);
-// 					reject(error);
-// 				}
-// 			} else if (!user.emailVerified) {
-// 				// console.log('Email not verified, Redirecting to verification page...');
-// 				router.push('/login');
-// 			} else {
-// 				resolve(user);
-// 			}
-// 		});
-// 	});
-// };
-
-
-export const loginRedirect = (
-    router: AppRouterInstance,
-    authorized: boolean = true
-): Promise<User | null> => {
-    return new Promise((resolve, reject) => {
-        onAuthStateChanged(auth, async (user) => {
-            if (!user) {
-                router.push('/login');
-            } else if (!authorized) {
-                try {
-                    const userDoc = await getDoc(doc(db, 'users', user.uid));
-                    if (!userDoc.exists() || !userDoc.data().isAdmin) {
-                        router.push('/');
-                    }
-                } catch (error) {
-                    reject(error);
+class AuthService {
+    static async redirectHome(router: AppRouterInstance): Promise<boolean> {
+        return new Promise((resolve) => {
+            onAuthStateChanged(auth, (user) => {
+                if (user) {
+                    router.push('/');
+                    resolve(true);
+                } else {
+                    resolve(false);
                 }
-            } else {
-                resolve(user);
-            }
+            });
         });
-    });
-};
-
-
-
-
-
-export const handleSignOut = async (router: AppRouterInstance) => {
-	try {
-		await signOut(auth);
-		router.push('/login');
-	} catch (error) {
-		// console.error('Sign out error:', error);
-	}
-};
-
-export const fetchProfile = async(uid: string) => {
-    try {
-        const profileRef = doc(db, 'users', uid);
-        const profileSnap = await getDoc(profileRef);
-        return profileSnap;
-    } catch (error) {
-        console.error('Error fetching profile:', error);
-        return null;
     }
-};
 
+    static async redirectLogin(
+        router: AppRouterInstance,
+        authorized: boolean = true
+    ): Promise<User | null> {
+        return new Promise((resolve, reject) => {
+            onAuthStateChanged(auth, async (user) => {
+                if (!user) {
+                    router.push('/login');
+                    return;
+                }
 
-export const fetchUser = async (uid: string) => {
-	try {
-		const userRef = doc(db, 'users', uid);
-		const userSnap = await getDoc(userRef);
-		return userSnap;
-	} catch (error) {
-		console.error('Error fetching user:', error);
-		return null;
-	}
-};
+                if (!authorized) {
+                    try {
+                        const userDoc = await getDoc(doc(db, 'users', user.uid));
+                        if (!userDoc.exists() || !userDoc.data().isAdmin) {
+                            router.push('/');
+                            return;
+                        }
+                    } catch (error) {
+                        reject(error);
+                        return;
+                    }
+                }
 
-// Function to check if a user exists
-export const checkUserExists = async (email: string, username: string) => {
-	const usersRef = collection(db, 'users');
+                resolve(user);
+            });
+        });
+    }
 
-	const promises = [];
+    static async signOut(router: AppRouterInstance): Promise<void> {
+        try {
+            await signOut(auth);
+            router.push('/login');
+        } catch (error) {
+            throw new Error('Failed to sign out');
+        }
+    }
+}
 
-	if (email) {
-		const emailQuery = query(usersRef, where('email', '==', email));
-		promises.push(getDocs(emailQuery));
-	}
+class UserService {
+    static async fetchProfile(uid: string) {
+        try {
+            const profileRef = doc(db, 'users', uid);
+            return await getDoc(profileRef);
+        } catch (error) {
+            throw new Error('Failed to fetch profile');
+        }
+    }
 
-	if (username) {
-		const usernameQuery = query(usersRef, where('userName', '==', username));
-		promises.push(getDocs(usernameQuery));
-	}
+    static async fetchUser(uid: string) {
+        try {
+            const userRef = doc(db, 'users', uid);
+            return await getDoc(userRef);
+        } catch (error) {
+            throw new Error('Failed to fetch user');
+        }
+    }
 
-	const results = await Promise.all(promises);
-	const exists = results.some(snapshot => !snapshot.empty);
-	console.log('User exists:', exists); // Log the result
-	console.log('Checking email:', email);
-	console.log('Checking username:', username);
-	return exists;
-};
+    static async checkUserExists(email: string, username: string): Promise<boolean> {
+        const usersRef = collection(db, 'users');
+        const queries = [];
 
-// export const sendOtp = async (phone: string) => {
-// 	try {
-// 		const recaptchaVerifier = new RecaptchaVerifier(auth, 'recaptcha', {
-// 			size: 'invisible',
-// 			callback: (response: any) => {
-// 				console.log('reCAPTCHA solved:', response);
-// 			},
-// 		});
+        if (email) {
+            queries.push(getDocs(query(usersRef, where('email', '==', email))));
+        }
 
-// 		const confirmation = await signInWithPhoneNumber(
-// 			auth,
-// 			phone,
-// 			recaptchaVerifier
-// 		);
-// 		console.log(confirmation);
-// 	} catch (error) {
-// 		console.error('Error sending OTP:', error);
-// 	}
-// };
+        if (username) {
+            queries.push(getDocs(query(usersRef, where('userName', '==', username))));
+        }
+
+        const results = await Promise.all(queries);
+        return results.some(snapshot => !snapshot.empty);
+    }
+}
+
+// Future implementation for email verification
+class EmailVerificationService {
+    static async verifyEmail(user: User): Promise<void> {
+        // Implementation for email verification
+    }
+
+    static async checkEmailVerification(user: User): Promise<boolean> {
+        // Implementation for checking email verification status
+        return true; // Currently always returns true since verification is not required
+    }
+}
+
+export { AuthService, UserService, EmailVerificationService };

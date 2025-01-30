@@ -28,6 +28,10 @@ type ProfileStore = {
   unreadCount: number;
   lastCheckedAt: Date | null;
 
+  // new count state
+  friendsCount: number;
+  postsCount: number;
+
   // Existing setters
   setProfileImage: (profileImage: ProfileImage) => void;
   setCoverImage: (coverImage: ProfileImage) => void;
@@ -46,6 +50,10 @@ type ProfileStore = {
   markAllAsRead: () => void;
   removeNotification: (notificationId: string) => void;
   updateLastChecked: () => void;
+
+  // new count setters
+  setFriendsCount: (count: number) => void;
+  setPostsCount: (count: number) => void;
 };
 
 export const useProfileStore = create<ProfileStore>((set) => ({
@@ -64,6 +72,11 @@ export const useProfileStore = create<ProfileStore>((set) => ({
   notifications: [],
   unreadCount: 0,
   lastCheckedAt: null,
+
+  // New count state values
+  friendsCount: 0,
+  postsCount: 0,
+
 
   // Existing setters remain the same
   setProfileImage: (profileImage) => set({ profileImage }),
@@ -110,5 +123,12 @@ export const useProfileStore = create<ProfileStore>((set) => ({
     })),
 
   updateLastChecked: () =>
-    set({ lastCheckedAt: new Date() })
+    set({ lastCheckedAt: new Date() }),
+
+    // New count setters
+    setFriendsCount: (count) => set({ friendsCount: count }),
+    setPostsCount: (count) => set({ postsCount: count })
+  
 }));
+
+

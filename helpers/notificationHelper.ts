@@ -1,4 +1,4 @@
-import { db } from '@/lib/firebaseConfig';
+import { auth, db } from '@/lib/firebaseConfig';
 import { collection, query, where, getDocs, orderBy, addDoc, updateDoc, deleteDoc, doc, Timestamp } from 'firebase/firestore';
 import { UserData } from '@/types/userTypes';
 
@@ -189,5 +189,30 @@ export const deleteAllNotifications = async (userId: string): Promise<void> => {
   } catch (error) {
     console.error('Error deleting all notifications:', error);
     throw error;
+  }
+};
+
+
+// test notification
+export const createTestNotification = async () => {
+  const user = auth.currentUser;
+  if (!user) return;
+  
+  try {
+      const notificationData = {
+          type: 'friendRequest',
+          fromUserId: 'test-user-id',
+          toUserId: user.uid,
+          createdAt: Timestamp.now(),
+          isRead: false,
+          status: 'pending',
+          friendshipId: 'test-friendship-id'
+      } as NotificationData;
+      
+      const notificationId = await createNotification(notificationData);
+      return notificationId;
+  } catch (error) {
+      console.error('Error creating test notification:', error);
+      throw error;
   }
 };
