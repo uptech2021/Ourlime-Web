@@ -6,7 +6,7 @@ import Image from 'next/image';
 import { useProfileStore } from 'src/store/useProfileStore';
 import { useRouter } from 'next/navigation';
 import { AuthService } from '@/helpers/Auth';
-
+import { useState } from 'react';
 
 interface MobileMenuProps {
     navLinks: {
@@ -18,7 +18,6 @@ interface MobileMenuProps {
 
 export default function MobileMenu({ navLinks, setIsMobileMenuOpen }: MobileMenuProps) {
     const router = useRouter();
-
     const {
         profileImage,
         firstName,
@@ -27,6 +26,7 @@ export default function MobileMenu({ navLinks, setIsMobileMenuOpen }: MobileMenu
         friendsCount,
         postsCount
     } = useProfileStore();
+    const [imageLoaded, setImageLoaded] = useState(false);
 
     return (
         <div className="fixed inset-y-0 right-0 max-w-xs w-full bg-white shadow-xl z-[9999]">
@@ -46,16 +46,24 @@ export default function MobileMenu({ navLinks, setIsMobileMenuOpen }: MobileMenu
                     {/* User Profile Section */}
                     <div className="p-6 border-b">
                         <div className="flex items-center gap-4">
-                            <div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-greenTheme ring-offset-2">
-                                <Image
-                                    src={profileImage?.imageURL || "/images/default-avatar.jpg"}
-                                    alt="Profile"
-                                    fill
-                                    className="object-cover"
-                                    loader={({ src }) => src}
-                                    unoptimized={true}
-                                />
-                            </div>
+
+<div className="relative w-16 h-16 rounded-full overflow-hidden ring-2 ring-greenTheme ring-offset-2">
+    <Image
+        src={profileImage?.imageURL || "/images/default-avatar.jpg"}
+        alt="Profile"
+        fill
+        priority
+        className={`object-cover transition-opacity duration-300 ${imageLoaded ? 'opacity-100' : 'opacity-0'}`}
+        loader={({ src }) => src}
+        unoptimized={true}
+        onLoadingComplete={() => setImageLoaded(true)}
+    />
+    {!imageLoaded && (
+        <div className="absolute inset-0 bg-gray-200 animate-pulse" />
+    )}
+</div>
+
+
                             <div>
                                 <h3 className="font-semibold text-gray-900">
                                     {firstName} {lastName}

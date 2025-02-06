@@ -2,14 +2,15 @@
 
 import AnimatedLogo from '@/components/AnimatedLoader';
 import { auth } from '@/lib/firebaseConfig';
-import { AuthService } from '@/helpers/Auth';
+import { AuthService, UserService } from '@/helpers/Auth';
 import { Button } from '@nextui-org/react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import Image from 'next/image';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import React, { useEffect, useState } from 'react';
-import { motion, AnimatePresence } from 'framer-motion';
+import { motion } from 'framer-motion';
+import { fetchInitialUserData } from '@/helpers/initialDataFetch';
 
 export default function LoginPage() {
 	const [email, setEmail] = useState('');
@@ -33,24 +34,28 @@ export default function LoginPage() {
 		setError('');
 		setIsSubmitting(true);
 		let formValid = true;
-
+	
 		if (!email.match(/^[^\s@]+@[^\s@]+\.[^\s@]+$/)) {
 			setEmailError('Please enter a valid email address.');
 			formValid = false;
 		} else setEmailError('');
-
+	
 		if (password.length < 6) {
 			setPasswordError('Password should be at least 6 characters.');
 			formValid = false;
 		} else setPasswordError('');
-
+	
 		if (!formValid) {
 			setIsSubmitting(false);
 			return;
 		}
-
+	
 		try {
-			await signInWithEmailAndPassword(auth, email, password);
+			const userCredential = await signInWithEmailAndPassword(auth, email, password);
+	
+			// Save to store
+			await fetchInitialUserData(userCredential.user.uid);
+
 			setSuccess(true);
 			setTimeout(() => {
 				window.location.replace('/');
@@ -69,6 +74,7 @@ export default function LoginPage() {
 			setIsSubmitting(false);
 		}
 	}
+	
 
 	if (loading) return <AnimatedLogo />;
 

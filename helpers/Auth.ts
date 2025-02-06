@@ -11,7 +11,7 @@ class AuthService {
                     router.push('/');
                     resolve(true);
                 } else {
-                    resolve(false);
+                resolve(false);
                 }
             });
         });

@@ -5,24 +5,25 @@ import Image from 'next/image';
 import { NotificationData, markAllAsRead } from '@/helpers/notificationHelper';
 import { Dropdown, DropdownTrigger, DropdownMenu, DropdownItem } from "@nextui-org/react";
 import { auth } from '@/lib/firebaseConfig';
+import { useProfileStore } from 'src/store/useProfileStore';
 
 interface MobileHeaderProps {
-    userData: any;
     notifications: NotificationData[];
     isMobileMenuOpen: boolean;
     setIsMobileMenuOpen: (isOpen: boolean) => void;
 }
 
-export default function MobileHeader({ 
-    userData, 
-    notifications, 
-    setIsMobileMenuOpen 
+export default function MobileHeader({
+    notifications,
+    setIsMobileMenuOpen
 }: MobileHeaderProps) {
+
     const handleMarkAllRead = async () => {
         const user = auth.currentUser;
         if (!user) return;
         await markAllAsRead(user.uid);
     };
+
 
     return (
         <div className="flex md:hidden items-center justify-between">

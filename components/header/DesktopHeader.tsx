@@ -9,11 +9,10 @@ import { createTestNotification, markAllAsRead } from '@/helpers/notificationHel
 import { auth } from '@/lib/firebaseConfig';
 
 interface DesktopHeaderProps {
-    userData: any;
     notifications: NotificationData[];
 }
 
-export default function DesktopHeader({ userData, notifications }: DesktopHeaderProps) {
+export default function DesktopHeader({ notifications }: DesktopHeaderProps) {
     const handleMarkAllRead = async () => {
         const user = auth.currentUser;
         if (!user) return;
@@ -116,7 +115,7 @@ export default function DesktopHeader({ userData, notifications }: DesktopHeader
                 <button className="text-gray-600 hover:text-greenTheme transition-colors" title="Explore">
                     <Compass size={24} />
                 </button>
-                <ProfileDropdown userData={userData} />
+                <ProfileDropdown />
             </div>
         </div>
     );

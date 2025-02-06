@@ -7,11 +7,10 @@ import ProfileDropdown from './ProfileDropdown';
 import NotificationDropdown from './NotificationDropdown';
 
 interface TabletHeaderProps {
-    userData: any;
     notifications: NotificationData[];
 }
 
-export default function TabletHeader({ userData, notifications }: TabletHeaderProps) {
+export default function TabletHeader({ notifications }: TabletHeaderProps) {
     return (
         <div className="hidden md:flex lg:hidden items-center justify-between">
             <div className="flex items-center">
@@ -40,7 +39,7 @@ export default function TabletHeader({ userData, notifications }: TabletHeaderPr
                     <MessageSquare size={22} />
                 </button>
                 <NotificationDropdown notifications={notifications} />
-                <ProfileDropdown userData={userData} />
+                <ProfileDropdown />
             </div>
         </div>
     );

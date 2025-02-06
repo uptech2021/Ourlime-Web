@@ -1,18 +1,10 @@
+// src/store/useProfileStore.ts
 import { create } from 'zustand';
+import { persist } from 'zustand/middleware';
 import { ProfileImage } from '@/types/userTypes';
-
-interface Notification {
-  id: string;
-  type: 'friendRequest' | 'postTag' | 'comment' | 'like' | 'share' | 'message' | 'groupInvite';
-  fromUserId: string;
-  content: string;
-  timestamp: Date;
-  isRead: boolean;
-  metadata?: any;
-}
+import { NotificationData } from '@/helpers/notificationHelper';
 
 type ProfileStore = {
-  // Existing states
   profileImage: ProfileImage | null;
   coverImage: ProfileImage | null;
   postProfileImage: ProfileImage | null;
@@ -22,17 +14,21 @@ type ProfileStore = {
   firstName: string | null;
   lastName: string | null;
   country: string | null;
-
-  // New notification states
-  notifications: Notification[];
+  notifications: NotificationData[];
   unreadCount: number;
   lastCheckedAt: Date | null;
-
-  // new count state
   friendsCount: number;
   postsCount: number;
 
-  // Existing setters
+  setUserData: (data: {
+    firstName: string | null;
+    lastName: string | null;
+    userName: string | null;
+    country: string | null;
+    friendsCount: number;
+    postsCount: number;
+  }) => void;
+
   setProfileImage: (profileImage: ProfileImage) => void;
   setCoverImage: (coverImage: ProfileImage) => void;
   setPostProfileImage: (postProfileImage: ProfileImage) => void;
@@ -42,93 +38,109 @@ type ProfileStore = {
   setFirstName: (firstName: string) => void;
   setLastName: (lastName: string) => void;
   setCountry: (country: string) => void;
-
-  // New notification setters
-  setNotifications: (notifications: Notification[]) => void;
-  addNotification: (notification: Notification) => void;
+  setNotifications: (notifications: NotificationData[]) => void;
+  addNotification: (notification: NotificationData) => void;
   markAsRead: (notificationId: string) => void;
   markAllAsRead: () => void;
   removeNotification: (notificationId: string) => void;
   updateLastChecked: () => void;
-
-  // new count setters
   setFriendsCount: (count: number) => void;
   setPostsCount: (count: number) => void;
 };
 
-export const useProfileStore = create<ProfileStore>((set) => ({
-  // Existing state values
-  profileImage: null,
-  coverImage: null,
-  postProfileImage: null,
-  jobProfileImage: null,
-  userImages: [],
-  userName: null,
-  firstName: null,
-  lastName: null,
-  country: null,
+export const useProfileStore = create<ProfileStore>()(
+  persist(
+    (set, get) => ({
+      profileImage: null,
+      coverImage: null,
+      postProfileImage: null,
+      jobProfileImage: null,
+      userImages: [],
+      userName: null,
+      firstName: null,
+      lastName: null,
+      country: null,
+      notifications: [],
+      unreadCount: 0,
+      lastCheckedAt: null,
+      friendsCount: 0,
+      postsCount: 0,
 
-  // New notification state values
-  notifications: [],
-  unreadCount: 0,
-  lastCheckedAt: null,
+      setUserData: (data) => {
+        set({
+          firstName: data.firstName,
+          lastName: data.lastName,
+          userName: data.userName,
+          country: data.country,
+          friendsCount: data.friendsCount,
+          postsCount: data.postsCount
+        });
+      },
 
-  // New count state values
-  friendsCount: 0,
-  postsCount: 0,
+      setProfileImage: (profileImage) => {
+        set({ profileImage });
+      },
 
+      setCoverImage: (coverImage) => set({ coverImage }),
+      setPostProfileImage: (postProfileImage) => set({ postProfileImage }),
+      setJobProfileImage: (jobProfileImage) => set({ jobProfileImage }),
+      setUserImages: (userImages) => set({ userImages }),
+      setUserName: (userName) => set({ userName }),
+      setFirstName: (firstName) => set({ firstName }),
+      setLastName: (lastName) => set({ lastName }),
+      setCountry: (country) => set({ country }),
 
-  // Existing setters remain the same
-  setProfileImage: (profileImage) => set({ profileImage }),
-  setCoverImage: (coverImage) => set({ coverImage }),
-  setPostProfileImage: (postProfileImage) => set({ postProfileImage }),
-  setJobProfileImage: (jobProfileImage) => set({ jobProfileImage }),
-  setUserImages: (userImages) => set({ userImages }),
-  setUserName: (userName) => set({ userName }),
-  setFirstName: (firstName) => set({ firstName }),
-  setLastName: (lastName) => set({ lastName }),
-  setCountry: (country) => set({ country }),
+      setNotifications: (notifications) =>
+        set({
+          notifications,
+          unreadCount: notifications.filter(n => !n.isRead).length
+        }),
 
-  // New notification setters
-  setNotifications: (notifications) => 
-    set({ 
-      notifications,
-      unreadCount: notifications.filter(n => !n.isRead).length 
+      addNotification: (notification) =>
+        set((state) => ({
+          notifications: [notification, ...state.notifications],
+          unreadCount: state.unreadCount + (notification.isRead ? 0 : 1)
+        })),
+
+      markAsRead: (notificationId) =>
+        set((state) => ({
+          notifications: state.notifications.map(n =>
+            n.id === notificationId ? { ...n, isRead: true } : n
+          ),
+          unreadCount: state.unreadCount - 1
+        })),
+
+      markAllAsRead: () =>
+        set((state) => ({
+          notifications: state.notifications.map(n => ({ ...n, isRead: true })),
+          unreadCount: 0
+        })),
+
+      removeNotification: (notificationId) =>
+        set((state) => ({
+          notifications: state.notifications.filter(n => n.id !== notificationId),
+          unreadCount: state.unreadCount - (state.notifications.find(n => n.id === notificationId)?.isRead ? 0 : 1)
+        })),
+
+      updateLastChecked: () =>
+        set({ lastCheckedAt: new Date() }),
+
+      setFriendsCount: (count) => set({ friendsCount: count }),
+      setPostsCount: (count) => set({ postsCount: count })
     }),
-
-  addNotification: (notification) =>
-    set((state) => ({
-      notifications: [notification, ...state.notifications],
-      unreadCount: state.unreadCount + (notification.isRead ? 0 : 1)
-    })),
-
-  markAsRead: (notificationId) =>
-    set((state) => ({
-      notifications: state.notifications.map(n =>
-        n.id === notificationId ? { ...n, isRead: true } : n
-      ),
-      unreadCount: state.unreadCount - 1
-    })),
-
-  markAllAsRead: () =>
-    set((state) => ({
-      notifications: state.notifications.map(n => ({ ...n, isRead: true })),
-      unreadCount: 0
-    })),
-
-  removeNotification: (notificationId) =>
-    set((state) => ({
-      notifications: state.notifications.filter(n => n.id !== notificationId),
-      unreadCount: state.unreadCount - (state.notifications.find(n => n.id === notificationId)?.isRead ? 0 : 1)
-    })),
-
-  updateLastChecked: () =>
-    set({ lastCheckedAt: new Date() }),
-
-    // New count setters
-    setFriendsCount: (count) => set({ friendsCount: count }),
-    setPostsCount: (count) => set({ postsCount: count })
-  
-}));
-
-
+    {
+      name: 'profile-storage',
+      partialize: (state) => {
+        return {
+          profileImage: state.profileImage,
+          userName: state.userName,
+          firstName: state.firstName,
+          lastName: state.lastName,
+          country: state.country,
+          friendsCount: state.friendsCount,
+          postsCount: state.postsCount
+        };
+      }
+    }
+  )
+);

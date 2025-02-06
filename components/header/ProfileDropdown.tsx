@@ -4,28 +4,21 @@ import { User, Wallet, Bookmark, HelpCircle, LogOut, Settings } from 'lucide-rea
 import Image from 'next/image';
 import { useRef, useState } from 'react';
 import { useProfileStore } from 'src/store/useProfileStore';
-import { auth } from '@/lib/firebaseConfig';
-import { signOut } from 'firebase/auth';
 import { useRouter } from 'next/navigation';
+import { AuthService } from '@/helpers/Auth';
 
-interface ProfileDropdownProps {
-    userData: any;
-}
-
-export default function ProfileDropdown({ userData }: ProfileDropdownProps) {
+export default function ProfileDropdown() {
     const router = useRouter();
     const [isProfileDropdownOpen, setIsProfileDropdownOpen] = useState(false);
     const dropdownRef = useRef(null);
-    const { profileImage, firstName, lastName, userName, friendsCount, postsCount } = useProfileStore();
-
-    const handleLogout = async () => {
-        try {
-            await signOut(auth);
-            router.push('/login');
-        } catch (error) {
-            console.error('Error logging out:', error);
-        }
-    };
+    const {
+        profileImage,
+        firstName,
+        lastName,
+        userName,
+        friendsCount,
+        postsCount
+    } = useProfileStore();
 
     return (
         <div className="relative" ref={dropdownRef}>
@@ -46,16 +39,17 @@ export default function ProfileDropdown({ userData }: ProfileDropdownProps) {
                 ) : (
                     <div className="w-full h-full bg-gray-200" />
                 )}
+
             </button>
 
             {isProfileDropdownOpen && (
                 <div className="absolute right-0 mt-3 w-72 bg-white rounded-xl shadow-2xl py-2 z-[1000] transform transition-all duration-200 ease-out">
                     <div className="px-6 py-4 border-b border-gray-100">
                         <p className="text-lg font-semibold text-gray-800" title='name'>
-                            {firstName || userData?.firstName} {lastName || userData?.lastName}
+                            {firstName} {lastName}
                         </p>
                         <p className="text-sm text-gray-500">
-                            @{userName || userData?.userName}
+                            @{userName}
                         </p>
                         <div className="mt-2 flex gap-4">
                             <span className="text-sm"><b>{friendsCount}</b> Friends</span>
@@ -88,7 +82,7 @@ export default function ProfileDropdown({ userData }: ProfileDropdownProps) {
                             <span>Help & Support</span>
                         </a>
                         <button
-                            onClick={handleLogout}
+                            onClick={() => AuthService.signOut(router)}
                             className="flex items-center w-full px-6 py-3 hover:bg-red-50 transition-colors text-red-600"
                         >
                             <LogOut className="w-5 h-5 mr-3" />
