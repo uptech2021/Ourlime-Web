@@ -47,3 +47,16 @@ export const fetchCommunityMembers = async (communityVariantId: string): Promise
 
     return membersData;
 };
+
+export const fetchCommunityPosts = async (communityVariantId: string): Promise<Post[]> => {
+    const postsRef = collection(db, 'communityVariantDetails');
+    const q = query(postsRef, where('communityVariantId', '==', communityVariantId));
+    const snapshot = await getDocs(q);
+
+    const postsData = snapshot.docs.map(doc => ({
+        id: doc.id,
+        ...doc.data(),
+    })) as Post[];
+
+    return postsData;
+};

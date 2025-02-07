@@ -6,9 +6,10 @@ import { useEffect, useState } from 'react';
 import CreatePost from '@/components/home/CreatePost';
 import { getFriends } from '@/helpers/friendsAndFollowingHelper';
 import { UserData, ProfileImage } from '@/types/userTypes';
-import { fetchCommunityMembers } from '@/helpers/communities';
+import { fetchCommunityMembers, fetchCommunityPosts } from '@/helpers/communities';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
+import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
 
 type BasePost = {
     id: string;
@@ -81,6 +82,7 @@ export default function CommunityDetailPage() {
         };
         loadMembers();
     }, [communityVariantId]);
+
 
     // Rich test data for community
     const communityData = {
@@ -477,7 +479,8 @@ export default function CommunityDetailPage() {
 
             {/* Create Post Modal */}
             {isPostModalOpen && (
-                <CreatePost 
+                <CreateCommunityPost 
+                    communityVariantId={communityVariantId}
                     setTogglePostForm={setIsPostModalOpen} 
                     profilePicture="path/to/profile/picture" // Replace with actual profile picture
                 />
