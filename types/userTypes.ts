@@ -1,4 +1,5 @@
 import { Timestamp } from "firebase/firestore";
+import { CommunityVariantDetailsSummary } from "./communityTypes";
 
 type UserData = {
 	id: string;
@@ -52,6 +53,27 @@ type Post = {
 		userName: string;
 		profileImage?: string;
 	};
+};
+
+type BasePost = {
+    id: string;
+    title: string; // Add title
+    caption: string; // Add caption
+    content: string; // Add content
+    visibility: string; // Add visibility
+    createdAt: Date; // Add createdAt
+    userId: string; // Add userId
+    hashtags: Array<string>; // Add hashtags
+    media: string; // Add media
+    userReferences: Array<string>; // Add userReferences
+    author: { // Add author object
+        id: string;
+        name: string;
+        avatar: string;
+        role: string;
+    };
+    timestamp: Date; // Add timestamp
+	mediaDetails : CommunityVariantDetailsSummary[];
 };
 
 type PostData = {
@@ -115,6 +137,7 @@ export type {
 	ProfileImage,
 	SearchUser,
 	Post,
+	BasePost,
 	PostData,
 	AppUser,
 	Contact,

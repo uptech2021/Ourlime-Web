@@ -3,32 +3,32 @@
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
 import { useEffect, useState } from 'react';
-import CreatePost from '@/components/home/CreatePost';
+import { useParams } from 'next/navigation';
 import { getFriends } from '@/helpers/friendsAndFollowingHelper';
-import { UserData, ProfileImage } from '@/types/userTypes';
+import { UserData, ProfileImage, BasePost } from '@/types/userTypes';
 import { fetchCommunityMembers, fetchCommunityPosts } from '@/helpers/communities';
 import { addDoc, collection } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
 
-type BasePost = {
-    id: string;
-    title: string;
-    content: string;
-    author: {
-        id: string;
-        name: string;
-        avatar: string;
-        role: string;
-    };
-    stats: {
-        likes: number;
-        comments: number;
-        shares: number;
-    };
-    tags: string[];
-    timestamp: string;
-};
+// type BasePost = {
+//     id: string;
+//     title: string;
+//     content: string;
+//     author: {
+//         id: string;
+//         name: string;
+//         avatar: string;
+//         role: string;
+//     };
+//     // stats: {
+//     //     likes: number;
+//     //     comments: number;
+//     //     shares: number;
+//     // };
+//     // tags: string[];
+//     timestamp: string;
+// };
 
 type GalleryPost = BasePost & {
     type: 'gallery';
@@ -73,7 +73,8 @@ export default function CommunityDetailPage() {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [members, setMembers] = useState<UserData[]>([]);
     const [posts, setPosts] = useState<Post[]>([]);
-    const communityVariantId = "ASN24qJPrz8eXqQx9gZZ"; // Replace with the actual community variant ID
+    const { id } = useParams();
+    const communityVariantId = id? String(id): "";
 
     useEffect(() => {
         const loadMembers = async () => {
@@ -81,6 +82,20 @@ export default function CommunityDetailPage() {
             setMembers(fetchedMembers);
         };
         loadMembers();
+    }, [communityVariantId]);
+
+    useEffect(() => {
+        const loadPosts = async () => {
+            if (communityVariantId) {
+                const fetchedCommunityPosts = await fetchCommunityPosts(communityVariantId);
+                // const validPosts = fetchedCommunityPosts.filter(isPost); // Ensure valid posts
+                setPosts(fetchedCommunityPosts); // Set the posts to state
+
+                console.log(fetchedCommunityPosts);
+            }
+        };
+
+        loadPosts();
     }, [communityVariantId]);
 
 
@@ -423,22 +438,22 @@ export default function CommunityDetailPage() {
                                             <p className="text-gray-600 text-sm mb-3">{post.content}</p>
 
                                             <div className="flex flex-wrap gap-2 mb-3">
-                                                {post.tags.map((tag, index) => (
+                                                {/* {post.tags.map((tag, index) => (
                                                     <span
                                                         key={index}
                                                         className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
                                                     >
                                                         #{tag}
                                                     </span>
-                                                ))}
+                                                ))} */}
                                             </div>
 
                                             <div className="flex items-center justify-between text-sm text-gray-500">
                                                 <div className="flex items-center gap-4">
-                                                    <span>{post.stats.likes} likes</span>
-                                                    <span>{post.stats.comments} comments</span>
+                                                    {/* <span>{post.stats.likes} likes</span>
+                                                    <span>{post.stats.comments} comments</span> */}
                                                 </div>
-                                                <span>{post.timestamp}</span>
+                                                <span>{post.timestamp.toDateString()}</span>
                                             </div>
                                         </div>
                                     </div>
