@@ -8,6 +8,7 @@ import { Analytics } from '@vercel/analytics/react';
 import Script from 'next/script';
 import { metadata } from './metadata';
 import { SessionHandler } from './SessionProvider';
+import { ChatButton } from '@/components/chat/ChatButton/ChatButton';
 
 export { metadata }
 
@@ -24,6 +25,7 @@ export default function RootLayout({
                     <SpeedInsights />
                     <Header />
                     {children}
+                    <ChatButton />
                     <Analytics />
                     <Script
                         src="https://cdn.jsdelivr.net/npm/flowbite@2.5.2/dist/flowbite.min.js"

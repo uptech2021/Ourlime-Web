@@ -1,13 +1,10 @@
-// helpers/initialDataFetch.ts
 import { UserService } from '@/helpers/Auth';
 import { db } from "@/lib/firebaseConfig";
 import { useProfileStore } from "@/src/store/useProfileStore";
 import { collection, getDocs, query, where } from "firebase/firestore";
 
-
 export const fetchInitialUserData = async (userId: string) => {
     try {
-        
         const [
             userDoc,
             profileImagesSnapshot,
@@ -59,7 +56,6 @@ export const fetchInitialUserData = async (userId: string) => {
                     createdAt: imageData.createdAt?.toDate() || new Date(),
                     updatedAt: imageData.updatedAt?.toDate() || new Date()
                 });
-                
             }
         }
 
@@ -67,6 +63,7 @@ export const fetchInitialUserData = async (userId: string) => {
         const totalFriendsCount = friendsSnapshot1.size + friendsSnapshot2.size;
 
         store.setUserData({
+            id: userId,
             firstName: userData?.firstName,
             lastName: userData?.lastName,
             userName: userData?.userName,
@@ -80,4 +77,3 @@ export const fetchInitialUserData = async (userId: string) => {
         return false;
     }
 };
-

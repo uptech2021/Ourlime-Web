@@ -1,10 +1,10 @@
-// src/store/useProfileStore.ts
 import { create } from 'zustand';
 import { persist } from 'zustand/middleware';
 import { ProfileImage } from '@/types/userTypes';
 import { NotificationData } from '@/helpers/notificationHelper';
 
 type ProfileStore = {
+  id: string | null;
   profileImage: ProfileImage | null;
   coverImage: ProfileImage | null;
   postProfileImage: ProfileImage | null;
@@ -21,6 +21,7 @@ type ProfileStore = {
   postsCount: number;
 
   setUserData: (data: {
+    id: string;
     firstName: string | null;
     lastName: string | null;
     userName: string | null;
@@ -51,6 +52,7 @@ type ProfileStore = {
 export const useProfileStore = create<ProfileStore>()(
   persist(
     (set, get) => ({
+      id: null,
       profileImage: null,
       coverImage: null,
       postProfileImage: null,
@@ -68,6 +70,7 @@ export const useProfileStore = create<ProfileStore>()(
 
       setUserData: (data) => {
         set({
+          id: data.id,
           firstName: data.firstName,
           lastName: data.lastName,
           userName: data.userName,
@@ -132,6 +135,7 @@ export const useProfileStore = create<ProfileStore>()(
       name: 'profile-storage',
       partialize: (state) => {
         return {
+          id: state.id, // Added id to persisted state
           profileImage: state.profileImage,
           userName: state.userName,
           firstName: state.firstName,

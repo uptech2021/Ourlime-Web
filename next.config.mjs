@@ -15,6 +15,8 @@ const nextConfig = {
                 pathname: '/**',
             },
         ],
+        dangerouslyAllowSVG: true,
+        contentSecurityPolicy: "default-src 'self'; script-src 'none'; sandbox;",
     },
     env: {
         IPINFO_API_TOKEN: process.env.IPINFO_API_TOKEN,
