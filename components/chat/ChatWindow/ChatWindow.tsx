@@ -1,11 +1,12 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, Globe, Search, ArrowLeft, Send, Paperclip, Smile, Plus } from 'lucide-react';
+import { Users, Globe, Search, ArrowLeft, Send, Paperclip, Smile } from 'lucide-react';
 import Image from 'next/image';
 import { ChatService } from '@/lib/chat/ChatAndFriendService';
 import { Timestamp } from 'firebase/firestore';
 import { useProfileStore } from '@/src/store/useProfileStore';
+import { useMessages } from '@/src/hooks/useMessages';
 
 interface ChatWindowProps {
     isCompact: boolean;
@@ -28,21 +29,21 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
     const [message, setMessage] = useState('');
     const [friends, setFriends] = useState([]);
     const [messages, setMessages] = useState<Message[]>([]);
+
     const chatService = ChatService.getInstance();
     const userData = useProfileStore();
+    const { getMessages, sendMessage } = useMessages();
 
     useEffect(() => {
         fetchFriends();
     }, []);
 
-    // useEffect(() => {
-    //     if (selectedFriend) {
-    //         fetchMessages();
-    //     }
-    // }, [selectedFriend]);
+    useEffect(() => {
+        if (selectedFriend?.id) {
+            fetchMessages();
+        }
+    }, [selectedFriend]);
 
-
-    
     const fetchFriends = async () => {
         try {
             const friendsData = await chatService.getFriends();
@@ -52,15 +53,39 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
         }
     };
 
-    // const fetchMessages = async () => {
-    //     if (!selectedFriend?.id) return;
-    //     try {
-    //         const messagesData = await chatService.getMessages(selectedFriend.id);
-    //         setMessages(messagesData as Message[]);
-    //     } catch (error) {
-    //         console.error('Error fetching messages:', error);
-    //     }
-    // };
+    const fetchMessages = async () => {
+        if (!selectedFriend?.id) return;
+        try {
+            const result = await getMessages(selectedFriend.id);
+            console.log('Fetched messages:', result);
+            if (result.status === 'success') {
+                setMessages(result.messages || []);
+            }
+        } catch (error) {
+            console.error('Error fetching messages:', error);
+        }
+    };
+
+    const handleSendMessage = async () => {
+        if (!message.trim() || !selectedFriend?.id) return;
+        try {
+            const result = await sendMessage(selectedFriend.id, message.trim());
+            console.log('Message result:', result);
+            if (result.status === 'success') {
+                await fetchMessages();
+                setMessage('');
+            }
+        } catch (error) {
+            console.error('Error sending message:', error);
+        }
+    };
+
+    const handleKeyPress = (e: React.KeyboardEvent) => {
+        if (e.key === 'Enter' && !e.shiftKey) {
+            e.preventDefault();
+            handleSendMessage();
+        }
+    };
 
     const renderFriendsList = () => (
         <div className="flex-1 overflow-y-auto">
@@ -105,7 +130,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
 
     const renderChatView = () => (
         <div className="h-full flex flex-col">
-            <div className="p-2 md:p-4 border-b border-gray-200 flex items-center gap-2 md:gap-3">
+            <div className="p-1 md:p-2 border-b border-gray-200 flex items-center gap-2 md:gap-3">
                 {isCompact && (
                     <button
                         onClick={() => setSelectedFriend(null)}
@@ -119,43 +144,52 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                     <div className="relative">
                         <div className="w-8 h-8 md:w-10 md:h-10 relative rounded-full overflow-hidden">
                             <Image
-                                src={selectedFriend.avatar}
-                                alt={`${selectedFriend.name}'s avatar`}
+                                src={selectedFriend.profileImage || '/images/transparentLogo.png'}
+                                alt={`${selectedFriend.firstName}'s avatar`}
                                 fill
                                 className="object-cover"
                             />
                         </div>
-                        <span className={`absolute bottom-0 right-0 w-2.5 h-2.5 md:w-3 md:h-3 border-2 border-white rounded-full ${selectedFriend.status === 'online' ? 'bg-green-500' : 'bg-gray-400'
-                            }`} />
                     </div>
                     <div>
-                        <h3 className="font-medium text-sm md:text-base">{selectedFriend.name}</h3>
-                        <p className="text-xs text-green-500">{selectedFriend.status}</p>
+                        <h3 className="font-medium text-sm md:text-base">{`${selectedFriend.firstName} ${selectedFriend.lastName}`}</h3>
+                        <p className="text-xs text-gray-500">@{selectedFriend.userName}</p>
                     </div>
                 </div>
             </div>
 
-            <div className="flex-1 overflow-y-auto p-2 md:p-4">
-                {messages.map((msg) => (
-                    <div
-                        key={msg.id}
-                        className={`flex ${msg.senderId === userData.id ? 'justify-end' : 'justify-start'} mb-3`}
-                    >
+            <div className="flex-1 overflow-y-auto p-1 md:p-2">
+                {messages && messages.length > 0 ? (
+                    messages.map((msg) => (
                         <div
-                            className={`max-w-[85%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-1.5 md:py-2 ${msg.senderId === userData.id
-                                ? 'bg-greenTheme text-white rounded-br-none'
-                                : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                                }`}
+                            key={msg.id}
+                            className={`flex ${msg.senderId === userData.id ? 'justify-end' : 'justify-start'} mb-3`}
                         >
-                            <p className="text-xs md:text-sm">{msg.message}</p>
-                            <span className={`text-[10px] md:text-xs ${msg.senderId === userData.id ? 'text-green-100' : 'text-gray-500'
-                                }`}>
-                                {new Date(msg.createdAt.toDate()).toLocaleTimeString()}
-                            </span>
+                            <div
+                                className={`max-w-[85%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 shadow-sm ${msg.senderId === userData.id
+                                    ? 'bg-blue-600 text-white rounded-br-none'
+                                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                    }`}
+                            >
+                                <p className="text-sm md:text-base leading-relaxed">{msg.message}</p>
+                                <span className={`text-[10px] md:text-xs mt-1 block ${msg.senderId === userData.id ? 'text-blue-100' : 'text-gray-500'
+                                    }`}>
+                                    {msg.createdAt?.toDate ?
+                                        new Date(msg.createdAt.toDate()).toLocaleTimeString()
+                                        : new Date().toLocaleTimeString()
+                                    }
+                                </span>
+                            </div>
                         </div>
+
+                    ))
+                ) : (
+                    <div className="flex items-center justify-center h-full text-gray-500">
+                        <p>No messages yet</p>
                     </div>
-                ))}
+                )}
             </div>
+
 
             <div className="p-2 md:p-4 border-t border-gray-200">
                 <div className="flex items-center gap-1.5 md:gap-2">
@@ -166,16 +200,16 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                         type="text"
                         value={message}
                         onChange={(e) => setMessage(e.target.value)}
+                        onKeyPress={handleKeyPress}
                         placeholder="Type a message..."
                         className="flex-1 px-3 md:px-4 py-1.5 md:py-2 text-sm md:text-base bg-gray-100 rounded-full focus:outline-none focus:ring-2 focus:ring-greenTheme"
-                        // onKeyPress={(e) => e.key === 'Enter' && handleSendMessage()}
                     />
                     <button className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors" title='smile'>
                         <Smile className="w-4 h-4 md:w-5 md:h-5 text-gray-500" />
                     </button>
                     <button
+                        onClick={handleSendMessage}
                         title='send'
-                        // onClick={handleSendMessage}
                         className="p-1.5 md:p-2 bg-greenTheme text-white rounded-full hover:bg-green-600 transition-colors"
                     >
                         <Send className="w-4 h-4 md:w-5 md:h-5" />
@@ -184,18 +218,6 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             </div>
         </div>
     );
-
-
-    // const handleSendMessage = async () => {
-    //     if (!message.trim() || !selectedFriend?.id) return;
-    //     try {
-    //         const newMessage = await chatService.sendMessage(selectedFriend.id, message.trim());
-    //         setMessages(prev => [...prev, newMessage]);
-    //         setMessage('');
-    //     } catch (error) {
-    //         console.error('Error sending message:', error);
-    //     }
-    // };
 
     const renderTabs = () => (
         <div className="grid grid-cols-2 w-full">
@@ -228,6 +250,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
         </div>
     );
 
+
     if (isCompact) {
         return (
             <div className="flex flex-col h-full">
@@ -258,8 +281,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
     }
 
     return (
-        <div className="flex flex-col lg:flex-row h-full container mx-auto">
-            {/* Mobile/Tablet: Horizontal Friend List / Desktop: Vertical Friend List */}
+        <div className="flex flex-col lg:flex-row h-full">
             <div className="lg:w-[30%] lg:border-r border-gray-200">
                 <div className="block lg:hidden h-16 border-b border-gray-200 overflow-x-auto">
                     <div className="flex px-2 py-1 gap-2 min-w-max">
@@ -267,9 +289,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                             <button
                                 key={friend.id}
                                 onClick={() => setSelectedFriend(friend)}
-                                className={`flex flex-col items-center ${
-                                    selectedFriend?.id === friend.id ? 'opacity-100' : 'opacity-70'
-                                }`}
+                                className={`flex flex-col items-center ${selectedFriend?.id === friend.id ? 'opacity-100' : 'opacity-70'}`}
                             >
                                 <div className="w-8 h-8 relative rounded-full overflow-hidden">
                                     <Image
@@ -284,8 +304,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                         ))}
                     </div>
                 </div>
-                
-                {/* Desktop Friend List */}
+
                 <div className="hidden lg:flex lg:flex-col h-full">
                     <div className="border-b border-gray-200">
                         {renderTabs()}
@@ -307,9 +326,8 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                     </div>
                 </div>
             </div>
-    
-            {/* Chat Section */}
-            <div className="flex-1 lg:w-[70%] px-2">
+
+            <div className="flex-1 lg:w-[70%]">
                 {selectedFriend ? (
                     renderChatView()
                 ) : (
@@ -320,7 +338,5 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             </div>
         </div>
     );
-    
+};
 
-
-}

@@ -107,25 +107,4 @@ export class ChatService {
         }
     }
 
-    private async getUserData(userId: string) {
-        try {
-            console.log('Fetching user data for ID:', userId);
-            const userDocRef = doc(db, 'users', userId);
-            const userDocSnap = await getDoc(userDocRef);
-
-            if (userDocSnap.exists()) {
-                const userData = userDocSnap.data();
-                console.log('User data found:', userData);
-                return {
-                    ...userData,
-                    id: userId,
-                };
-            }
-            console.log('No user document found for ID:', userId);
-            return null;
-        } catch (error) {
-            console.error('Error fetching user data:', error);
-            throw error;
-        }
-    }
 }

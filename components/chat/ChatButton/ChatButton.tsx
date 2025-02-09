@@ -45,17 +45,18 @@ export const ChatButton = () => {
                 </button>
             )}
             {windowSize !== 'closed' && (
-                <div
-                    className={`chat-window fixed bg-white rounded-lg shadow-2xl 
-                ${windowSize === 'compact'
-                            ? 'bottom-6 right-6 w-[90vw] md:w-[400px] h-[80vh] md:h-[500px]'
-                            : 'bottom-6 right-6 w-[95vw] md:w-[800px] h-[85vh]'
-                        }
-                    animate-expand origin-bottom-right
-                    max-w-[95%] max-h-[95%]
-                    transition-all duration-300 ease-in-out
-                    mx-auto container`}
-                >
+                    <div
+                        className={`chat-window fixed bg-white rounded-lg shadow-2xl 
+                            ${windowSize === 'compact'
+                                ? 'bottom-8 right-8 w-[90vw] md:w-[400px] h-[75vh] md:h-[500px]'
+                                : 'bottom-8 right-8 w-[90vw] md:w-[800px] h-[80vh]'
+                            }
+                            animate-expand origin-bottom-right
+                            max-w-[calc(100%-4rem)] max-h-[calc(100vh-4rem)]
+                            transition-all duration-300 ease-in-out
+                            mx-auto md:mx-0`}
+                    >
+
                     <div className="h-12 border-b border-gray-200 flex justify-between items-center px-2 md:px-4">
                         <div className="text-sm font-medium text-gray-700">Messages</div>
                         <div className="flex gap-2">
