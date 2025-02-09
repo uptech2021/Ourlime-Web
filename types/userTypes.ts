@@ -65,10 +65,10 @@ type BasePost = {
     userId: string; // Add userId
     hashtags: Array<string>; // Add hashtags
     media: string; // Add media
-    userReferences: Array<string>; // Add userReferences
     author: { // Add author object
         id: string;
-        name: string;
+        firstName: string;
+		lastName: string;
         avatar: string;
         role: string;
     };

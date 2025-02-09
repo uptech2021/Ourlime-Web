@@ -72,7 +72,7 @@ type Post = GalleryPost | VideoPost | ArticlePost | MusicPost | ResourcePost;
 export default function CommunityDetailPage() {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [members, setMembers] = useState<UserData[]>([]);
-    const [posts, setPosts] = useState<Post[]>([]);
+    const [posts, setPosts] = useState<BasePost[]>([]);
     const { id } = useParams();
     const communityVariantId = id? String(id): "";
 
@@ -226,22 +226,7 @@ export default function CommunityDetailPage() {
     //     }
     // ];
 
-    const [currentSlide, setCurrentSlide] = useState<Record<string, number>>({});
-
-    const nextSlide = (postId: string, resourcesLength: number) => {
-        setCurrentSlide((prev) => ({
-            ...prev,
-            [postId]: ((prev[postId] || 0) + 1) % resourcesLength
-        }));
-    };
-    
-    const prevSlide = (postId: string, resourcesLength: number) => {
-        setCurrentSlide((prev) => ({
-            ...prev,
-            [postId]: prev[postId] === 0 ? resourcesLength - 1 : prev[postId] - 1
-        }));
-    };
-    
+    const [activeMediaIndices, setActiveMediaIndices] = useState<{ [key: string]: number }>({});
 
     return (
         <>
@@ -296,170 +281,95 @@ export default function CommunityDetailPage() {
 
                             {/* Posts Grid */}
                             <div className="grid grid-cols-2 gap-6">
-                                {posts.map((post) => (
-                                    <div key={post.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
-                                        {/* Dynamic Media Section */}
-                                        {post.type === 'gallery' ? (
+                                {posts.map((post) => {
+                                    const activeMediaIndex = activeMediaIndices[post.id] || 0;
+
+                                    return (
+                                        <div key={post.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
+                                            {/* Dynamic Media Section */}
                                             <div className="aspect-video relative rounded-t-xl overflow-hidden">
-                                                <Image
-                                                    src={post.media[0]} // Show first image, could add carousel
-                                                    alt={post.title}
-                                                    fill
-                                                    className="object-cover"
-                                                    loader={({ src }) => src}
-                                                    unoptimized={true}
-                                                />
-                                                {post.media.length > 1 && (
-                                                    <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 rounded text-white text-xs">
-                                                        +{post.media.length - 1}
-                                                    </div>
-                                                )}
-                                            </div>
-                                        ) : post.type === 'video' ? (
-                                            <div className="aspect-video relative rounded-t-xl overflow-hidden">
-                                                <video
-                                                    className="w-full h-full object-cover"
-                                                    poster={post.thumbnail}
-                                                    controls
-                                                    playsInline
-                                                >
-                                                    <source src={post.media} type="video/mp4" />
-                                                </video>
-                                                <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 rounded text-white text-xs">
-                                                    {post.duration}
-                                                </div>
-                                            </div>
-                                        
-                                        ) : post.type === 'article' ? (
-                                            <div className="aspect-video relative rounded-t-xl overflow-hidden">
-                                                <Image
-                                                    src={post.coverImage}
-                                                    alt={post.title}
-                                                    fill
-                                                    className="object-cover"
-                                                    loader={({ src }) => src}
-                                                    unoptimized={true}
-                                                />
-                                                <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 rounded text-white text-xs">
-                                                    {post.readTime}
-                                                </div>
-                                            </div>
-                                        ) : post.type === 'music' ? (
-                                            <div className="aspect-video relative rounded-t-xl overflow-hidden bg-gradient-to-br from-green-400 to-blue-500 p-6">
-                                                <div className="flex items-center gap-6">
-                                                    <Image
-                                                        src={post.albumArt}
-                                                        alt={post.title}
-                                                        width={120}
-                                                        height={120}
-                                                        className="rounded-lg shadow-lg"
-                                                        loader={({ src }) => src}
-                                                        unoptimized={true}
-                                                    />
-                                                    <div className="flex-1 text-white">
-                                                        <div className="mb-4">
-                                                            <h3 className="font-bold text-xl">{post.trackList[0].name}</h3>
-                                                            <p className="text-white/80">{post.platform}</p>
-                                                        </div>
-                                                        <audio
-                                                            id={`audio-${post.id}`}
-                                                            src={post.trackList[0].name}
-                                                            className="w-full"
-                                                            controls
-                                                        />
-                                                    </div>
-                                                </div>
-                                            </div>
-                                        ) : post.type === 'resource' ? (
-                                            <div className="aspect-video relative rounded-t-xl overflow-hidden">
-                                                <div className="flex h-full">
-                                                    {post.resources.map((resource, index) => (
-                                                        <div key={index} className="w-full h-full flex-shrink-0">
+                                                {post.mediaDetails.length > 0 && (
+                                                    <>
+                                                        {post.mediaDetails[activeMediaIndex].type === 'video' ? (
+                                                            <video
+                                                                className="w-full h-full object-cover"
+                                                                controls
+                                                                playsInline
+                                                            >
+                                                                <source src={post.mediaDetails[activeMediaIndex].typeUrl} type="video/mp4" />
+                                                                Your browser does not support the video tag.
+                                                            </video>
+                                                        ) : (
                                                             <Image
-                                                                src={resource.cover}
-                                                                alt={resource.title}
+                                                                src={post.mediaDetails[activeMediaIndex].typeUrl}
+                                                                alt={post.title}
                                                                 fill
-                                                                className="object-contain"
+                                                                className="object-cover"
                                                                 loader={({ src }) => src}
                                                                 unoptimized={true}
                                                             />
-                                                            <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                                                                <h4 className="text-white font-medium">{resource.title}</h4>
-                                                                <p className="text-white/80 text-sm">{resource.author}</p>
-                                                            </div>
-                                                        </div>
-                                                    ))}
-                                                </div>
-                                                <div className="absolute bottom-2 right-2 px-2 py-1 bg-black/50 rounded text-white text-xs">
-                                                    {`${(currentSlide[post.id] || 0) + 1}/${post.resources.length}`}
-
-                                                </div>
-                                                {post.resources.length > 1 && (
-                                                    <>
-                                                        <button
-                                                            onClick={() => prevSlide(post.id, post.resources.length)}
-                                                            className="absolute left-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50"
-                                                            title="prev"
-                                                        >
-                                                            <ChevronLeft size={20} />
-                                                        </button>
-
-                                                        <button
-                                                            onClick={() => nextSlide(post.id, post.resources.length)}
-                                                            className="absolute right-2 top-1/2 -translate-y-1/2 p-2 rounded-full bg-black/30 text-white hover:bg-black/50"
-                                                            title="next"
-                                                        >
-                                                            <ChevronRight size={20} />
-                                                        </button>
+                                                        )}
                                                     </>
                                                 )}
                                             </div>
-                                        ) : null}
 
-                                        {/* Post Content Section - Remains the same for all types */}
-                                        <div className="p-4">
-                                            <div className="flex items-center gap-3 mb-3">
-                                                <Image
-                                                    src={post.author.avatar}
-                                                    alt={post.author.name}
-                                                    width={40}
-                                                    height={40}
-                                                    className="rounded-full"
-                                                    loader={({ src }) => src}
-                                                    unoptimized={true}
-                                                />
-                                                <div>
-                                                    <div className="font-semibold">{post.author.name}</div>
-                                                    <div className="text-sm text-gray-500">{post.author.role}</div>
-                                                </div>
-                                            </div>
-
-                                            <h3 className="font-bold mb-2">{post.title}</h3>
-                                            <p className="text-gray-600 text-sm mb-3">{post.content}</p>
-
-                                            <div className="flex flex-wrap gap-2 mb-3">
-                                                {/* {post.tags.map((tag, index) => (
-                                                    <span
-                                                        key={index}
-                                                        className="px-2 py-1 bg-gray-100 rounded-full text-xs text-gray-600"
+                                            {/* Thumbnails for Media Gallery */}
+                                            <div className="flex gap-2 p-2 overflow-x-auto">
+                                                {post.mediaDetails.map((media, index) => (
+                                                    <div
+                                                        key={media.id}
+                                                        className={`relative w-16 h-16 cursor-pointer rounded-lg overflow-hidden ${activeMediaIndex === index ? 'ring-2 ring-greenTheme' : ''}`}
+                                                        onClick={() => setActiveMediaIndices((prev) => ({ ...prev, [post.id]: index }))}
                                                     >
-                                                        #{tag}
-                                                    </span>
-                                                ))} */}
+                                                        {media.type === 'video' ? (
+                                                            <video
+                                                                className="w-full h-full object-cover"
+                                                                playsInline
+                                                            >
+                                                                <source src={media.typeUrl} type="video/mp4" />
+                                                            </video>
+                                                        ) : (
+                                                            <Image
+                                                                src={media.typeUrl}
+                                                                alt={`Thumbnail ${index + 1}`}
+                                                                fill
+                                                                className="object-cover"
+                                                            />
+                                                        )}
+                                                    </div>
+                                                ))}
                                             </div>
 
-                                            <div className="flex items-center justify-between text-sm text-gray-500">
-                                                <div className="flex items-center gap-4">
-                                                    {/* <span>{post.stats.likes} likes</span>
-                                                    <span>{post.stats.comments} comments</span> */}
+                                            {/* Post Content Section */}
+                                            <div className="p-4">
+                                                <div className="flex items-center gap-3 mb-3">
+                                                    <Image
+                                                        src={post.author.avatar}
+                                                        alt={post.author.firstName}
+                                                        width={40}
+                                                        height={40}
+                                                        className="rounded-full"
+                                                        loader={({ src }) => src}
+                                                        unoptimized={true}
+                                                    />
+                                                    <div>
+                                                        <div className="font-semibold">{post.author.firstName} {post.author.lastName}</div>
+                                                        <div className="text-sm text-gray-500">{post.author.role}</div>
+                                                    </div>
                                                 </div>
-                                                <span>{post.timestamp.toDateString()}</span>
+
+                                                <h3 className="font-bold mb-2">{post.title}</h3>
+                                                <p className="text-gray-600 text-sm mb-3">{post.content}</p>
+
+                                                <div className="flex items-center justify-between text-sm text-gray-500">
+                                                    <span>{new Date(post.timestamp).toLocaleString()}</span>
+                                                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
+                                                </div>
                                             </div>
                                         </div>
-                                    </div>
-
-                                ))}                            </div>
-
+                                    );
+                                })}
+                            </div>
                         </section>
 
 

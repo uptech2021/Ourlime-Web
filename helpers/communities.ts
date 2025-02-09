@@ -1,6 +1,6 @@
 import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
-import { UserData, BasePost } from "@/types/userTypes"; // Adjust the import based on your project structure
+import { UserData, Post, BasePost } from "@/types/userTypes"; // Adjust the import based on your project structure
 import { CommunityVariantDetailsSummary } from "@/types/communityTypes";
 
 export const fetchCommunityMembers = async (communityVariantId: string): Promise<UserData[]> => {
@@ -55,41 +55,19 @@ export const fetchCommunityPosts = async (communityVariantId: string): Promise<B
     const snapshot = await getDocs(q);
 
     const postsData = await Promise.all(snapshot.docs.map(async (postdoc) => {
-        
-        const userDocRef = doc(db, 'users',postdoc.data().userId);
+        const userDocRef = doc(db, 'users', postdoc.data().userId);
         const userDocSnap = await getDoc(userDocRef);
         const userData = userDocSnap.data();
 
-        const post = {
-            id: postdoc.id,
-            title: postdoc.data().title,
-            caption: postdoc.data().caption,
-            content: postdoc.data().content,
-            visibility: postdoc.data().visibility,
-            userId: postdoc.data().userId,
-            hashtags: postdoc.data().hashtags || [],
-            media: postdoc.data().media,
-            userReferences: postdoc.data().userReferences || [],
-            timestamp: postdoc.data().createdAt.toDate(),
-            author: {
-                id: postdoc.data().userId,
-                name: userData.firstName,
-                avatar: userData.profileImage,
-                role: userData.role,
-            },
-            mediaDetails: [],
-        } as BasePost;
-
-
-         // Get user's profile image
-         const profileImagesQuery = query(
+          // Get user's profile image
+          const profileImagesQuery = query(
             collection(db, 'profileImages'),
-            where('userId', '==', post.userId)
+            where('userId', '==', postdoc.data().userId)
         );
         const profileImagesSnapshot = await getDocs(profileImagesQuery);
         const profileSetAsQuery = query(
             collection(db, 'profileImageSetAs'),
-            where('userId', '==', post.userId),
+            where('userId', '==', postdoc.data().userId),
             where('setAs', '==', 'profile')
         );
         const setAsSnapshot = await getDocs(profileSetAsQuery);
@@ -105,19 +83,43 @@ export const fetchCommunityPosts = async (communityVariantId: string): Promise<B
         }
 
         // Fetch associated summary data from communityVariantDetailsSummary
-        const summaryRef = collection(db, 'communityVariantDetailsSummary');
-        const summaryQuery = query(summaryRef, where('communityVariantDetailsId', '==', post.id));
-        const summarySnapshot = await getDocs(summaryQuery);
+    const summaryRef = collection(db, 'communityVariantDetailsSummary');
+    const summaryQuery = query(summaryRef, where('communityVariantDetailsId', '==', postdoc.id));
+    const summarySnapshot = await getDocs(summaryQuery);
 
-        const summaries: CommunityVariantDetailsSummary[] = summarySnapshot.docs.map(summaryDoc => ({
-            id: summaryDoc.id,
-            ...summaryDoc.data(),
-        })) as CommunityVariantDetailsSummary[];
-
+    const mediaDetails: CommunityVariantDetailsSummary[] = summarySnapshot.docs.map(summaryDoc => {
+        const data = summaryDoc.data(); // Get the data from the document
         return {
-            ...post,
-            summaries, // Add summaries to the post object
-        };
+            id: summaryDoc.id,
+            type: data.type, // Ensure type is included
+            typeUrl: data.typeUrl, // Ensure typeUrl is included
+            communityVariantDetailsId: data.communityVariantDetailsId, // Ensure communityVariantDetailsId is included
+            // Add any other necessary properties from the summaryDoc.data() if needed
+        } as CommunityVariantDetailsSummary; // Cast to the correct type
+    });
+
+        // Construct the post object ensuring all required properties are included
+        const post = {
+            id: postdoc.id,
+            title: postdoc.data().title,
+            caption: postdoc.data().caption,
+            content: postdoc.data().content,
+            visibility: postdoc.data().visibility,
+            userId: postdoc.data().userId,
+            hashtags: postdoc.data().hashtags || [],
+            media: mediaDetails.map(item => item.typeUrl), // Ensure media is included
+            timestamp: postdoc.data().createdAt.toDate(), // Ensure timestamp is included
+            userReferences: postdoc.data().userReferences || [], // Ensure userReferences is included
+            author: {
+                ...userData,
+                profileImage: userData.profileImage,
+            },
+            description: postdoc.data().description || '', // Ensure description is included
+            createdAt: postdoc.data().createdAt.toDate(), // Ensure createdAt is included
+            mediaDetails,
+        } as unknown as BasePost;
+
+        return  post; // Return the post object
     }));
 
     return postsData;
