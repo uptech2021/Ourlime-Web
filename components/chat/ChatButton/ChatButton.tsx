@@ -1,25 +1,21 @@
 'use client';
 
 import { MessageCircle, X, Minimize2, Maximize2, Video, Phone } from 'lucide-react';
-import { useState, useEffect } from 'react';
+import { useState } from 'react';
 import { ChatWindow } from '../ChatWindow/ChatWindow';
+import { usePathname } from 'next/navigation';
 
 type WindowSize = 'closed' | 'compact' | 'full';
+const noChatButton = ['/login', '/register', '/forgot-password', '/reset-password'];
 
 export const ChatButton = () => {
+    const pathname = usePathname();
     const [windowSize, setWindowSize] = useState<WindowSize>('closed');
-    const [hasNotifications, setHasNotifications] = useState(true);
+    const hasNotifications = useState(true);
 
-    const getWindowStyles = () => {
-        switch (windowSize) {
-            case 'compact':
-                return 'bottom-6 right-6 w-[400px] h-[500px]';
-            case 'full':
-                return 'bottom-0 right-0 w-[800px] h-[90vh]';
-            default:
-                return '';
-        }
-    };
+    if (noChatButton.includes(pathname)) {
+        return null;
+    }
 
     const handleClose = () => {
         const element = document.querySelector('.chat-window');
