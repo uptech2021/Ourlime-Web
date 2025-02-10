@@ -38,23 +38,20 @@ export class ChatService {
             const currentUserData = this.store;
             if (!currentUserId) throw new Error('User not authenticated');
     
-            const [friendsSnapshot1, friendsSnapshot2] = await Promise.all([
-                getDocs(query(
-                    collection(this.db, 'friendship'),
-                    where('userId1', '==', currentUserId),
-                    where('friendshipStatus', '==', 'accepted')
-                )),
-                getDocs(query(
-                    collection(this.db, 'friendship'),
-                    where('userId2', '==', currentUserId),
-                    where('friendshipStatus', '==', 'accepted')
-                ))
-            ]);
+            // Get all friendships where current user is involved
+            const friendshipQuery = query(
+                collection(this.db, 'friendship'),
+                where('friendshipStatus', '==', 'accepted')
+            );
     
-            const friendIds = new Set([
-                ...friendsSnapshot1.docs.map(doc => doc.data().userId2),
-                ...friendsSnapshot2.docs.map(doc => doc.data().userId1)
-            ]);
+            const friendshipSnapshot = await getDocs(friendshipQuery);
+            
+            // Filter friendships to get relevant friend IDs
+            const friendIds = new Set(
+                friendshipSnapshot.docs
+                    .filter(doc => doc.data().userId1 === currentUserId || doc.data().userId2 === currentUserId)
+                    .map(doc => doc.data().userId1 === currentUserId ? doc.data().userId2 : doc.data().userId1)
+            );
     
             const friendsData = await Promise.all(
                 Array.from(friendIds).map(async (friendId) => {
@@ -106,5 +103,6 @@ export class ChatService {
             throw error;
         }
     }
+    
 
 }

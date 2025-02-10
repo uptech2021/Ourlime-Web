@@ -120,7 +120,7 @@ export default function WalletPage() {
 
     return (
         <div className="min-h-screen w-full bg-gray-50">
-            <main className="h-[calc(100vh-10px)] pt-24 md:pt-24 lg:pt-32 w-full px-2 md:px-8">
+            <main className="pt-12 sm:pt-20 md:pt-28 lg:pt-36 w-full 2xl:w-9/12 2xl:mx-auto tvScreen:w-7/12 px-2 md:px-8">
                 <div className="max-w-7xl mx-auto h-full">
                     <div className="flex flex-col lg:flex-row gap-4 h-full relative">
                         <div className="lg:sticky lg:top-32">
