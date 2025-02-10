@@ -38,20 +38,32 @@ export class ChatService {
             const currentUserData = this.store;
             if (!currentUserId) throw new Error('User not authenticated');
     
-            // Get all friendships where current user is involved
-            const friendshipQuery = query(
+            // Get friendships where currentUser is either userId1 or userId2
+            const friendshipQuery1 = query(
                 collection(this.db, 'friendship'),
+                where('userId1', '==', currentUserId),
                 where('friendshipStatus', '==', 'accepted')
             );
     
-            const friendshipSnapshot = await getDocs(friendshipQuery);
-            
-            // Filter friendships to get relevant friend IDs
-            const friendIds = new Set(
-                friendshipSnapshot.docs
-                    .filter(doc => doc.data().userId1 === currentUserId || doc.data().userId2 === currentUserId)
-                    .map(doc => doc.data().userId1 === currentUserId ? doc.data().userId2 : doc.data().userId1)
+            const friendshipQuery2 = query(
+                collection(this.db, 'friendship'),
+                where('userId2', '==', currentUserId),
+                where('friendshipStatus', '==', 'accepted')
             );
+    
+            // Execute both queries
+            const [snapshot1, snapshot2] = await Promise.all([
+                getDocs(friendshipQuery1),
+                getDocs(friendshipQuery2)
+            ]);
+    
+            // Combine results and get friend IDs
+            const friendIds = new Set([
+                ...snapshot1.docs.map(doc => doc.data().userId2),
+                ...snapshot2.docs.map(doc => doc.data().userId1)
+            ]);
+    
+            // Rest of your existing code to fetch friend details remains the same
     
             const friendsData = await Promise.all(
                 Array.from(friendIds).map(async (friendId) => {
@@ -104,5 +116,4 @@ export class ChatService {
         }
     }
     
-
 }
