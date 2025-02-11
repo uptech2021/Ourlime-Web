@@ -1,15 +1,17 @@
 import { db } from '@/lib/firebaseConfig';
-import { 
-    collection, 
-    doc, 
-    getDoc, 
-    setDoc, 
-    updateDoc, 
-    arrayUnion, 
-    Timestamp, 
-    query, 
-    where, 
-    getDocs 
+import {
+    collection,
+    doc,
+    getDoc,
+    setDoc,
+    updateDoc,
+    arrayUnion,
+    Timestamp,
+    query,
+    where,
+    getDocs,
+    writeBatch,
+    onSnapshot
 } from 'firebase/firestore';
 
 interface MessageData {
@@ -24,6 +26,8 @@ interface ChatRoom {
     participants: string[];
     lastMessageTime: Timestamp;
     messages: MessageData[];
+    unreadCount?: number;
+    lastMessage?: string;
 }
 
 export class MessagingService {
@@ -58,20 +62,23 @@ export class MessagingService {
         };
 
         const chatDoc = await getDoc(chatRef);
-
+        
         if (!chatDoc.exists()) {
-            // Create new chat room
             const chatRoom: ChatRoom = {
                 participants: [senderId, receiverId],
                 lastMessageTime: messageData.timestamp,
-                messages: [messageData]
+                messages: [messageData],
+                unreadCount: 1,
+                lastMessage: message
             };
             await setDoc(chatRef, chatRoom);
         } else {
-            // Update existing chat room
+            const currentData = chatDoc.data();
             await updateDoc(chatRef, {
                 messages: arrayUnion(messageData),
-                lastMessageTime: messageData.timestamp
+                lastMessageTime: messageData.timestamp,
+                unreadCount: (currentData.unreadCount || 0) + 1,
+                lastMessage: message
             });
         }
 
@@ -81,12 +88,31 @@ export class MessagingService {
         };
     }
 
+    public async markMessagesAsRead(receiverId: string, senderId: string) {
+        const chatRoomId = this.getChatRoomId(senderId, receiverId);
+        const chatRef = doc(this.db, 'chats', chatRoomId);
+        const chatDoc = await getDoc(chatRef);
+
+        if (!chatDoc.exists()) return;
+
+        const chatData = chatDoc.data();
+        const updatedMessages = chatData.messages.map(msg => {
+            if (msg.receiverId === senderId && msg.status !== 'read') {
+                return { ...msg, status: 'read' };
+            }
+            return msg;
+        });
+
+        await updateDoc(chatRef, { 
+            messages: updatedMessages,
+            unreadCount: 0 // Reset unread count when messages are read
+        });
+    }
+
     public async getMessages(receiverId: string, senderId: string) {
         const chatRoomId = this.getChatRoomId(senderId, receiverId);
         const chatRef = doc(db, 'chats', chatRoomId);
-        
-        console.log('Fetching chat room:', chatRoomId);
-        
+                
         const chatDoc = await getDoc(chatRef);
         
         if (!chatDoc.exists()) {
@@ -96,8 +122,44 @@ export class MessagingService {
         const chatData = chatDoc.data();
         console.log('Chat data:', chatData);
     
-        // Return the messages array from the chat document
-        return chatData.messages || [];
-    }
+        const updatedMessages = chatData.messages.map(msg => {
+            if (msg.receiverId === senderId && msg.status === 'sent') {
+                return { ...msg, status: 'delivered' };
+            }
+            return msg;
+        });
+
+        if (JSON.stringify(updatedMessages) !== JSON.stringify(chatData.messages)) {
+            await updateDoc(chatRef, { messages: updatedMessages });
+        }
     
+        return updatedMessages;
+    }
+
+    public async getUnreadCount(userId: string, friendId: string): Promise<number> {
+        const chatRoomId = this.getChatRoomId(userId, friendId);
+        const chatRef = doc(this.db, 'chats', chatRoomId);
+        const chatDoc = await getDoc(chatRef);
+        
+        if (!chatDoc.exists()) return 0;
+        return chatDoc.data().unreadCount || 0;
+    }
+
+    public subscribeToMessages(
+        receiverId: string,
+        senderId: string,
+        callback: (messages: any[]) => void
+    ): () => void {
+        const chatRoomId = this.getChatRoomId(senderId, receiverId);
+        const chatRef = doc(this.db, 'chats', chatRoomId);
+
+        return onSnapshot(chatRef, (doc) => {
+            if (doc.exists()) {
+                const chatData = doc.data();
+                callback(chatData.messages || []);
+            } else {
+                callback([]);
+            }
+        });
+    }
 }

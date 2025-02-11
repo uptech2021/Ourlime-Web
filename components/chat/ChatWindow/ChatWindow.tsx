@@ -1,24 +1,25 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import { Users, Globe, Search, ArrowLeft, Send, Paperclip, Smile } from 'lucide-react';
+import { Users, Globe, Search, ArrowLeft, Send, Paperclip, Smile, MessageSquare } from 'lucide-react';
 import Image from 'next/image';
 import { ChatService } from '@/lib/chat/ChatAndFriendService';
 import { Timestamp } from 'firebase/firestore';
 import { useProfileStore } from '@/src/store/useProfileStore';
 import { useMessages } from '@/src/hooks/useMessages';
-
+import { format, isToday, isYesterday } from 'date-fns';
+import { Check, CheckCheck } from 'lucide-react';
 interface ChatWindowProps {
     isCompact: boolean;
 }
 
-interface Message {
+type Message = {
     id?: string;
     message: string;
     senderId: string;
     receiverId: string;
     status: 'sent' | 'delivered' | 'read';
-    timestamp: Timestamp;  // Changed from createdAt/updatedAt to single timestamp
+    timestamp: Timestamp;
 }
 
 export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
@@ -33,31 +34,71 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
     const userData = useProfileStore();
     const { getMessages, sendMessage } = useMessages();
 
+
+    const formatMessageTime = (timestamp) => {
+        const date = new Date(timestamp.seconds * 1000);
+        const now = new Date();
+        const diffInMinutes = Math.floor((now.getTime() - date.getTime()) / (1000 * 60));
+
+        // Show relative time for messages less than 1 hour old
+        if (diffInMinutes < 60) {
+            if (diffInMinutes < 1) return 'just now';
+            if (diffInMinutes === 1) return '1 minute ago';
+            return `${diffInMinutes} minutes ago`;
+        }
+
+        // For same day messages older than 1 hour
+        if (isToday(date)) {
+            return format(date, 'h:mm a');
+        }
+
+        if (isYesterday(date)) {
+            return `Yesterday at ${format(date, 'h:mm a')}`;
+        }
+
+        return format(date, 'MMM d, h:mm a');
+    };
+
     useEffect(() => {
         fetchFriends();
     }, []);
-    
+
     useEffect(() => {
         if (!selectedFriend?.id) return;
-        
-        // Initial fetch
         fetchMessages();
-    
-        // Set up real-time listener through MessagingService
+
         const unsubscribe = chatService.subscribeToMessages(
-            selectedFriend.id, 
+            selectedFriend.id,
             userData.id,
             (newMessages) => {
-                const sortedMessages = newMessages.sort((a, b) => 
+                const sortedMessages = newMessages.sort((a, b) =>
                     a.timestamp.seconds - b.timestamp.seconds
                 );
                 setMessages(sortedMessages);
             }
         );
-    
+
         return () => unsubscribe();
     }, [selectedFriend?.id]);
+
+    useEffect(() => {
+        if (selectedFriend?.id) {
+            // Subscribe to real-time message updates
+            const unsubscribe = chatService.subscribeToMessages(
+                selectedFriend.id,
+                userData.id,
+                async () => {
+                    // Refresh friends list to update unread counts
+                    const updatedFriends = await chatService.getFriends();
+                    setFriends(updatedFriends);
+                }
+            );
     
+            return () => unsubscribe();
+        }
+    }, [selectedFriend]);
+    
+
     const fetchFriends = async () => {
         try {
             const friendsData = await chatService.getFriends();
@@ -66,7 +107,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             console.error('Error fetching friends:', error);
         }
     };
-    
+
     const fetchMessages = async () => {
         if (!selectedFriend?.id) return;
         try {
@@ -82,7 +123,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             setMessages([]);
         }
     };
-    
+
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedFriend?.id) return;
         try {
@@ -92,15 +133,13 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             console.error('Error sending message:', error);
         }
     };
-    
+
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
         }
     };
-
-    
 
     const renderFriendsList = () => (
         <div className="flex-1 overflow-y-auto">
@@ -109,7 +148,7 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                     key={friend.id}
                     onClick={() => setSelectedFriend(friend)}
                     title={`Chat with ${friend.firstName}`}
-                    className="w-full flex items-center gap-2 md:gap-3 p-3 md:p-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 text-left"
+                    className="w-full flex items-center gap-2 md:gap-3 p-3 md:p-4 hover:bg-gray-50 cursor-pointer transition-colors border-b border-gray-100 text-left relative"
                 >
                     <div className="relative">
                         <div className="w-10 h-10 md:w-12 md:h-12 relative rounded-full overflow-hidden">
@@ -125,17 +164,45 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                                 }}
                             />
                         </div>
+                        {friend.unreadCount > 0 && (
+                            <div className="absolute -top-1 -right-1 w-5 h-5 bg-red-500 rounded-full flex items-center justify-center">
+                                <span className="text-xs text-white font-medium">
+                                    {friend.unreadCount > 99 ? '99+' : friend.unreadCount}
+                                </span>
+                            </div>
+                        )}
                     </div>
+    
                     <div className="flex-1 min-w-0">
-                        <div className="flex justify-between items-start">
-                            <h3 className="font-medium text-sm md:text-base truncate">{`${friend.firstName} ${friend.lastName}`}</h3>
+                        <div className="flex justify-between items-start w-full">
+                            <h3 className="font-medium text-sm md:text-base truncate">
+                                {`${friend.firstName} ${friend.lastName}`}
+                            </h3>
+                            {friend.lastMessageTime && (
+                                <span className="text-xs text-gray-500 ml-2">
+                                    {new Date(friend.lastMessageTime.seconds * 1000).toLocaleTimeString([], {
+                                        hour: '2-digit',
+                                        minute: '2-digit'
+                                    })}
+                                </span>
+                            )}
                         </div>
-                        <p className="text-xs md:text-sm text-gray-600 truncate">@{friend.userName}</p>
+                        <div className="flex items-center gap-2">
+                            <p className="text-xs md:text-sm text-gray-600 truncate">
+                                {friend.lastMessage || `@${friend.userName}`}
+                            </p>
+                            {friend.unreadCount > 0 && (
+                                <span className="text-xs font-medium text-red-500">
+                                    New
+                                </span>
+                            )}
+                        </div>
                     </div>
                 </button>
             ))}
         </div>
     );
+    
 
     const renderDiscoverRooms = () => (
         <div className="flex-1 overflow-y-auto">
@@ -172,35 +239,80 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                     </div>
                 </div>
             </div>
-
-            <div className="flex-1 overflow-y-auto p-1 md:p-2">
+            <div className="flex-1 overflow-y-auto px-4 py-2">
                 {messages && messages.length > 0 ? (
-                    messages.map((msg) => (
-                        <div
-                            key={msg.id || `${msg.timestamp.seconds}-${msg.timestamp.nanoseconds}`}
-                            className={`flex ${msg.senderId === userData.id ? 'justify-end' : 'justify-start'} mb-3`}
-                        >
-                            <div
-                                className={`max-w-[85%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 shadow-sm ${msg.senderId === userData.id
-                                        ? 'bg-blue-600 text-white rounded-br-none'
-                                        : 'bg-gray-100 text-gray-800 rounded-bl-none'
-                                    }`}
-                            >
-                                <p className="text-sm md:text-base leading-relaxed">{msg.message}</p>
-                                <span className={`text-[10px] md:text-xs mt-1 block ${msg.senderId === userData.id ? 'text-blue-100' : 'text-gray-500'
-                                    }`}>
-                                    {new Date(msg.timestamp.seconds * 1000).toLocaleTimeString()}
-                                </span>
-                            </div>
-                        </div>
-                    ))
+                    <div className="flex flex-col">
+                        {messages.map((msg, index) => {
+                            const isFirstInGroup = index === 0 || messages[index - 1].senderId !== msg.senderId;
+                            const isLastInGroup = index === messages.length - 1 || messages[index + 1].senderId !== msg.senderId;
+
+                            return (
+                                <div
+                                    key={msg.id || `${msg.timestamp.seconds}-${msg.timestamp.nanoseconds}`}
+                                    className={`flex flex-col mb-2 ${msg.senderId === userData.id ? 'items-end' : 'items-start'}`}
+                                >
+                                    <div className="flex items-end gap-1.5 max-w-[80%]">
+                                        {msg.senderId !== userData.id && isFirstInGroup && (
+                                            <div className="w-6 h-6 rounded-full overflow-hidden flex-shrink-0">
+                                                <Image
+                                                    src={selectedFriend.profileImage || '/images/transparentLogo.png'}
+                                                    alt={selectedFriend.firstName}
+                                                    width={24}
+                                                    height={24}
+                                                    className="object-cover"
+                                                />
+                                            </div>
+                                        )}
+
+                                        <div className={`
+                                px-3 py-2 
+                                ${msg.senderId === userData.id
+                                                ? 'bg-blue-600 text-white rounded-l-lg rounded-tr-lg'
+                                                : 'bg-gray-100 text-gray-800 rounded-r-lg rounded-tl-lg'
+                                            }
+                                ${!isLastInGroup ? 'mb-0.5' : ''}
+                            `}>
+                                            <p className="text-sm">{msg.message}</p>
+                                        </div>
+                                    </div>
+
+                                    {isLastInGroup && (
+                                        <div className={`
+                                flex items-center gap-1 mt-1
+                                ${msg.senderId === userData.id ? 'mr-1' : 'ml-7'}
+                            `}>
+                                            <span className="text-[10px] text-gray-500">
+                                                {formatMessageTime(msg.timestamp)}
+                                            </span>
+
+                                            {msg.senderId === userData.id && (
+                                                <div className="flex items-center">
+                                                    {msg.status === 'sent' && (
+                                                        <Check className="w-3 h-3 text-gray-400" />
+                                                    )}
+                                                    {msg.status === 'delivered' && (
+                                                        <CheckCheck className="w-3 h-3 text-gray-400" />
+                                                    )}
+                                                    {msg.status === 'read' && (
+                                                        <CheckCheck className="w-3 h-3 text-blue-500" />
+                                                    )}
+                                                </div>
+                                            )}
+                                        </div>
+                                    )}
+                                </div>
+                            );
+                        })}
+                    </div>
                 ) : (
-                    <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-2">
-                        <p className="text-lg font-medium">No messages yet</p>
-                        <p className="text-sm">Start a conversation with {selectedFriend.firstName}</p>
+                    <div className="h-full flex flex-col items-center justify-center text-gray-500">
+                        <div className="w-16 h-16 rounded-full bg-gray-100 flex items-center justify-center mb-3">
+                            <MessageSquare className="w-8 h-8 text-gray-400" />
+                        </div>
+                        <p className="font-medium">No messages yet</p>
+                        <p className="text-sm">Send a message to {selectedFriend.firstName}</p>
                     </div>
                 )}
-
             </div>
 
 

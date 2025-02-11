@@ -69,17 +69,19 @@ export class ChatService {
                             firstName: currentUserData.firstName,
                             lastName: currentUserData.lastName,
                             userName: currentUserData.userName,
-                            profileImage: currentUserData.profileImage?.imageURL
+                            profileImage: currentUserData.profileImage?.imageURL,
+                            unreadCount: 0
                         };
                     }
     
-                    const [userDoc, profileSetAs] = await Promise.all([
+                    const [userDoc, profileSetAs, chatDoc] = await Promise.all([
                         getDoc(doc(this.db, 'users', friendId)),
                         getDocs(query(
                             collection(this.db, 'profileImageSetAs'),
                             where('userId', '==', friendId),
                             where('setAs', '==', 'profile')
-                        ))
+                        )),
+                        getDoc(doc(this.db, 'chats', [currentUserId, friendId].sort().join('_')))
                     ]);
     
                     if (!userDoc.exists()) return null;
@@ -94,13 +96,32 @@ export class ChatService {
                         }
                     }
     
+                    let unreadCount = 0;
+                    let lastMessage = '';
+                    let lastMessageTime = null;
+    
+                    if (chatDoc.exists()) {
+                        const chatData = chatDoc.data();
+                        unreadCount = chatData.messages.filter(msg => 
+                            msg.receiverId === currentUserId && 
+                            msg.status === 'sent'
+                        ).length;
+                        
+                        const lastMsg = chatData.messages[chatData.messages.length - 1];
+                        lastMessage = lastMsg?.message || '';
+                        lastMessageTime = lastMsg?.timestamp || null;
+                    }
+    
                     const userData = userDoc.data();
                     return {
                         id: friendId,
                         firstName: userData.firstName,
                         lastName: userData.lastName,
                         userName: userData.userName,
-                        profileImage
+                        profileImage,
+                        unreadCount,
+                        lastMessage,
+                        lastMessageTime
                     };
                 })
             );
@@ -112,6 +133,8 @@ export class ChatService {
         }
     }
 
+    
+    
     public subscribeToMessages(
         receiverId: string, 
         senderId: string, 
