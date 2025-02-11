@@ -11,12 +11,14 @@ export async function POST(request: Request) {
         console.log('Received data:', { receiverId, message, senderId });
         
         const messagingService = MessagingService.getInstance();
+        const chatId = [senderId, receiverId].sort().join('_');
         const savedMessage = await messagingService.sendMessage(receiverId, message, senderId);
         
         console.log('Message saved:', savedMessage);
         return NextResponse.json({
             status: 'success',
-            data: savedMessage
+            data: savedMessage,
+            chatId
         });
     } catch (error) {
         console.log('API Error:', error);

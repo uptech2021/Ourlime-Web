@@ -6,6 +6,7 @@ import {
     getDocs,
     doc,
     getDoc,
+    onSnapshot
 } from 'firebase/firestore';
 import { useProfileStore } from '@/src/store/useProfileStore';
 
@@ -38,7 +39,6 @@ export class ChatService {
             const currentUserData = this.store;
             if (!currentUserId) throw new Error('User not authenticated');
     
-            // Get friendships where currentUser is either userId1 or userId2
             const friendshipQuery1 = query(
                 collection(this.db, 'friendship'),
                 where('userId1', '==', currentUserId),
@@ -51,19 +51,15 @@ export class ChatService {
                 where('friendshipStatus', '==', 'accepted')
             );
     
-            // Execute both queries
             const [snapshot1, snapshot2] = await Promise.all([
                 getDocs(friendshipQuery1),
                 getDocs(friendshipQuery2)
             ]);
     
-            // Combine results and get friend IDs
             const friendIds = new Set([
                 ...snapshot1.docs.map(doc => doc.data().userId2),
                 ...snapshot2.docs.map(doc => doc.data().userId1)
             ]);
-    
-            // Rest of your existing code to fetch friend details remains the same
     
             const friendsData = await Promise.all(
                 Array.from(friendIds).map(async (friendId) => {
@@ -115,5 +111,22 @@ export class ChatService {
             throw error;
         }
     }
-    
+
+    public subscribeToMessages(
+        receiverId: string, 
+        senderId: string, 
+        callback: (messages: any[]) => void
+    ): () => void {
+        const chatRoomId = [senderId, receiverId].sort().join('_');
+        const chatRef = doc(this.db, 'chats', chatRoomId);
+
+        return onSnapshot(chatRef, (doc) => {
+            if (doc.exists()) {
+                const chatData = doc.data();
+                callback(chatData.messages || []);
+            } else {
+                callback([]);
+            }
+        });
+    }
 }

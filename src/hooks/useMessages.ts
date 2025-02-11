@@ -8,7 +8,6 @@ export const useMessages = () => {
     const getMessages = async (receiverId: string) => {
         setLoading(true);
         try {
-            // Include senderId as a query parameter
             const response = await fetch(`/api/messaging/${receiverId}?senderId=${userData.id}`);
             const data = await response.json();
             return data;
@@ -36,7 +35,10 @@ export const useMessages = () => {
             return data;
         } catch (error) {
             console.error('Error sending message:', error);
-            throw error;
+            return {
+                status: 'error',
+                error: error.message
+            };
         } finally {
             setLoading(false);
         }

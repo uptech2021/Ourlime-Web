@@ -1,13 +1,29 @@
 import { db } from '@/lib/firebaseConfig';
-import { collection, addDoc, Timestamp, query, where, orderBy, getDocs } from 'firebase/firestore';
+import { 
+    collection, 
+    doc, 
+    getDoc, 
+    setDoc, 
+    updateDoc, 
+    arrayUnion, 
+    Timestamp, 
+    query, 
+    where, 
+    getDocs 
+} from 'firebase/firestore';
 
 interface MessageData {
     senderId: string;
     receiverId: string;
     message: string;
+    timestamp: Timestamp;
     status: 'sent' | 'delivered' | 'read';
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
+}
+
+interface ChatRoom {
+    participants: string[];
+    lastMessageTime: Timestamp;
+    messages: MessageData[];
 }
 
 export class MessagingService {
@@ -25,42 +41,63 @@ export class MessagingService {
         return MessagingService.instance;
     }
 
+    private getChatRoomId(userId1: string, userId2: string): string {
+        return [userId1, userId2].sort().join('_');
+    }
+
     public async sendMessage(receiverId: string, message: string, senderId: string) {
+        const chatRoomId = this.getChatRoomId(senderId, receiverId);
+        const chatRef = doc(db, 'chats', chatRoomId);
+
         const messageData: MessageData = {
             senderId,
             receiverId,
             message,
             status: 'sent',
-            createdAt: Timestamp.now(),
-            updatedAt: Timestamp.now()
+            timestamp: Timestamp.now()
         };
 
-        const docRef = await addDoc(collection(this.db, 'messages'), messageData);
+        const chatDoc = await getDoc(chatRef);
+
+        if (!chatDoc.exists()) {
+            // Create new chat room
+            const chatRoom: ChatRoom = {
+                participants: [senderId, receiverId],
+                lastMessageTime: messageData.timestamp,
+                messages: [messageData]
+            };
+            await setDoc(chatRef, chatRoom);
+        } else {
+            // Update existing chat room
+            await updateDoc(chatRef, {
+                messages: arrayUnion(messageData),
+                lastMessageTime: messageData.timestamp
+            });
+        }
+
         return {
-            id: docRef.id,
+            id: chatRoomId,
             ...messageData
         };
     }
 
     public async getMessages(receiverId: string, senderId: string) {
-        console.log('Fetching messages for:', { senderId, receiverId });
+        const chatRoomId = this.getChatRoomId(senderId, receiverId);
+        const chatRef = doc(db, 'chats', chatRoomId);
         
-        const messagesQuery = query(
-            collection(this.db, 'messages'),
-            where('senderId', 'in', [senderId, receiverId]),
-            where('receiverId', 'in', [senderId, receiverId]),
-            orderBy('createdAt', 'asc') 
-        );
+        console.log('Fetching chat room:', chatRoomId);
+        
+        const chatDoc = await getDoc(chatRef);
+        
+        if (!chatDoc.exists()) {
+            return [];
+        }
     
-        const messagesSnapshot = await getDocs(messagesQuery);
-        console.log('Found messages:', messagesSnapshot.size);
+        const chatData = chatDoc.data();
+        console.log('Chat data:', chatData);
     
-        const messages = messagesSnapshot.docs.map(doc => ({
-            id: doc.id,
-            ...doc.data()
-        }));
-    
-        return messages;
-    
+        // Return the messages array from the chat document
+        return chatData.messages || [];
     }
+    
 }

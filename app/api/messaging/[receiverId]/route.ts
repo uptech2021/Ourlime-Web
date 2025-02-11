@@ -8,6 +8,7 @@ export async function GET(
     const { searchParams } = new URL(request.url);
     const senderId = searchParams.get('senderId');
     const receiverId = params.receiverId;
+    const chatId = [senderId, receiverId].sort().join('_');
 
     const messagingService = MessagingService.getInstance();
     
@@ -16,6 +17,7 @@ export async function GET(
         
         return NextResponse.json({
             debug: {
+                chatId,
                 receiverId,
                 senderId,
                 url: request.url,
@@ -28,6 +30,7 @@ export async function GET(
     } catch (error) {
         return NextResponse.json({
             debug: {
+                chatId,
                 receiverId,
                 senderId,
                 url: request.url,

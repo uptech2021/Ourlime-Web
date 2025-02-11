@@ -13,13 +13,12 @@ interface ChatWindowProps {
 }
 
 interface Message {
-    id: string;
+    id?: string;
     message: string;
     senderId: string;
     receiverId: string;
     status: 'sent' | 'delivered' | 'read';
-    createdAt: Timestamp;
-    updatedAt: Timestamp;
+    timestamp: Timestamp;  // Changed from createdAt/updatedAt to single timestamp
 }
 
 export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
@@ -37,13 +36,28 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
     useEffect(() => {
         fetchFriends();
     }, []);
-
+    
     useEffect(() => {
-        if (selectedFriend?.id) {
-            fetchMessages();
-        }
-    }, [selectedFriend]);
-
+        if (!selectedFriend?.id) return;
+        
+        // Initial fetch
+        fetchMessages();
+    
+        // Set up real-time listener through MessagingService
+        const unsubscribe = chatService.subscribeToMessages(
+            selectedFriend.id, 
+            userData.id,
+            (newMessages) => {
+                const sortedMessages = newMessages.sort((a, b) => 
+                    a.timestamp.seconds - b.timestamp.seconds
+                );
+                setMessages(sortedMessages);
+            }
+        );
+    
+        return () => unsubscribe();
+    }, [selectedFriend?.id]);
+    
     const fetchFriends = async () => {
         try {
             const friendsData = await chatService.getFriends();
@@ -52,40 +66,41 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             console.error('Error fetching friends:', error);
         }
     };
-
+    
     const fetchMessages = async () => {
         if (!selectedFriend?.id) return;
         try {
             const result = await getMessages(selectedFriend.id);
-            console.log('Fetched messages:', result);
-            if (result.status === 'success') {
-                setMessages(result.messages || []);
+            if (result.status === 'success' && result.messages) {
+                const sortedMessages = result.messages.sort((a, b) =>
+                    a.timestamp.seconds - b.timestamp.seconds
+                );
+                setMessages(sortedMessages);
             }
         } catch (error) {
             console.error('Error fetching messages:', error);
+            setMessages([]);
         }
     };
-
+    
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedFriend?.id) return;
         try {
             const result = await sendMessage(selectedFriend.id, message.trim());
-            console.log('Message result:', result);
-            if (result.status === 'success') {
-                await fetchMessages();
-                setMessage('');
-            }
+            setMessage('');
         } catch (error) {
             console.error('Error sending message:', error);
         }
     };
-
+    
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
             handleSendMessage();
         }
     };
+
+    
 
     const renderFriendsList = () => (
         <div className="flex-1 overflow-y-auto">
@@ -162,33 +177,32 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                 {messages && messages.length > 0 ? (
                     messages.map((msg) => (
                         <div
-                            key={msg.id}
+                            key={msg.id || `${msg.timestamp.seconds}-${msg.timestamp.nanoseconds}`}
                             className={`flex ${msg.senderId === userData.id ? 'justify-end' : 'justify-start'} mb-3`}
                         >
                             <div
                                 className={`max-w-[85%] md:max-w-[70%] rounded-lg px-3 md:px-4 py-2 md:py-3 shadow-sm ${msg.senderId === userData.id
-                                    ? 'bg-blue-600 text-white rounded-br-none'
-                                    : 'bg-gray-100 text-gray-800 rounded-bl-none'
+                                        ? 'bg-blue-600 text-white rounded-br-none'
+                                        : 'bg-gray-100 text-gray-800 rounded-bl-none'
                                     }`}
                             >
                                 <p className="text-sm md:text-base leading-relaxed">{msg.message}</p>
                                 <span className={`text-[10px] md:text-xs mt-1 block ${msg.senderId === userData.id ? 'text-blue-100' : 'text-gray-500'
                                     }`}>
-                                    {msg.createdAt?.toDate ?
-                                        new Date(msg.createdAt.toDate()).toLocaleTimeString()
-                                        : new Date().toLocaleTimeString()
-                                    }
+                                    {new Date(msg.timestamp.seconds * 1000).toLocaleTimeString()}
                                 </span>
                             </div>
                         </div>
-
                     ))
                 ) : (
-                    <div className="flex items-center justify-center h-full text-gray-500">
-                        <p>No messages yet</p>
+                    <div className="flex flex-col items-center justify-center h-full text-gray-500 space-y-2">
+                        <p className="text-lg font-medium">No messages yet</p>
+                        <p className="text-sm">Start a conversation with {selectedFriend.firstName}</p>
                     </div>
                 )}
+
             </div>
+
 
 
             <div className="p-2 md:p-4 border-t border-gray-200">
