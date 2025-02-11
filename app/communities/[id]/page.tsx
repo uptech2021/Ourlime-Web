@@ -12,6 +12,7 @@ import { db, auth } from '@/lib/firebaseConfig';
 import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
 import PostMedia from '@/components/communities/PostMedia';
 import { debounce } from 'lodash';
+import CommunityPostCommentsModal from '@/components/communities/CommunityPostCommentsModal';
 
 // type BasePost = {
 //     id: string;
@@ -73,6 +74,7 @@ type Post = GalleryPost | VideoPost | ArticlePost | MusicPost | ResourcePost;
 
 export default function CommunityDetailPage() {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+    const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [members, setMembers] = useState<UserData[]>([]);
     const [posts, setPosts] = useState<BasePost[]>([]);
     const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
@@ -186,6 +188,11 @@ export default function CommunityDetailPage() {
         const currentLikeState = likedPosts[postId] || false;
         setLikedPosts((prev) => ({ ...prev, [postId]: !currentLikeState }));
         debouncedLikeHandler(postId, currentLikeState);
+    };
+
+    const openCommentsModal = (postId: string) => {
+        setSelectedPostId(postId);
+        setIsPostModalOpen(true);
     };
 
     // Rich test data for community
@@ -405,10 +412,16 @@ export default function CommunityDetailPage() {
                                                     <Heart className="w-5 h-5" fill={likedPosts[post.id] ? 'currentColor' : 'none'} />
                                                     <span>{likedPosts[post.id] ? 'Liked' : 'Like'}</span>
                                                 </button>
+
+                                                {/* Open Comments Modal Button */}
+                                                <button onClick={() => openCommentsModal(post.id)} className="mt-2 text-blue-500">
+                                                    View Comments
+                                                </button>
                                             </div>
                                         </div>
                                     );
                                 })}
+                                
                             </div>
                         </section>
 
@@ -442,12 +455,11 @@ export default function CommunityDetailPage() {
                 </main>
             </div>
 
-            {/* Create Post Modal */}
-            {isPostModalOpen && (
-                <CreateCommunityPost 
-                    communityVariantId={communityVariantId}
-                    setTogglePostForm={setIsPostModalOpen} 
-                    profilePicture="path/to/profile/picture" // Replace with actual profile picture
+            {/* Render the Comments Modal */}
+            {isPostModalOpen && selectedPostId && (
+                <CommunityPostCommentsModal 
+                    postId={selectedPostId} 
+                    onClose={() => setIsPostModalOpen(false)} 
                 />
             )}
         </>
