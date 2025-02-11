@@ -404,7 +404,6 @@ export default function CommunityDetailPage() {
 
                                                 <div className="flex items-center justify-between text-sm text-gray-500">
                                                     <span>{new Date(post.timestamp).toLocaleString()}</span>
-                                                    <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                                                 </div>
 
                                                 {/* Like Button */}
