@@ -71,6 +71,7 @@ type BasePost = {
 		lastName: string;
         avatar: string;
         role: string;
+		profileImage?: string;
     };
     timestamp: Date; // Add timestamp
 	mediaDetails : CommunityVariantDetailsSummary[];

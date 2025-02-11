@@ -50,24 +50,42 @@ export const fetchCommunityMembers = async (communityVariantId: string): Promise
 };
 
 export const fetchCommunityPosts = async (communityVariantId: string): Promise<BasePost[]> => {
+    if (!communityVariantId) {
+        throw new Error("communityVariantId is required");
+    }
     const postsRef = collection(db, 'communityVariantDetails');
     const q = query(postsRef, where('communityVariantId', '==', communityVariantId));
     const snapshot = await getDocs(q);
 
     const postsData = await Promise.all(snapshot.docs.map(async (postdoc) => {
-        const userDocRef = doc(db, 'users', postdoc.data().userId);
-        const userDocSnap = await getDoc(userDocRef);
-        const userData = userDocSnap.data();
+        const userId = postdoc.data().userId;
 
-          // Get user's profile image
-          const profileImagesQuery = query(
+        // Log the userId for debugging
+        console.log(`Fetching user data for userId: ${userId}`);
+
+        if (!userId) {
+            throw new Error("userId is required");
+        }
+
+        const userDocRef = doc(db, 'users', userId);
+        const userDocSnap = await getDoc(userDocRef);
+        const userData = userDocSnap.data() as UserData;
+
+        // Set the id property to the document ID
+        userData.id = userDocSnap.id; // Assign the document ID to the id property
+
+        // Log the entire userData object for debugging
+        console.log("User Data Retrieved: ", userData);
+
+        // Get user's profile image
+        const profileImagesQuery = query(
             collection(db, 'profileImages'),
-            where('userId', '==', postdoc.data().userId)
+            where('userId', '==', userData.id)
         );
         const profileImagesSnapshot = await getDocs(profileImagesQuery);
         const profileSetAsQuery = query(
             collection(db, 'profileImageSetAs'),
-            where('userId', '==', postdoc.data().userId),
+            where('userId', '==', userData.id),
             where('setAs', '==', 'profile')
         );
         const setAsSnapshot = await getDocs(profileSetAsQuery);
@@ -83,20 +101,20 @@ export const fetchCommunityPosts = async (communityVariantId: string): Promise<B
         }
 
         // Fetch associated summary data from communityVariantDetailsSummary
-    const summaryRef = collection(db, 'communityVariantDetailsSummary');
-    const summaryQuery = query(summaryRef, where('communityVariantDetailsId', '==', postdoc.id));
-    const summarySnapshot = await getDocs(summaryQuery);
+        const summaryRef = collection(db, 'communityVariantDetailsSummary');
+        const summaryQuery = query(summaryRef, where('communityVariantDetailsId', '==', postdoc.id));
+        const summarySnapshot = await getDocs(summaryQuery);
 
-    const mediaDetails: CommunityVariantDetailsSummary[] = summarySnapshot.docs.map(summaryDoc => {
-        const data = summaryDoc.data(); // Get the data from the document
-        return {
-            id: summaryDoc.id,
-            type: data.type, // Ensure type is included
-            typeUrl: data.typeUrl, // Ensure typeUrl is included
-            communityVariantDetailsId: data.communityVariantDetailsId, // Ensure communityVariantDetailsId is included
-            // Add any other necessary properties from the summaryDoc.data() if needed
-        } as CommunityVariantDetailsSummary; // Cast to the correct type
-    });
+        const mediaDetails: CommunityVariantDetailsSummary[] = summarySnapshot.docs.map(summaryDoc => {
+            const data = summaryDoc.data(); // Get the data from the document
+            return {
+                id: summaryDoc.id,
+                type: data.type, // Ensure type is included
+                typeUrl: data.typeUrl, // Ensure typeUrl is included
+                communityVariantDetailsId: data.communityVariantDetailsId, // Ensure communityVariantDetailsId is included
+                // Add any other necessary properties from the summaryDoc.data() if needed
+            } as CommunityVariantDetailsSummary; // Cast to the correct type
+        });
 
         // Construct the post object ensuring all required properties are included
         const post = {
@@ -112,7 +130,7 @@ export const fetchCommunityPosts = async (communityVariantId: string): Promise<B
             userReferences: postdoc.data().userReferences || [], // Ensure userReferences is included
             author: {
                 ...userData,
-                profileImage: userData.profileImage,
+                profileImage: profileImage?.imageURL || null,
             },
             description: postdoc.data().description || '', // Ensure description is included
             createdAt: postdoc.data().createdAt.toDate(), // Ensure createdAt is included

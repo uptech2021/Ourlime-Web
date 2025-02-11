@@ -2,14 +2,16 @@
 
 import Image from 'next/image';
 import { ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
-import { useEffect, useState } from 'react';
+import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getFriends } from '@/helpers/friendsAndFollowingHelper';
 import { UserData, ProfileImage, BasePost } from '@/types/userTypes';
 import { fetchCommunityMembers, fetchCommunityPosts } from '@/helpers/communities';
-import { addDoc, collection } from 'firebase/firestore';
-import { db } from '@/lib/firebaseConfig';
+import { addDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, writeBatch, serverTimestamp, increment, doc } from 'firebase/firestore';
+import { db, auth } from '@/lib/firebaseConfig';
 import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
+import PostMedia from '@/components/communities/PostMedia';
+import { debounce } from 'lodash';
 
 // type BasePost = {
 //     id: string;
@@ -73,8 +75,11 @@ export default function CommunityDetailPage() {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
     const [members, setMembers] = useState<UserData[]>([]);
     const [posts, setPosts] = useState<BasePost[]>([]);
+    const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
+    const [likeCounts, setLikeCounts] = useState<{ [key: string]: number }>({});
     const { id } = useParams();
     const communityVariantId = id? String(id): "";
+    const currentUserId = auth.currentUser?.uid;
 
     useEffect(() => {
         const loadMembers = async () => {
@@ -88,16 +93,100 @@ export default function CommunityDetailPage() {
         const loadPosts = async () => {
             if (communityVariantId) {
                 const fetchedCommunityPosts = await fetchCommunityPosts(communityVariantId);
-                // const validPosts = fetchedCommunityPosts.filter(isPost); // Ensure valid posts
-                setPosts(fetchedCommunityPosts); // Set the posts to state
-
-                console.log(fetchedCommunityPosts);
+                setPosts(fetchedCommunityPosts);
             }
         };
 
         loadPosts();
     }, [communityVariantId]);
+    console.log("Fetched Posts: ", posts);
 
+
+    // Check if user has liked the post
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const likesRef = collection(db, 'communityVariantDetailsLikes');
+        const unsubscribe = onSnapshot(likesRef, (snapshot) => {
+            const userLikedPosts: { [key: string]: boolean } = {};
+            const counts: { [key: string]: number } = {};
+
+            snapshot.docs.forEach((doc) => {
+                const data = doc.data();
+                userLikedPosts[data.postId] = true;
+                counts[data.postId] = (counts[data.postId] || 0) + 1;
+            });
+
+            setLikedPosts(userLikedPosts);
+            setLikeCounts(counts);
+        });
+
+        return () => unsubscribe();
+    }, [currentUserId]);
+
+    // Debounced like handler
+    const debouncedLikeHandler = useCallback(
+        debounce(async (communityVariantDetailsId: string, currentLikeState: boolean) => {
+            const currentUserId = auth.currentUser?.uid;
+            if (!currentUserId) return;
+
+            const batch = writeBatch(db);
+            const likesRef = collection(db, 'communityVariantDetailsLikes');
+            const userLikeQuery = query(
+                likesRef,
+                where('postId', '==', communityVariantDetailsId),
+                where('userId', '==', currentUserId)
+            );
+
+            const snapshot = await getDocs(userLikeQuery);
+
+            // Handle communityVariantLikes
+            if (!currentLikeState) {
+                const newLikeRef = doc(likesRef);
+                batch.set(newLikeRef, {
+                    communityVariantDetailsId,
+                    userId: currentUserId,
+                    timestamp: serverTimestamp()
+                });
+            } else {
+                if (!snapshot.empty) {
+                    batch.delete(snapshot.docs[0].ref);
+                }
+            }
+
+            // Handle like counts
+            const likesCountRef = collection(db, 'communityVariantDetailsCounter');
+            const countQuery = query(likesCountRef, where('communityVariantDetailsId', '==', communityVariantDetailsId));
+            const countSnapshot = await getDocs(countQuery);
+
+            if (countSnapshot.empty) {
+                const newCountRef = doc(likesCountRef);
+                batch.set(newCountRef, {
+                    communityVariantDetailsId,
+                    likeCount: 1,
+                    commentCount: 0,
+                    shareCount: 0
+                });
+            } else {
+                const countDoc = countSnapshot.docs[0];
+                const { commentCount, shareCount } = countDoc.data();
+                batch.update(countDoc.ref, {
+                    likeCount: currentLikeState ? increment(-1) : increment(1),
+                    commentCount,
+                    shareCount
+                });
+            }
+
+            await batch.commit();
+        }, 5000), // 5 seconds delay
+        []
+    );
+
+    const handleLike = (postId: string) => {
+        const currentLikeState = likedPosts[postId] || false;
+        setLikedPosts((prev) => ({ ...prev, [postId]: !currentLikeState }));
+        debouncedLikeHandler(postId, currentLikeState);
+    };
 
     // Rich test data for community
     const communityData = {
@@ -226,8 +315,6 @@ export default function CommunityDetailPage() {
     //     }
     // ];
 
-    const [activeMediaIndices, setActiveMediaIndices] = useState<{ [key: string]: number }>({});
-
     return (
         <>
             <div className="min-h-screen bg-gray-50">
@@ -282,69 +369,16 @@ export default function CommunityDetailPage() {
                             {/* Posts Grid */}
                             <div className="grid grid-cols-2 gap-6">
                                 {posts.map((post) => {
-                                    const activeMediaIndex = activeMediaIndices[post.id] || 0;
-
                                     return (
                                         <div key={post.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
                                             {/* Dynamic Media Section */}
-                                            <div className="aspect-video relative rounded-t-xl overflow-hidden">
-                                                {post.mediaDetails.length > 0 && (
-                                                    <>
-                                                        {post.mediaDetails[activeMediaIndex].type === 'video' ? (
-                                                            <video
-                                                                className="w-full h-full object-cover"
-                                                                controls
-                                                                playsInline
-                                                            >
-                                                                <source src={post.mediaDetails[activeMediaIndex].typeUrl} type="video/mp4" />
-                                                                Your browser does not support the video tag.
-                                                            </video>
-                                                        ) : (
-                                                            <Image
-                                                                src={post.mediaDetails[activeMediaIndex].typeUrl}
-                                                                alt={post.title}
-                                                                fill
-                                                                className="object-cover"
-                                                                loader={({ src }) => src}
-                                                                unoptimized={true}
-                                                            />
-                                                        )}
-                                                    </>
-                                                )}
-                                            </div>
-
-                                            {/* Thumbnails for Media Gallery */}
-                                            <div className="flex gap-2 p-2 overflow-x-auto">
-                                                {post.mediaDetails.map((media, index) => (
-                                                    <div
-                                                        key={media.id}
-                                                        className={`relative w-16 h-16 cursor-pointer rounded-lg overflow-hidden ${activeMediaIndex === index ? 'ring-2 ring-greenTheme' : ''}`}
-                                                        onClick={() => setActiveMediaIndices((prev) => ({ ...prev, [post.id]: index }))}
-                                                    >
-                                                        {media.type === 'video' ? (
-                                                            <video
-                                                                className="w-full h-full object-cover"
-                                                                playsInline
-                                                            >
-                                                                <source src={media.typeUrl} type="video/mp4" />
-                                                            </video>
-                                                        ) : (
-                                                            <Image
-                                                                src={media.typeUrl}
-                                                                alt={`Thumbnail ${index + 1}`}
-                                                                fill
-                                                                className="object-cover"
-                                                            />
-                                                        )}
-                                                    </div>
-                                                ))}
-                                            </div>
+                                            <PostMedia media={post.mediaDetails} />
 
                                             {/* Post Content Section */}
                                             <div className="p-4">
                                                 <div className="flex items-center gap-3 mb-3">
                                                     <Image
-                                                        src={post.author.avatar}
+                                                        src={post.author.profileImage}
                                                         alt={post.author.firstName}
                                                         width={40}
                                                         height={40}
@@ -365,6 +399,12 @@ export default function CommunityDetailPage() {
                                                     <span>{new Date(post.timestamp).toLocaleString()}</span>
                                                     <span>{new Date(post.createdAt).toLocaleDateString()}</span>
                                                 </div>
+
+                                                {/* Like Button */}
+                                                <button onClick={() => handleLike(post.id)} className={`flex items-center gap-2 ${likedPosts[post.id] ? 'text-greenTheme' : 'text-gray-600'}`}>
+                                                    <Heart className="w-5 h-5" fill={likedPosts[post.id] ? 'currentColor' : 'none'} />
+                                                    <span>{likedPosts[post.id] ? 'Liked' : 'Like'}</span>
+                                                </button>
                                             </div>
                                         </div>
                                     );
