@@ -1,7 +1,7 @@
 'use client';
 
 import Image from 'next/image';
-import { ChevronLeft, ChevronRight, Heart, Play } from 'lucide-react';
+import { ChevronLeft, ChevronRight, Heart, Play, MessageCircle } from 'lucide-react';
 import { useEffect, useState, useCallback } from 'react';
 import { useParams } from 'next/navigation';
 import { getFriends } from '@/helpers/friendsAndFollowingHelper';
@@ -412,15 +412,18 @@ export default function CommunityDetailPage() {
                                                     <span>{likedPosts[post.id] ? 'Liked' : 'Like'}</span>
                                                 </button>
 
-                                                {/* Open Comments Modal Button */}
-                                                <button onClick={() => openCommentsModal(post.id)} className="mt-2 text-blue-500">
-                                                    View Comments
+                                                {/* Comments Button */}
+                                                <button
+                                                    className="flex items-center gap-2 text-gray-600 hover:text-greenTheme mt-2"
+                                                    onClick={() => openCommentsModal(post.id)}
+                                                >
+                                                    <MessageCircle size={20} />
+                                                    <span>Comment</span>
                                                 </button>
                                             </div>
                                         </div>
                                     );
                                 })}
-                                
                             </div>
                         </section>
 
@@ -457,7 +460,7 @@ export default function CommunityDetailPage() {
             {/* Render the Comments Modal */}
             {isPostModalOpen && selectedPostId && (
                 <CommunityPostCommentsModal 
-                    postId={selectedPostId} 
+                    communityVariantDetailsId={selectedPostId} 
                     onClose={() => setIsPostModalOpen(false)} 
                 />
             )}

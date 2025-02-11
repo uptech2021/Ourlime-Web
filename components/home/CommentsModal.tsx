@@ -51,7 +51,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 				setIsLoadingComments(true);
 
 				try {
-					const fetchedComments = await fetchCommentsForPost(postId);
+					const fetchedComments = await fetchCommentsForPost('feedsPostComments', postId);
 
           fetchedComments.sort((a, b) => {
             return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
@@ -61,7 +61,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 
           const repliesData: { [key: string]: Reply[]} = {};
           for(const comment of fetchedComments){
-            const fetchedReplies = await fetchRepliesForComments(comment.id);
+            const fetchedReplies = await fetchRepliesForComments('feedsPostCommentsReplies', comment.id);
 
             fetchedReplies.sort((c, d) => {
               return new Date(d.createdAt).getTime() - new Date(c.createdAt).getTime();
@@ -80,7 +80,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
 			};
       console.log("Comments: ", comments);
 			fetchComments();
-		}, [postId, hasFetched, comments]);
+		}, [postId, hasFetched]);
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -99,7 +99,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
         setComment(""); // Clear the input field after submission
 
         //Refetch comments after creating a new comment
-        const fetchedComments = await fetchCommentsForPost(postId);
+        const fetchedComments = await fetchCommentsForPost('feedsPostComments', postId);
 
          // Sort comments by createdAt in descending order
         fetchedComments.sort((a, b) => {
@@ -130,11 +130,11 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
         await addDoc(collection(db, "feedsPostCommentsReplies"), replyData);
         setReply("");
 
-        const fetchedComments = await fetchCommentsForPost(postId);
+        const fetchedComments = await fetchCommentsForPost('feedsPostComments', postId);
         setComments(fetchedComments);
 
          // Refetch replies for the specific comment
-         const fetchedReplies = await fetchRepliesForComments(commentId);
+         const fetchedReplies = await fetchRepliesForComments('feedsPostCommentsReplies', commentId);
          fetchedReplies.sort((a, b) => {
              return new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime();
          });

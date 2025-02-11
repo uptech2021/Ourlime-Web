@@ -3,30 +3,39 @@ import { addDoc, serverTimestamp, collection, getDocs, query, where } from "fire
 import { db } from "@/lib/firebaseConfig";
 import { UserData } from "@/types/userTypes";
 import Image from "next/image";
+import { fetchCommentsForPost } from "@/helpers/Posts"; // Import the new fetch function
+import PostMedia from './PostMedia'; // Import PostMedia component
+import { auth } from '@/lib/firebaseConfig'; // Import auth to access current user
 
 interface CommunityPostCommentsModalProps {
-    postId: string;
+    communityVariantDetailsId: string;
     onClose: () => void;
 }
 
-const CommunityPostCommentsModal: React.FC<CommunityPostCommentsModalProps> = ({ postId, onClose }) => {
+const CommunityPostCommentsModal: React.FC<CommunityPostCommentsModalProps> = ({ communityVariantDetailsId, onClose }) => {
     const [comment, setComment] = useState("");
     const [comments, setComments] = useState<any[]>([]); // Adjust type as needed
     const [isLoading, setIsLoading] = useState(true);
+    const [postDetails, setPostDetails] = useState<any>(null); // Add state for post details
 
     useEffect(() => {
         const fetchComments = async () => {
             setIsLoading(true);
-            const commentsRef = collection(db, 'communityVariantDetailsComments');
-            const q = query(commentsRef, where('communityVariantDetailsId', '==', postId));
-            const snapshot = await getDocs(q);
-            const fetchedComments = snapshot.docs.map(doc => ({ id: doc.id, ...doc.data() }));
-            setComments(fetchedComments);
-            setIsLoading(false);
+            try {
+                const fetchedComments = await fetchCommentsForPost('communityVariantDetailsComments', communityVariantDetailsId); // Use the new fetch function
+                setComments(fetchedComments);
+                // Fetch post details here if needed
+                // Example: const fetchedPostDetails = await fetchPostDetails(communityVariantDetailsId);
+                // setPostDetails(fetchedPostDetails);
+            } catch (error) {
+                console.error("Error fetching comments:", error);
+            } finally {
+                setIsLoading(false);
+            }
         };
 
         fetchComments();
-    }, [postId]);
+    }, [communityVariantDetailsId]);
 
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
@@ -34,8 +43,8 @@ const CommunityPostCommentsModal: React.FC<CommunityPostCommentsModalProps> = ({
             const commentData = {
                 comment,
                 createdAt: serverTimestamp(),
-                communityVariantDetailsId: postId,
-                userId: "currentUserId", // Replace with actual user ID
+                communityVariantDetailsId,
+                userId: auth.currentUser?.uid,
             };
 
             try {
@@ -50,7 +59,14 @@ const CommunityPostCommentsModal: React.FC<CommunityPostCommentsModalProps> = ({
     return (
         <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white w-full max-w-4xl mx-4 rounded-lg shadow-lg flex flex-col">
-                <button className="ml-auto" aria-label="Close modal" onClick={onClose}>X</button>
+                <button className="ml-auto p-2" aria-label="Close modal" onClick={onClose}>X</button>
+
+                {/* Post Media Section */}
+                {postDetails && postDetails.media && postDetails.media.length > 0 && (
+                    <div className="md:w-1/2 w-full h-auto flex items-center justify-center">
+                        <PostMedia media={postDetails.media} />
+                    </div>
+                )}
 
                 {/* Scrollable Comments */}
                 <div className="flex-1 p-4 space-y-4 overflow-y-auto">
@@ -60,9 +76,11 @@ const CommunityPostCommentsModal: React.FC<CommunityPostCommentsModalProps> = ({
                         comments.map((c) => (
                             <div key={c.id} className="flex items-start space-x-3">
                                 <Image
-                                    src={c.userData?.profileImage || "https://via.placeholder.com/40"}
+                                    src={c.userData?.profileImage || ""}
                                     alt={`${c.userData?.firstName}'s avatar`}
                                     className="w-10 h-10 rounded-full"
+                                    width={100}
+                                    height={100}
                                 />
                                 <div className="flex-1">
                                     <p className="text-sm font-medium">{c.userData?.firstName} {c.userData?.lastName}</p>
