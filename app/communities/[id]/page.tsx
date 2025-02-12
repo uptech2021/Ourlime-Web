@@ -13,6 +13,7 @@ import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
 import PostMedia from '@/components/communities/PostMedia';
 import { debounce } from 'lodash';
 import CommunityPostCommentsModal from '@/components/communities/CommunityPostCommentsModal';
+import PostEventModal from '@/components/PostEventModal';
 
 // type BasePost = {
 //     id: string;
@@ -74,6 +75,8 @@ type Post = GalleryPost | VideoPost | ArticlePost | MusicPost | ResourcePost;
 
 export default function CommunityDetailPage() {
     const [isPostModalOpen, setIsPostModalOpen] = useState(false);
+    const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+    const [isCommunityPostModalOpen, setIsCommunityPostModalOpen] = useState(false);
     const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
     const [members, setMembers] = useState<UserData[]>([]);
     const [posts, setPosts] = useState<BasePost[]>([]);
@@ -190,10 +193,18 @@ export default function CommunityDetailPage() {
         debouncedLikeHandler(postId, currentLikeState);
     };
 
+    const closeCreateModal = () => {
+        setIsCommunityPostModalOpen(false);
+    }
+
     const openCommentsModal = (postId: string) => {
         setSelectedPostId(postId);
         setIsPostModalOpen(true);
     };
+
+    const closeEventsModal = () => {
+        setIsEventModalOpen(false);
+    }
 
     // Rich test data for community
     const communityData = {
@@ -405,21 +416,24 @@ export default function CommunityDetailPage() {
                                                 <div className="flex items-center justify-between text-sm text-gray-500">
                                                     <span>{new Date(post.timestamp).toLocaleString()}</span>
                                                 </div>
+                                                <div className="flex items-center gap-4 pt-3">
+                                                    {/* Like Button */}
+                                                    <button 
+                                                    onClick={() => handleLike(post.id)} 
+                                                    className={`flex items-center gap-2 ${likedPosts[post.id] ? 'text-greenTheme' : 'text-gray-600'}`}>
+                                                        <Heart className="w-5 h-5" fill={likedPosts[post.id] ? 'currentColor' : 'none'} />
+                                                        <span>{likedPosts[post.id] ? 'Liked' : 'Like'}</span>
+                                                    </button>
 
-                                                {/* Like Button */}
-                                                <button onClick={() => handleLike(post.id)} className={`flex items-center gap-2 ${likedPosts[post.id] ? 'text-greenTheme' : 'text-gray-600'}`}>
-                                                    <Heart className="w-5 h-5" fill={likedPosts[post.id] ? 'currentColor' : 'none'} />
-                                                    <span>{likedPosts[post.id] ? 'Liked' : 'Like'}</span>
-                                                </button>
-
-                                                {/* Comments Button */}
-                                                <button
-                                                    className="flex items-center gap-2 text-gray-600 hover:text-greenTheme mt-2"
-                                                    onClick={() => openCommentsModal(post.id)}
-                                                >
-                                                    <MessageCircle size={20} />
-                                                    <span>Comment</span>
-                                                </button>
+                                                    {/* Comments Button */}
+                                                    <button
+                                                        className="flex items-center gap-2 text-gray-600 hover:text-greenTheme mt-2"
+                                                        onClick={() => openCommentsModal(post.id)}
+                                                    >
+                                                        <MessageCircle size={20} />
+                                                        <span>Comment</span>
+                                                    </button>
+                                                </div>
                                             </div>
                                         </div>
                                     );
@@ -438,8 +452,11 @@ export default function CommunityDetailPage() {
                             </div>
                             <button 
                             className="px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors"
-                            onClick={() => setIsPostModalOpen(true)}>
+                            onClick={() => setIsCommunityPostModalOpen(true)}>
                                 Create Post +
+                            </button>
+                            <button className="mt-2 px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors" onClick={() => setIsEventModalOpen(true)}>
+                                Host Event +
                             </button>
                             <h2 className="text-lg font-bold mt-6">Join Your Friends</h2>
                             <ul className="mt-4 space-y-2">
@@ -463,6 +480,19 @@ export default function CommunityDetailPage() {
                     communityVariantDetailsId={selectedPostId} 
                     onClose={() => setIsPostModalOpen(false)} 
                 />
+            )}
+
+            {isCommunityPostModalOpen && (
+                            <CreateCommunityPost 
+                                communityVariantId={communityVariantId}
+                                setTogglePostForm={closeCreateModal} 
+                                profilePicture={''}
+                            />
+            )}
+
+            {isEventModalOpen && (
+                <PostEventModal
+                onClose={closeEventsModal}/>
             )}
         </>
     );
