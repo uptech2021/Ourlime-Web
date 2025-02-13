@@ -15,6 +15,7 @@ import { debounce } from 'lodash';
 import CommunityPostCommentsModal from '@/components/communities/CommunityPostCommentsModal';
 import PostEventModal from '@/components/PostEventModal';
 import EventsList from '@/components/EventsList';
+import { event } from 'cypress/types/jquery';
 
 // type BasePost = {
 //     id: string;
@@ -86,7 +87,7 @@ export default function CommunityDetailPage() {
     const { id } = useParams();
     const communityVariantId = id? String(id): "";
     const currentUserId = auth.currentUser?.uid;
-
+    
     useEffect(() => {
         const loadMembers = async () => {
             const fetchedMembers = await fetchCommunityMembers(communityVariantId);
@@ -388,7 +389,7 @@ export default function CommunityDetailPage() {
                             {/* Events Grid */}
                             <div className="mb-8 border-black border-b">
                                 <h2 className="mb-4">Community Events</h2>
-                                <EventsList />
+                                <EventsList communityId={communityVariantId} userId={currentUserId}/>
                             </div>
 
                             {/* Posts Grid */}
@@ -500,7 +501,8 @@ export default function CommunityDetailPage() {
             {isEventModalOpen && (
                 <PostEventModal
                 isOpen={isEventModalOpen}
-                onClose={closeEventsModal}/>
+                onClose={closeEventsModal}
+                communityVariantId={communityVariantId}/>
             )}
         </>
     );

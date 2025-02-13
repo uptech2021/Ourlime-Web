@@ -9,10 +9,12 @@ import { Upload, X } from 'lucide-react';
 interface PostEventModalProps {
     isOpen: boolean;
     onClose: () => void;
+    communityVariantId?: string;
 }
 
-const PostEventModal: React.FC<PostEventModalProps> = ({ isOpen, onClose }) => {
+const PostEventModal: React.FC<PostEventModalProps> = ({ isOpen, onClose, communityVariantId }) => {
     const [title, setTitle] = useState<string>('');
+    const [description, setDescription] = useState('')
     const [summary, setSummary] = useState<string>('');
     const [startDate, setStartDate] = useState('');
     const [endDate, setEndDate] = useState('');
@@ -47,7 +49,6 @@ const PostEventModal: React.FC<PostEventModalProps> = ({ isOpen, onClose }) => {
             try {
                 let imageUrl = '';
                 
-                // Upload image first if there are selected files
                 if (selectedFiles.length > 0) {
                     const file = selectedFiles[0];
                     const storageRef = ref(storage, `eventImages/${Date.now()}_${file.name}`);
@@ -55,22 +56,38 @@ const PostEventModal: React.FC<PostEventModalProps> = ({ isOpen, onClose }) => {
                     imageUrl = await getDownloadURL(uploadResult.ref);
                 }
     
-                // Create event data with image URL
-                const eventData: Event = {
+                // Create event data
+                const eventData: any = {
                     title,
                     summary,
                     startDate,
                     endDate,
                     location,
                     userId,
-                    ...(imageUrl && { image: imageUrl }) // Only add image field if there's an URL
+                    ...(imageUrl && { image: imageUrl })
                 };
     
+                // Conditionally add communityVariantId
+                if (communityVariantId) {
+                    eventData.communityVariantId = communityVariantId;
+                }
+    
                 // Add the event data to Firestore
-                await addDoc(collection(db, 'events'), eventData);
+                const eventRef = await addDoc(collection(db, 'events'), eventData);
+    
+                // Create eventVariant data
+                const eventVariantData = {
+                    eventId: eventRef.id,
+                    title,
+                    description
+                };
+    
+                // Add the eventVariant data to Firestore
+                await addDoc(collection(db, 'eventVariant'), eventVariantData);
     
                 // Reset form
                 setTitle('');
+                setDescription('');
                 setSummary('');
                 setStartDate('');
                 setEndDate('');
@@ -82,8 +99,6 @@ const PostEventModal: React.FC<PostEventModalProps> = ({ isOpen, onClose }) => {
                 console.error("Error adding event:", error);
             }
         }
-
-        console.log()
     };
 
     if (!isOpen) return null;
@@ -108,6 +123,15 @@ const PostEventModal: React.FC<PostEventModalProps> = ({ isOpen, onClose }) => {
                             className="w-full p-2 border rounded"
                             value={title}
                             onChange={(e) => setTitle(e.target.value)}
+                            required
+                        />
+                    </div>
+                    <div className="mb-4">
+                        <textarea
+                            placeholder="Event Description"
+                            className="w-full p-2 border rounded"
+                            value={description}
+                            onChange={(e) => setDescription(e.target.value)}
                             required
                         />
                     </div>

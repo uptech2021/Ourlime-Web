@@ -1,12 +1,16 @@
 import { useEffect, useState } from 'react';
 import { fetchEvents } from '@/helpers/Events';
 import { Event } from '@/types/eventTypes';
+import { db } from '@/lib/firebaseConfig';
+import { doc, increment, setDoc, updateDoc } from 'firebase/firestore';
+import { Heart } from 'lucide-react';
 
 interface EventsListProps {
     communityId?: string;
+    userId: string;
 }
 
-export default function EventsList({ communityId }: EventsListProps) {
+export default function EventsList({ communityId, userId }: EventsListProps) {
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -25,8 +29,33 @@ export default function EventsList({ communityId }: EventsListProps) {
             }
         };
 
+        console.log(`Events for community ID ${communityId}:`, events);
         loadEvents();
     }, [communityId]);
+
+   // Function to handle liking an event
+const handleLike = async (eventId: string, userId: string) => {
+    try {
+        // Reference to the specific like document
+        const likeRef = doc(db, 'eventVariantLikes', `${eventId}_${userId}`);
+
+        // Add a like document for the user-event pair
+        await setDoc(likeRef, {
+            eventVariantId: eventId,
+            userId: userId
+        });
+
+        // Reference to the like counter document
+        const likeCounterRef = doc(db, 'eventLikeCounter', eventId);
+
+        // Increment the like counter
+        await updateDoc(likeCounterRef, {
+            like: increment(1)
+        });
+    } catch (error) {
+        console.error('Error liking event:', error);
+    }
+};
 
     if (loading) return <div>Loading events...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -50,6 +79,15 @@ export default function EventsList({ communityId }: EventsListProps) {
                         {new Date(event.endDate).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500">{event.location}</p>
+                    <div className="flex items-center justify-between mt-4">
+                        <button
+                            onClick={() => handleLike(event.id, userId)}
+                            className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+                        >
+                            <Heart className="w-5 h-5" />
+                            <span>Like</span>
+                        </button>
+                    </div>
                 </div>
             ))}
         </div>
