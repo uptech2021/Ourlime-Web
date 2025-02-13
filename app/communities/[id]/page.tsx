@@ -13,8 +13,8 @@ import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
 import PostMedia from '@/components/communities/PostMedia';
 import { debounce } from 'lodash';
 import CommunityPostCommentsModal from '@/components/communities/CommunityPostCommentsModal';
-import PostEventModal from '@/components/PostEventModal';
-import EventsList from '@/components/EventsList';
+import PostEventModal from '@/components/events/PostEventModal';
+import EventsList from '@/components/events/EventsList';
 import { event } from 'cypress/types/jquery';
 
 // type BasePost = {

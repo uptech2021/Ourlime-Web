@@ -3,7 +3,8 @@ import { fetchEvents } from '@/helpers/Events';
 import { Event } from '@/types/eventTypes';
 import { db } from '@/lib/firebaseConfig';
 import { doc, increment, setDoc, updateDoc } from 'firebase/firestore';
-import { Heart } from 'lucide-react';
+import { Heart, MessageCircle } from 'lucide-react';
+import EventCommentModal from './EventCommentModal';
 
 interface EventsListProps {
     communityId?: string;
@@ -14,6 +15,18 @@ export default function EventsList({ communityId, userId }: EventsListProps) {
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
+    const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+
+    const openCommentModal = () => {
+        // setSelectedEventId(eventId);
+        setIsCommentModalOpen(true);
+    };
+
+    const closeCommentModal = () => {
+        setIsCommentModalOpen(false);
+        setSelectedEventId(null);
+    };
 
     useEffect(() => {
         const loadEvents = async () => {
@@ -87,9 +100,24 @@ const handleLike = async (eventId: string, userId: string) => {
                             <Heart className="w-5 h-5" />
                             <span>Like</span>
                         </button>
+                        <button
+                            onClick={openCommentModal}
+                            className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+                        >
+                            <MessageCircle size={20} />
+                            Comment
+                        </button>
                     </div>
                 </div>
             ))}
+                        {/* Comment Modal */}
+                        {selectedEventId && (
+                <EventCommentModal
+                    isOpen={isCommentModalOpen}
+                    onClose={closeCommentModal}
+                    eventId={selectedEventId}
+                />
+            )}
         </div>
     );
 }
