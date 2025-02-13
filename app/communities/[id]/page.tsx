@@ -14,6 +14,7 @@ import PostMedia from '@/components/communities/PostMedia';
 import { debounce } from 'lodash';
 import CommunityPostCommentsModal from '@/components/communities/CommunityPostCommentsModal';
 import PostEventModal from '@/components/PostEventModal';
+import EventsList from '@/components/EventsList';
 
 // type BasePost = {
 //     id: string;
@@ -384,8 +385,14 @@ export default function CommunityDetailPage() {
                                 </div>
                             </div>
 
+                            {/* Events Grid */}
+                            <div className="mb-8 border-black border-b">
+                                <h2 className="mb-4">Community Events</h2>
+                                <EventsList />
+                            </div>
+
                             {/* Posts Grid */}
-                            <div className="grid grid-cols-2 gap-6">
+                            <div className="grid grid-cols-2 gap-6 mt-8">
                                 {posts.map((post) => {
                                     return (
                                         <div key={post.id} className="bg-white rounded-xl shadow-sm hover:shadow-md transition-all">
@@ -492,6 +499,7 @@ export default function CommunityDetailPage() {
 
             {isEventModalOpen && (
                 <PostEventModal
+                isOpen={isEventModalOpen}
                 onClose={closeEventsModal}/>
             )}
         </>
