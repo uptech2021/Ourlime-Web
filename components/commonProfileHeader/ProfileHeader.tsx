@@ -31,7 +31,6 @@ export default function ProfileHeader({ onCustomizationSelect }: ProfileHeaderPr
     const [isEditingBio, setIsEditingBio] = useState(false);
     const [newBio, setNewBio] = useState(userData?.bio || '');
     const { firstName, lastName, userName } = useProfileStore();
-    const isOnline = useProfileStore(state => state.isUserOnline(userData?.id));
 
     const handleImageSelect = async (selectedImage: ProfileImage) => {
         const user = auth.currentUser;

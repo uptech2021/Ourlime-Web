@@ -13,6 +13,7 @@ type ProfileStore = {
   userName: string | null;
   firstName: string | null;
   lastName: string | null;
+  email: string | null;
   country: string | null;
   notifications: NotificationData[];
   unreadCount: number;
@@ -24,6 +25,7 @@ type ProfileStore = {
     id: string;
     firstName: string | null;
     lastName: string | null;
+    email: string | null;
     userName: string | null;
     country: string | null;
     friendsCount: number;
@@ -38,6 +40,7 @@ type ProfileStore = {
   setUserName: (userName: string) => void;
   setFirstName: (firstName: string) => void;
   setLastName: (lastName: string) => void;
+  setEmail: (email: string) => void;
   setCountry: (country: string) => void;
   setNotifications: (notifications: NotificationData[]) => void;
   addNotification: (notification: NotificationData) => void;
@@ -61,6 +64,7 @@ export const useProfileStore = create<ProfileStore>()(
       userName: null,
       firstName: null,
       lastName: null,
+      email: null,
       country: null,
       notifications: [],
       unreadCount: 0,
@@ -73,6 +77,7 @@ export const useProfileStore = create<ProfileStore>()(
           id: data.id,
           firstName: data.firstName,
           lastName: data.lastName,
+          email: data.email,
           userName: data.userName,
           country: data.country,
           friendsCount: data.friendsCount,
@@ -91,6 +96,7 @@ export const useProfileStore = create<ProfileStore>()(
       setUserName: (userName) => set({ userName }),
       setFirstName: (firstName) => set({ firstName }),
       setLastName: (lastName) => set({ lastName }),
+      setEmail: (email) => set({ email }),
       setCountry: (country) => set({ country }),
 
       setNotifications: (notifications) =>
@@ -140,6 +146,7 @@ export const useProfileStore = create<ProfileStore>()(
           userName: state.userName,
           firstName: state.firstName,
           lastName: state.lastName,
+          email: state.email,
           country: state.country,
           friendsCount: state.friendsCount,
           postsCount: state.postsCount

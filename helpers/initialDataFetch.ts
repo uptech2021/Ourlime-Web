@@ -66,6 +66,7 @@ export const fetchInitialUserData = async (userId: string) => {
             id: userId,
             firstName: userData?.firstName,
             lastName: userData?.lastName,
+            email: userData?.email,
             userName: userData?.userName,
             country: userData?.country,
             friendsCount: totalFriendsCount,

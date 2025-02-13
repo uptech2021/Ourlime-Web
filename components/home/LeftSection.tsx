@@ -255,20 +255,20 @@ export default function LeftSection({
 
     const [localSearchTerm, setLocalSearchTerm] = useState('');
     const [displayUsers, setDisplayUsers] = useState<SearchUser[]>([]);
-    
+
     useEffect(() => {
         setDisplayUsers(tabUsers);
     }, [tabUsers]);
-    
+
     const handleLocalSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const searchTerm = e.target.value.toLowerCase();
         setLocalSearchTerm(searchTerm);
-    
+
         if (searchTerm === '') {
             setDisplayUsers(tabUsers);
             return;
         }
-    
+
         const filtered = tabUsers.filter(user =>
             user?.userName?.toLowerCase().includes(searchTerm) ||
             user?.firstName?.toLowerCase().includes(searchTerm) ||
@@ -276,7 +276,7 @@ export default function LeftSection({
         );
         setDisplayUsers(filtered);
     };
-    
+
 
 
 
@@ -385,8 +385,6 @@ export default function LeftSection({
 
     // END HERE
 
-
-
     // ADD A FOLLOWING LOGIC
     // START HERE
     const [isFollowing, setIsFollowing] = useState(false);
@@ -445,10 +443,10 @@ export default function LeftSection({
             {/* Wrapper for entire section */}
             <section
                 className="bg-white rounded-lg shadow-md 
-                           p-3 order-2 lg:order-1 sticky top-36
-                           h-[calc(100vh-9rem)] overflow-y-auto 
-                           scrollbar-thin scrollbar-thumb-gray-200 
-                           hidden lg:block w-full"
+                            p-3 order-2 lg:order-1 sticky top-36
+                            h-[calc(100vh-9rem)] overflow-y-auto 
+                            scrollbar-thin scrollbar-thumb-gray-200 
+                            hidden lg:block w-full"
             >
                 {/* Profile Section */}
                 <div className="flex flex-col items-center mb-4">

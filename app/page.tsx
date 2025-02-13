@@ -92,7 +92,6 @@ export default function Page() {
 				);
 				const setAsSnapshot = await getDocs(profileSetAsQuery);
 
-
 				let profileImageUrl = null;
 				if (!setAsSnapshot.empty) {
 					const setAsDoc = setAsSnapshot.docs[0].data();

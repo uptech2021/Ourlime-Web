@@ -9,6 +9,7 @@ import Script from 'next/script';
 import { metadata } from './metadata';
 import { SessionHandler } from './SessionProvider';
 import { ChatButton } from '@/components/chat/ChatButton/ChatButton';
+import { GlobalReminders } from '@/components/reminder/GlobalReminders';
 
 export { metadata }
 
@@ -21,9 +22,10 @@ export default function RootLayout({
         <html lang="en">
             <body className="bg-backgroundColorTheme overflow-x-hidden">
                 <Providers>
-					<SessionHandler />
+                    <SessionHandler />
                     <SpeedInsights />
                     <Header />
+                    <GlobalReminders />
                     {children}
                     <ChatButton />
                     <Analytics />
@@ -36,3 +38,4 @@ export default function RootLayout({
         </html>
     );
 }
+
