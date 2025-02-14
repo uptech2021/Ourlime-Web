@@ -226,7 +226,7 @@ export type Comment = {
   id: string;
   comment: string;
   createdAt: Date;
-  updatedAt: Date;
+  // updatedAt: Date;
   feedsPostId: string;
   userId: string;
   replies: Comment[];

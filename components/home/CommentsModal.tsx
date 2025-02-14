@@ -31,7 +31,8 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
   useEffect(() => {
     const loadPostDetails = async () => {
       try {
-        const fetchedPosts = await fetchPosts(); // Fetch all posts
+
+        const fetchedPosts = await fetchPosts('feedPosts'); // Fetch all posts
         const specificPost = fetchedPosts.find(post => post.id === postId); // Find the specific post by ID
         console.log("Fetched Post: ", specificPost);
         setPostDetails(specificPost || null); // Set the specific post or null if not found
@@ -301,7 +302,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
             />
             <button 
               type="submit"
-              className="px-4 py-2 bg-greenTheme text-white rounder-md">
+              className="px-4 py-2 bg-greenTheme text-white rounded-md">
                 Send Reply
               </button>
           </form>
@@ -323,7 +324,7 @@ const CommentModal: React.FC<CommentModalProps> = ({ postId, userId, onClose }) 
                               {reply.userData?.firstName} {reply.userData?.lastName} 
                               <span className="text-gray-400">@{reply.userData?.userName}</span>
                             </p>
-                            <p className="text-xs text-gray-400 mt-1">{formatDate(reply.createdAt)}</p>
+                            <p className="text-xs text-gray-400 mt-1">{reply.createdAt?.toLocaleString()}</p>
                           </div>
                           <p className="text-gray-600 text-sm">{reply.reply}</p>
                         </div>

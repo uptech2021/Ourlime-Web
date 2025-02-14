@@ -1,7 +1,9 @@
 import { collection, getDocs, query, where, doc, getDoc } from "firebase/firestore";
 import { db } from "@/lib/firebaseConfig";
 import { UserData, Post, BasePost } from "@/types/userTypes"; // Adjust the import based on your project structure
+import { Comment, Reply } from "@/types/global";
 import { CommunityVariantDetailsSummary } from "@/types/communityTypes";
+import { error } from "console";
 
 export const fetchCommunityMembers = async (communityVariantId: string): Promise<UserData[]> => {
     const membersRef = collection(db, 'communityVariantMembership');
@@ -141,4 +143,153 @@ export const fetchCommunityPosts = async (communityVariantId: string): Promise<B
     }));
 
     return postsData;
+};
+
+export const fetchCommunityPostComments = async (communityVariantDetailsId: string): Promise<Comment[]> => {
+    if (!communityVariantDetailsId) {
+        throw new Error("Community Variant Details Id Required");
+    }
+
+    try {
+        const commentsRef = collection(db, "communityVariantDetailsComments");
+        const q = query(commentsRef, where("communityVariantDetailsId", "==", communityVariantDetailsId));
+        const querySnapshot = await getDocs(q);
+
+        const comments: Comment[] = await Promise.all(querySnapshot.docs.map(async (commentDoc) => {
+            const commentData = commentDoc.data();
+            const userId = commentData.userId;
+
+            // Fetch user data
+            const userDoc = await getDoc(doc(db, "users", userId));
+            let commentUserData = null;
+
+            if (userDoc.exists()) {
+                commentUserData = userDoc.data();
+            } else {
+                console.warn("No user document found for userId:", userId);
+            }
+
+            // Fetch user's profile image
+            const profileImagesQuery = query(
+                collection(db, "profileImages"),
+                where("userId", "==", userId)
+            );
+            const profileImagesSnapshot = await getDocs(profileImagesQuery);
+
+            const profileSetAsQuery = query(
+                collection(db, "profileImageSetAs"),
+                where("userId", "==", userId),
+                where("setAs", "==", "profile")
+            );
+            const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+            let profileImage = null;
+            if (!setAsSnapshot.empty) {
+                const setAsDoc = setAsSnapshot.docs[0].data();
+                const matchingImage = profileImagesSnapshot.docs.find(img => img.id === setAsDoc.profileImageId);
+                if (matchingImage) {
+                    profileImage = matchingImage.data().imageURL;
+                } else {
+                    console.warn("No matching profile image found for userId:", userId);
+                }
+            } else {
+                console.warn("No profile image set for userId:", userId);
+            }
+
+            return {
+                id: commentDoc.id,
+                comment: commentData.comment || '', // Adjust based on Comment type definition
+                createdAt: commentData.createdAt.toDate(),
+                feedsPostId: commentData.communityVariantDetailsId,
+                userId: userId,
+                userData: {
+                    id: userId,
+                    firstName: commentUserData?.firstName || '',
+                    lastName: commentUserData?.lastName || '',
+                    userName: commentUserData?.userName || '',
+                    profileImage: profileImage || null,
+                },
+                replies: [],
+            } as Comment;
+        }));
+
+        console.log(`Fetched ${comments.length} comments for post ID: ${communityVariantDetailsId}`);
+        return comments;
+    } catch (error) {
+        console.error("Error fetching community post comments:", error);
+        throw new Error("Failed to fetch community post comments");
+    }
+};
+
+// Function to fetch replies for comments
+export const fetchRepliesForCommunityPostComments = async (collectionName: string, commentId: string): Promise<Reply[]> => {
+    const repliesRef = collection(db, collectionName);
+    const q = query(repliesRef, where("communityVariantDetailsCommentsId", "==", commentId)); // Ensure the field name matches your Firestore structure
+
+    try {
+        const snapshot = await getDocs(q);
+        console.log(`Querying replies for commentId: ${commentId}, found ${snapshot.docs.length} replies.`);
+        
+        const repliesData = await Promise.all(snapshot.docs.map(async (replyDoc) => {
+            const data = replyDoc.data();
+            const userId = data.userId;
+
+            // Fetch user data for the reply
+            const userDoc = await getDoc(doc(db, "users", userId));
+            let replyUserData: UserData | null = null;
+
+            if (userDoc.exists()) {
+                replyUserData = userDoc.data() as UserData;
+            } else {
+                console.log("No user document found for userId:", userId);
+            }
+
+            // Get user's profile image
+            const profileImagesQuery = query(
+                collection(db, 'profileImages'),
+                where('userId', '==', data.userId)
+            );
+            const profileImagesSnapshot = await getDocs(profileImagesQuery);
+            const profileSetAsQuery = query(
+                collection(db, 'profileImageSetAs'),
+                where('userId', '==', data.userId),
+                where('setAs', '==', 'profile')
+            );
+            const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+            let profileImage = null;
+            if (!setAsSnapshot.empty) {
+                const setAsDoc = setAsSnapshot.docs[0].data();
+                const matchingImage = profileImagesSnapshot.docs
+                    .find(img => img.id === setAsDoc.profileImageId);
+                if (matchingImage) {
+                    profileImage = matchingImage.data();
+                } else {
+                    console.log("No matching profile image found for userId: ", userId);
+                }
+            } else {
+                console.log("No profile image set for userId: ", userId);
+            }
+
+            return {
+                id: replyDoc.id,
+                reply: data.commentReply,
+                feedsPostCommentId: data.feedsPostCommentId,
+                userId: data.userId,
+                createdAt: data.createdAt.toDate(),
+                userData: {
+                    firstName: replyUserData?.firstName || '',
+                    lastName: replyUserData?.lastName || '',
+                    userName: replyUserData?.userName || '',
+                    profileImage: profileImage?.imageURL || null,
+                },
+            } as Reply;
+        }));
+
+        console.log(`Fetched ${repliesData.length} replies for comment ID: ${commentId}`);
+        return repliesData;
+    } catch (error) {
+        console.error('Error fetching replies:', error);
+        return [];
+    }
 };

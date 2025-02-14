@@ -435,7 +435,7 @@ export default function CommunityDetailPage() {
 
                                                     {/* Comments Button */}
                                                     <button
-                                                        className="flex items-center gap-2 text-gray-600 hover:text-greenTheme mt-2"
+                                                        className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
                                                         onClick={() => openCommentsModal(post.id)}
                                                     >
                                                         <MessageCircle size={20} />

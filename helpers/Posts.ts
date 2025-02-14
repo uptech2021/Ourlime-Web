@@ -1,7 +1,7 @@
 import { db } from "@/lib/firebaseConfig";
 import { collection, getDoc, getDocs, query, Timestamp, where, doc, orderBy } from "firebase/firestore";
 import { Comment, Reply } from '@/types/global';
-import { UserData } from "@/types/userTypes";
+import { BasePost, UserData } from "@/types/userTypes";
 import { Post } from "@/types/userTypes";
 // Function to format the Firebase timestamp into a readable format
 export const formatDate = (timestamp: any) => {
@@ -55,8 +55,8 @@ export const fetchAllFeedPosts = async (): Promise<Post[]> => {
     }
 };
 
-export const fetchPosts = async (): Promise<Post[]> => {
-    const postsRef = collection(db, 'feedPosts');
+export const fetchPosts = async (collectionName: string): Promise<Post[]> => {
+    const postsRef = collection(db, collectionName);
     const q = query(postsRef, orderBy('createdAt', 'desc'));
     const snapshot = await getDocs(q);
     const postsWithUserData = await Promise.all(

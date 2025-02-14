@@ -1,10 +1,11 @@
 import { useEffect, useState } from 'react';
 import { fetchEvents } from '@/helpers/Events';
 import { Event } from '@/types/eventTypes';
-import { db } from '@/lib/firebaseConfig';
-import { doc, increment, setDoc, updateDoc } from 'firebase/firestore';
+import { auth, db } from '@/lib/firebaseConfig';
+import { addDoc, collection, doc, increment, setDoc, updateDoc } from 'firebase/firestore';
 import { Heart, MessageCircle } from 'lucide-react';
 import EventCommentModal from './EventCommentModal';
+import { Button } from '@nextui-org/react';
 
 interface EventsListProps {
     communityId?: string;
@@ -17,6 +18,8 @@ export default function EventsList({ communityId, userId }: EventsListProps) {
     const [error, setError] = useState<string | null>(null);
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+    const currentUserId = auth.currentUser?.uid; 
+
 
     const openCommentModal = () => {
         // setSelectedEventId(eventId);
@@ -47,28 +50,42 @@ export default function EventsList({ communityId, userId }: EventsListProps) {
     }, [communityId]);
 
    // Function to handle liking an event
-const handleLike = async (eventId: string, userId: string) => {
-    try {
-        // Reference to the specific like document
-        const likeRef = doc(db, 'eventVariantLikes', `${eventId}_${userId}`);
+    const handleLike = async (eventId: string, userId: string) => {
+        try {
+            // Reference to the specific like document
+            const likeRef = doc(db, 'eventVariantLikes', `${eventId}_${userId}`);
 
-        // Add a like document for the user-event pair
-        await setDoc(likeRef, {
-            eventVariantId: eventId,
-            userId: userId
-        });
+            // Add a like document for the user-event pair
+            await setDoc(likeRef, {
+                eventVariantId: eventId,
+                userId: userId
+            });
 
-        // Reference to the like counter document
-        const likeCounterRef = doc(db, 'eventLikeCounter', eventId);
+            // Reference to the like counter document
+            const likeCounterRef = doc(db, 'eventLikeCounter', eventId);
 
-        // Increment the like counter
-        await updateDoc(likeCounterRef, {
-            like: increment(1)
-        });
-    } catch (error) {
-        console.error('Error liking event:', error);
-    }
-};
+            // Increment the like counter
+            await updateDoc(likeCounterRef, {
+                like: increment(1)
+            });
+        } catch (error) {
+            console.error('Error liking event:', error);
+        }
+    };
+
+    const handleRegisterForEvent = async (eventId: string) => {
+        try {
+            await addDoc(collection(db, 'eventSubscription'), {
+                isAttending: true,
+                userId: currentUserId,
+                eventId: eventId
+            });
+            console.log('User registered for event:', eventId);
+        } catch (error) {
+            console.error('Error registering for event:', error);
+        }
+    };
+
 
     if (loading) return <div>Loading events...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -92,6 +109,12 @@ const handleLike = async (eventId: string, userId: string) => {
                         {new Date(event.endDate).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500">{event.location}</p>
+                    {/* Other event details... */}
+                    {event.userId !== currentUserId && (
+                        <Button onClick={() => handleRegisterForEvent(event.id)}>
+                            Register
+                        </Button>
+                    )}
                     <div className="flex items-center justify-between mt-4">
                         <button
                             onClick={() => handleLike(event.id, userId)}
