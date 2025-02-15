@@ -13,13 +13,17 @@ export const GlobalReminderComponent = () => {
         if (!userData.id) return;
 
         const checkReminders = async () => {
-            console.log('Starting reminder check');
-            console.log('User data:', userData);
             await globalReminders.checkAndProcessReminders();
         };
 
         checkReminders();
+        /// Check reminders every 5 minutes
+        // use this duriing lopmentdeve
         const interval = setInterval(checkReminders, 5 * 60 * 1000);
+
+        // Check reminders every 10 minutes
+        // usethis when launched
+        // const interval = setInterval(checkReminders, 10 * 60 * 1000);
 
         return () => clearInterval(interval);
     }, [userData.id]);

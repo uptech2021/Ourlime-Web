@@ -59,11 +59,11 @@ export class ReminderManager {
         const [hours, minutes] = schedule.startTime.split(':');
         const scheduleTime = new Date();
         scheduleTime.setHours(parseInt(hours), parseInt(minutes), 0);
-        
+
         const timeDiff = scheduleTime.getTime() - now.getTime();
         const minutesDiff = Math.floor(timeDiff / (1000 * 60));
 
-        if (minutesDiff <= 25 && minutesDiff > 0) {
+        if (minutesDiff <= 20 && minutesDiff > 0) {
             return 'upcoming';
         }
         return 'not-due';
