@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { UserData, SearchUser } from '@/types/userTypes';
 import { addDoc, collection, deleteDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
+import Link from 'next/link';
 
 type LeftSectionProps = {
     profileImage: { imageURL: string } | null;
@@ -52,9 +53,9 @@ const UserModal = ({ selectedUser, setShowUserModal, onAddFriend, onFollow, isFo
                         <div className="flex flex-col items-center">
                             {/* Profile Image */}
                             <div className="w-24 h-24 rounded-full overflow-hidden mb-4 ring-4 ring-greenTheme/20">
-                                {selectedUser?.profileImage ? (
+                                {selectedUser?.profileImages?.profile ? (
                                     <Image
-                                        src={selectedUser.profileImage}
+                                        src={selectedUser.profileImages.profile}
                                         alt={selectedUser.firstName}
                                         width={96}
                                         height={96}
@@ -70,6 +71,7 @@ const UserModal = ({ selectedUser, setShowUserModal, onAddFriend, onFollow, isFo
                                         </span>
                                     </div>
                                 )}
+
                             </div>
 
                             {/* User Details */}
@@ -558,13 +560,19 @@ export default function LeftSection({
                                         )}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="font-medium text-sm">
-                                            {`${user.firstName} ${user.lastName}`}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                            @{user.userName}
-                                        </span>
+                                        <Link
+                                            href={`/profile/viewOtherProfile/${user.userName}`}
+                                            className="hover:underline flex flex-col"
+                                        >
+                                            <span className="font-medium text-sm">
+                                                {`${user.firstName} ${user.lastName}`}
+                                            </span>
+                                            <span className="text-xs text-gray-500">
+                                                @{user.userName}
+                                            </span>
+                                        </Link>
                                     </div>
+
                                 </div>
 
                                 {/* Action Button based on tab */}

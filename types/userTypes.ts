@@ -1,30 +1,39 @@
 import { Timestamp } from "firebase/firestore";
 
 type UserData = {
-	id: string;
-	firstName: string;
-	lastName: string;
-	userName: string;
-	email: string;
-	gender: string;
-	birthday: string;
-	country: string;
-	isAdmin: boolean;
-	last_loggedIn: Date;
-	userTier: number;
-	createdAt: Date;
-    profileImage?: string;
-	bio?:string;
+    id: string;
+    firstName: string;
+    lastName: string;
+    userName: string;
+    email: string;
+    gender: string;
+    birthday: string;
+    country: string;
+    isAdmin: boolean;
+    last_loggedIn: Date;
+    userTier: number;
+    createdAt: Date;
+    bio?: string;
+    profileImages?: {
+        [key: string]: string; // This allows for dynamic profile image types
+    };
 };
 
-type ProfileImage = {
-	id: string;
-	imageURL: string;
-	userId: string;
-	typeOfImage: string;
-	createdAt: Date;
-	updatedAt: Date;
 
+type ProfileImage = {
+    id: string;
+    imageURL: string;
+    userId: string;
+    typeOfImage: string;
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+type ProfileImageSetAs = {
+    id: string;
+    userId: string;
+    profileImageId: string;
+    setAs: 'profile' | 'coverProfile' | 'postProfile' | 'jobProfile';
 };
 
 type SearchUser = {
@@ -113,6 +122,7 @@ type AddressSectionProps = {
 export type {
 	UserData, 
 	ProfileImage,
+	ProfileImageSetAs,
 	SearchUser,
 	Post,
 	PostData,
