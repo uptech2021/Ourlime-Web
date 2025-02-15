@@ -59,7 +59,7 @@ export default function Schedule() {
     const [templateName, setTemplateName] = useState('');
 
     const userData = useProfileStore();
-    const timeSlots = ["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00"];
+    const timeSlots = ["8:00", "9:00", "10:00", "11:00", "12:00", "13:00", "14:00", "15:00", "16:00", "17:00", "18:00", "19:00", "20:00", "21:00", "22:00", "23:00"];
     const daysOfWeek = ["Monday", "Tuesday", "Wednesday", "Thursday", "Friday"];
     const colors = ['#00ff5e', '#ff0000', '#0000ff', '#ffff00', '#ff00ff', '#00ffff', '#ffa500', '#800080'];
 
@@ -432,27 +432,6 @@ export default function Schedule() {
                 {/* Enhanced Header with View Toggle and Actions */}
                 <div className="flex flex-wrap justify-between items-center mb-6 gap-4">
                     <h2 className="text-xl font-semibold text-gray-800">Class Schedule</h2>
-
-                    <button
-                        className="px-4 py-2 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors flex items-center gap-2 shadow-sm"
-                        onClick={async () => {
-                            try {
-                                const response = await fetch('/api/test/email', {
-                                    method: 'POST',
-                                    headers: { 'Content-Type': 'application/json' },
-                                    body: JSON.stringify({ email: userData.email })
-                                });
-                                const data = await response.json();
-                                console.log('Test email result:', data);
-                            } catch (error) {
-                                console.log('Test email error:', error);
-                            }
-                        }}
-                    >
-                        <Mail className="w-4 h-4" />
-                        Test Email Notification
-                    </button>
-
 
                     <div className="flex items-center gap-3">
                         {/* View Toggle */}

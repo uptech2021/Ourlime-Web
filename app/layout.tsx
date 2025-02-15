@@ -1,4 +1,3 @@
-// app/layout.tsx
 import Header from '@/components/Header';
 import './globals.css';
 import Providers from './providers';
@@ -9,7 +8,7 @@ import Script from 'next/script';
 import { metadata } from './metadata';
 import { SessionHandler } from './SessionProvider';
 import { ChatButton } from '@/components/chat/ChatButton/ChatButton';
-import { GlobalReminders } from '@/components/reminder/GlobalReminders';
+import { GlobalReminderComponent } from '@/components/reminder/GlobalReminderComponent';
 
 export { metadata }
 
@@ -25,7 +24,7 @@ export default function RootLayout({
                     <SessionHandler />
                     <SpeedInsights />
                     <Header />
-                    <GlobalReminders />
+                    <GlobalReminderComponent />
                     {children}
                     <ChatButton />
                     <Analytics />
