@@ -8,11 +8,11 @@ import EventCommentModal from './EventCommentModal';
 import { Button } from '@nextui-org/react';
 
 interface EventsListProps {
-    communityId?: string;
+    communityVariantId?: string;
     userId: string;
 }
 
-export default function EventsList({ communityId, userId }: EventsListProps) {
+export default function EventsList({ communityVariantId, userId }: EventsListProps) {
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
@@ -35,8 +35,9 @@ export default function EventsList({ communityId, userId }: EventsListProps) {
         const loadEvents = async () => {
             try {
                 setLoading(true);
-                const fetchedEvents = await fetchEvents(communityId);
+                const fetchedEvents = await fetchEvents(communityVariantId);
                 setEvents(fetchedEvents);
+                console.log("Events", events)
             } catch (err) {
                 setError('Failed to load events');
                 console.error(err);
@@ -45,9 +46,9 @@ export default function EventsList({ communityId, userId }: EventsListProps) {
             }
         };
 
-        console.log(`Events for community ID ${communityId}:`, events);
+        console.log(`Events for community ID ${communityVariantId}:`, events);
         loadEvents();
-    }, [communityId]);
+    }, [communityVariantId]);
 
    // Function to handle liking an event
     const handleLike = async (eventId: string, userId: string) => {
@@ -92,7 +93,7 @@ export default function EventsList({ communityId, userId }: EventsListProps) {
     if (events.length === 0) return <div>No events found</div>;
 
     return (
-        <div className="grid gap-4 md:grid-cols-2 lg:grid-cols-3 mb-4">
+        <div className="grid grid-cols-1 w-full gap-4 md:grid-cols-2 mb-4">
             {events.map((event) => (
                 <div key={event.id} className="p-4 border rounded-lg shadow">
                     {event.image && (

@@ -5,6 +5,7 @@ import { Button } from '@nextui-org/react';
 import { getDocs, collection, addDoc, setDoc, getDoc, doc, serverTimestamp, query, where, updateDoc, increment } from 'firebase/firestore';
 import { db, auth } from '@/lib/firebaseConfig';
 import { Communities } from '@/types/global';
+import { Community } from '@/types/communityTypes';
 import { Search, MessageSquare, Bell, Settings, Compass, Plus, Users, Calendar, X, LogOut, HelpCircle, Bookmark, Wallet, User, Heart, LayoutGrid, ChevronDown, List, Flag } from 'lucide-react';
 import Link from 'next/link';
 import Image from 'next/image';
@@ -13,23 +14,23 @@ import { signOut } from 'firebase/auth';
 import { doc as firestoreDoc } from 'firebase/firestore';
 
 
-type Community = {
-  id: string;
-  title: string;
-  description: string;
-  imageUrl: string;
-  isPrivate: boolean;
-  userId: string;
-  categoryId: string;
-  bannerImageUrl: string;
-  membershipCount: number;
-  membershipLikes: number;
-  topMembers: string[];
-  creatorProfileImage?: string | null;
-  creatorName: string;
-  isMember: boolean;
-  requestStatus: string;
-}
+// type Community = {
+//   id: string;
+//   title: string;
+//   description: string;
+//   imageUrl: string;
+//   isPrivate: boolean;
+//   userId: string;
+//   categoryId: string;
+//   bannerImageUrl: string;
+//   membershipCount: number;
+//   membershipLikes: number;
+//   topMembers: string[];
+//   creatorProfileImage?: string | null;
+//   creatorName: string;
+//   isMember: boolean;
+//   requestStatus: string;
+// }
 
 type CategoryType = {
   id: string;

@@ -2,8 +2,22 @@ import { collection, getDocs, query, where, doc, getDoc } from "firebase/firesto
 import { db } from "@/lib/firebaseConfig";
 import { UserData, Post, BasePost } from "@/types/userTypes"; // Adjust the import based on your project structure
 import { Comment, Reply } from "@/types/global";
-import { CommunityVariantDetailsSummary } from "@/types/communityTypes";
+import { CommunityVariantDetailsSummary, Community } from "@/types/communityTypes";
 import { error } from "console";
+
+export const fetchCommunityData = async (communityVariantId: string): Promise<Community | null> => {
+    if (!communityVariantId) return null; // Ensure ID is valid
+
+    const communityDocRef = doc(db, "communityVariant", communityVariantId);
+    const communitySnapshot = await getDoc(communityDocRef);
+
+    if (!communitySnapshot.exists()) {
+        console.warn(`Community with ID ${communityVariantId} not found.`);
+        return null;
+    }
+
+    return { id: communitySnapshot.id, ...communitySnapshot.data() } as Community;
+};
 
 export const fetchCommunityMembers = async (communityVariantId: string): Promise<UserData[]> => {
     const membersRef = collection(db, 'communityVariantMembership');

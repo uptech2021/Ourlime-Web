@@ -2,15 +2,15 @@ import { collection, getDocs, query, where, orderBy } from 'firebase/firestore';
 import { db } from '@/lib/firebaseConfig';
 import { Event } from '@/types/eventTypes';
 
-export const fetchEvents = async (communityId?: string) => {
+export const fetchEvents = async (communityVariantId?: string) => {
     try {
         let eventsQuery;
         
-        if (communityId) {
+        if (communityVariantId) {
             // If communityId is provided, fetch events for that community
             eventsQuery = query(
                 collection(db, 'events'),
-                where('communityId', '==', communityId),
+                where('communityVariantId', '==', communityVariantId),
                 orderBy('startDate', 'desc')
             );
         } else {
