@@ -10,9 +10,9 @@ type UserData = {
     birthday: string;
     country: string;
     isAdmin: boolean;
-    last_loggedIn: Date;
+    last_loggedIn: Timestamp;
     userTier: number;
-    createdAt: Date;
+    createdAt: Timestamp;
     bio?: string;
     profileImages?: {
         [key: string]: string; // This allows for dynamic profile image types

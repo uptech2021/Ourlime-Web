@@ -18,7 +18,7 @@ export class GlobalReminders {
 		return GlobalReminders.instance;
 	}
 
-	// lib/schedule/reminders/GlobalReminders.ts
+
 	async fetchSchedules(): Promise<{ schedules: any[] }> {
 		const schedulesQuery = query(collection(db, 'schedules'));
 
@@ -27,8 +27,6 @@ export class GlobalReminders {
 			id: doc.id,
 			...doc.data(),
 		}));
-
-		console.log('Fetched schedules:', schedules);
 		return { schedules };
 	}
 

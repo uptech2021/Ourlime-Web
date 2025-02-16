@@ -10,11 +10,16 @@ export async function GET(request: Request) {
     }
 
     const viewProfileService = ViewOtherProfileService.getInstance();
-    const result = await viewProfileService.fetchUserProfile(username);
+    
+    try {
+        const profileResult = await viewProfileService.fetchUserProfile(username);
 
-    if (result.error) {
-        return NextResponse.json({ error: result.error }, { status: result.status as number });
+        if ('error' in profileResult) {
+            return NextResponse.redirect(new URL('/404', request.url));
+        }
+
+        return NextResponse.json(profileResult);
+    } catch (error) {
+        return NextResponse.redirect(new URL('/404', request.url));
     }
-
-    return NextResponse.json(result);
 }
