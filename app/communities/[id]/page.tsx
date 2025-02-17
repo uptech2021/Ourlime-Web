@@ -287,13 +287,6 @@
                                     <p>Loading community data or community not found.</p>
                                 )}
 
-                                {/* Events Grid */}
-                                <div className="mb-8 border-black border-b">
-                                    <h2 className="mb-4">Community Events</h2>
-                                    <Slider>
-                                        <EventsList communityVariantId={communityVariantId} userId={currentUserId}/>
-                                    </Slider>     
-                                </div>
                                 <div className='flex gap-4 lg:hidden'>
                                     <button 
                                     className="px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors"
@@ -306,6 +299,13 @@
                                         Host Event +
                                     </button>
                                 </div>
+
+                                {/* Events Grid */}
+                                <div className="mb-8 border-black border-b">
+                                    <h2 className="mb-4">Community Events</h2>
+                                    <EventsList communityVariantId={communityVariantId} userId={currentUserId}/>
+                                </div>
+                          
                                 {/* Posts Grid */}
                                 <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 mt-8">
                                     {posts.map((post) => {
