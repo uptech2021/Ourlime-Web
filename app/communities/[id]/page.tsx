@@ -15,6 +15,7 @@
     import CommunityPostCommentsModal from '@/components/communities/CommunityPostCommentsModal';
     import PostEventModal from '@/components/events/PostEventModal';
     import EventsList from '@/components/events/EventsList';
+    import EventCommentModal from '@/components/events/EventCommentModal';
     import { event } from 'cypress/types/jquery';
     import Slider from '@/components/comm/Slider';
     import { Community } from '@/types/communityTypes';
@@ -80,6 +81,8 @@
     export default function CommunityDetailPage() {
         const [isPostModalOpen, setIsPostModalOpen] = useState(false);
         const [isEventModalOpen, setIsEventModalOpen] = useState(false);
+        const [isEventCommentModalOpen, setIsEventCommentModalOpen] = useState(false);
+        const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
         const [isCommunityPostModalOpen, setIsCommunityPostModalOpen] = useState(false);
         const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
         const [members, setMembers] = useState<UserData[]>([]);
@@ -218,6 +221,15 @@
 
         const closeEventsModal = () => {
             setIsEventModalOpen(false);
+        }
+
+        const openEventCommentModal = (eventId: string) => {
+            setSelectedEventId(eventId);
+            setIsEventCommentModalOpen(true);
+        }
+
+        const closeEventCommentModal = () => {
+            setIsEventCommentModalOpen(false);
         }
         
         return (
@@ -408,6 +420,12 @@
                     isOpen={isEventModalOpen}
                     onClose={closeEventsModal}
                     communityVariantId={communityVariantId}/>
+                )}
+
+                {isEventCommentModalOpen && (
+                    <EventCommentModal
+                    onClose={closeEventCommentModal}
+                    eventId={selectedEventId} />
                 )}
             </>
         );

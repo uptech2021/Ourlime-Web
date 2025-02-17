@@ -2,7 +2,7 @@ import { useEffect, useState } from 'react';
 import { fetchEvents } from '@/helpers/Events';
 import { Event } from '@/types/eventTypes';
 import { auth, db } from '@/lib/firebaseConfig';
-import { addDoc, collection, doc, increment, setDoc, updateDoc } from 'firebase/firestore';
+import { addDoc, collection, doc, getDoc, getDocs, increment, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
 import { Heart, MessageCircle } from 'lucide-react';
 import EventCommentModal from './EventCommentModal';
 import { Button } from '@nextui-org/react';
@@ -12,24 +12,14 @@ interface EventsListProps {
     userId: string;
 }
 
-export default function EventsList({ communityVariantId, userId }: EventsListProps) {
+export default function EventsList({ communityVariantId }: EventsListProps) {
     const [events, setEvents] = useState<Event[]>([]);
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
+    const [likedEvents, setLikedEvents] = useState<{ [key: string]: boolean }>({});
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
     const currentUserId = auth.currentUser?.uid; 
-
-
-    const openCommentModal = () => {
-        // setSelectedEventId(eventId);
-        setIsCommentModalOpen(true);
-    };
-
-    const closeCommentModal = () => {
-        setIsCommentModalOpen(false);
-        setSelectedEventId(null);
-    };
 
     useEffect(() => {
         const loadEvents = async () => {
@@ -37,7 +27,6 @@ export default function EventsList({ communityVariantId, userId }: EventsListPro
                 setLoading(true);
                 const fetchedEvents = await fetchEvents(communityVariantId);
                 setEvents(fetchedEvents);
-                console.log("Events", events)
             } catch (err) {
                 setError('Failed to load events');
                 console.error(err);
@@ -46,29 +35,69 @@ export default function EventsList({ communityVariantId, userId }: EventsListPro
             }
         };
 
-        console.log(`Events for community ID ${communityVariantId}:`, events);
         loadEvents();
     }, [communityVariantId]);
 
-   // Function to handle liking an event
-    const handleLike = async (eventId: string, userId: string) => {
+    // Fetch liked events for the user on mount
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const fetchLikedEvents = async () => {
+            try {
+                const likesQuery = query(collection(db, 'eventVariantLikes'), where('userId', '==', currentUserId));
+                const likesSnapshot = await getDocs(likesQuery);
+
+                const likedEventIds: { [key: string]: boolean } = {};
+                likesSnapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    likedEventIds[data.eventVariantId] = true;
+                });
+
+                setLikedEvents(likedEventIds);
+            } catch (error) {
+                console.error("Error fetching liked events:", error);
+            }
+        };
+
+        fetchLikedEvents();
+    }, [currentUserId]);
+
+    const handleLike = async (eventId: string) => {
+        if (!currentUserId) return;
+
         try {
-            // Reference to the specific like document
-            const likeRef = doc(db, 'eventVariantLikes', `${eventId}_${userId}`);
-
-            // Add a like document for the user-event pair
-            await setDoc(likeRef, {
-                eventVariantId: eventId,
-                userId: userId
-            });
-
-            // Reference to the like counter document
+            const likeRef = doc(db, 'eventVariantLikes', `${eventId}_${currentUserId}`);
             const likeCounterRef = doc(db, 'eventLikeCounter', eventId);
 
-            // Increment the like counter
-            await updateDoc(likeCounterRef, {
-                like: increment(1)
-            });
+            if (likedEvents[eventId]) {
+                // Unlike the event
+                await deleteDoc(likeRef);
+                await updateDoc(likeCounterRef, {
+                    like: increment(-1),
+                });
+                setLikedEvents((prev) => {
+                    const updatedLikes = { ...prev };
+                    delete updatedLikes[eventId];
+                    return updatedLikes;
+                });
+            } else {
+                // Like the event
+                await setDoc(likeRef, {
+                    eventVariantId: eventId,
+                    userId: currentUserId
+                });
+
+                const likeCounterSnap = await getDoc(likeCounterRef);
+                if (likeCounterSnap.exists()) {
+                    await updateDoc(likeCounterRef, {
+                        like: increment(1),
+                    });
+                } else {
+                    await setDoc(likeCounterRef, { like: 1 });
+                }
+
+                setLikedEvents((prev) => ({ ...prev, [eventId]: true }));
+            }
         } catch (error) {
             console.error('Error liking event:', error);
         }
@@ -87,6 +116,10 @@ export default function EventsList({ communityVariantId, userId }: EventsListPro
         }
     };
 
+    const openCommentsModal = async (eventId: string) => {
+        setSelectedEventId(eventId);
+        setIsCommentModalOpen(true);
+    }
 
     if (loading) return <div>Loading events...</div>;
     if (error) return <div>Error: {error}</div>;
@@ -110,22 +143,26 @@ export default function EventsList({ communityVariantId, userId }: EventsListPro
                         {new Date(event.endDate).toLocaleDateString()}
                     </p>
                     <p className="text-sm text-gray-500">{event.location}</p>
-                    {/* Other event details... */}
+
                     {event.userId !== currentUserId && (
                         <Button onClick={() => handleRegisterForEvent(event.id)}>
                             Register
                         </Button>
                     )}
-                    <div className="flex items-center justify-between mt-4">
+
+                    <div className="flex items-center gap-4 mt-4">
                         <button
-                            onClick={() => handleLike(event.id, userId)}
-                            className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
+                            onClick={() => handleLike(event.id)}
+                            className={`flex items-center gap-2 ${
+                                likedEvents[event.id] ? 'text-greenTheme' : 'text-gray-600'
+                            } hover:text-greenTheme transition-colors`}
                         >
-                            <Heart className="w-5 h-5" />
-                            <span>Like</span>
+                            <Heart className="w-5 h-5" fill={likedEvents[event.id] ? 'currentColor' : 'none'} />
+                            <span>{likedEvents[event.id] ? 'Liked' : 'Like'}</span>
                         </button>
+
                         <button
-                            onClick={openCommentModal}
+                            onClick={() => openCommentsModal(event.id)}
                             className="flex items-center gap-2 text-gray-600 hover:text-greenTheme"
                         >
                             <MessageCircle size={20} />
@@ -134,11 +171,10 @@ export default function EventsList({ communityVariantId, userId }: EventsListPro
                     </div>
                 </div>
             ))}
-                        {/* Comment Modal */}
-                        {selectedEventId && (
+
+            {isCommentModalOpen && selectedEventId && (
                 <EventCommentModal
-                    isOpen={isCommentModalOpen}
-                    onClose={closeCommentModal}
+                    onClose={() => setIsCommentModalOpen(false)}
                     eventId={selectedEventId}
                 />
             )}

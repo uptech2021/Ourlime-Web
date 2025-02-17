@@ -2,14 +2,14 @@ import React, { useState } from 'react';
 import { Button, Textarea } from '@nextui-org/react';
 import { db } from '@/lib/firebaseConfig';
 import { addDoc, collection } from 'firebase/firestore';
+import { fetchEvents } from '@/helpers/Events';
 
 interface EventCommentModalProps {
-    isOpen: boolean;
     onClose: () => void;
     eventId: string;
 }
 
-const EventCommentModal: React.FC<EventCommentModalProps> = ({ isOpen, onClose, eventId }) => {
+const EventCommentModal: React.FC<EventCommentModalProps> = ({ onClose, eventId }) => {
     const [comment, setComment] = useState('');
 
     const handleCommentSubmit = async () => {
@@ -29,10 +29,9 @@ const EventCommentModal: React.FC<EventCommentModalProps> = ({ isOpen, onClose, 
         }
     };
 
-    if (!isOpen) return null;
 
     return (
-        <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+        <div className="border-b fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
             <div className="bg-white rounded-lg p-6 w-full max-w-md">
                 <h3 className="text-lg font-semibold mb-4">Add a Comment</h3>
                 <Textarea
