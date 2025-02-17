@@ -3,7 +3,7 @@ import { fetchEvents } from '@/helpers/Events';
 import { Event } from '@/types/eventTypes';
 import { auth, db } from '@/lib/firebaseConfig';
 import { addDoc, collection, doc, getDoc, getDocs, increment, setDoc, updateDoc, deleteDoc, query, where } from 'firebase/firestore';
-import { Heart, MessageCircle } from 'lucide-react';
+import { Heart, MessageCircle, CheckCircle } from 'lucide-react';
 import EventCommentModal from './EventCommentModal';
 import { Button } from '@nextui-org/react';
 import Slider from '../comm/Slider';
@@ -18,8 +18,10 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
     const [loading, setLoading] = useState(true);
     const [error, setError] = useState<string | null>(null);
     const [likedEvents, setLikedEvents] = useState<{ [key: string]: boolean }>({});
+    const [registeredEvents, setRegisteredEvents] = useState<{ [key: string]: boolean }>({});
     const [isCommentModalOpen, setIsCommentModalOpen] = useState(false);
     const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
+    const [registrationMessage, setRegistrationMessage] = useState<{ [key: string]: boolean }>({});
     const currentUserId = auth.currentUser?.uid;
 
     useEffect(() => {
@@ -38,6 +40,55 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
 
         loadEvents();
     }, [communityVariantId]);
+
+    useEffect(() => {
+        if (!currentUserId) return;
+
+        const fetchRegisteredEvents = async () => {
+            try {
+                const registeredQuery = query(collection(db, 'eventSubscription'), where('userId', '==', currentUserId));
+                const registeredSnapshot = await getDocs(registeredQuery);
+
+                const registeredEventIds: { [key: string]: boolean } = {};
+                registeredSnapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    registeredEventIds[data.eventId] = true;
+                });
+
+                setRegisteredEvents(registeredEventIds);
+            } catch (error) {
+                console.error("Error fetching registered events:", error);
+            }
+        };
+
+        fetchRegisteredEvents();
+    }, [currentUserId]);
+
+    const handleRegisterForEvent = async (eventId: string) => {
+        if (registeredEvents[eventId]) return; // Prevent multiple registrations
+
+        try {
+            await addDoc(collection(db, 'eventSubscription'), {
+                isAttending: true,
+                userId: currentUserId,
+                eventId: eventId
+            });
+
+            setRegisteredEvents(prev => ({ ...prev, [eventId]: true }));
+            setRegistrationMessage(prev => ({ ...prev, [eventId]: true }));
+
+            // Hide message after 3 seconds
+            setTimeout(() => {
+                setRegistrationMessage(prev => {
+                    const updatedMessages = { ...prev };
+                    delete updatedMessages[eventId];
+                    return updatedMessages;
+                });
+            }, 3000);
+        } catch (error) {
+            console.error('Error registering for event:', error);
+        }
+    };
 
     const openCommentsModal = async (eventId: string) => {
         setSelectedEventId(eventId);
@@ -67,6 +118,30 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
                             {new Date(event.endDate).toLocaleDateString()}
                         </p>
                         <p className="text-sm text-gray-500">{event.location}</p>
+
+                        {/* Show Register button only if user didn't create the event */}
+                        {event.userId !== currentUserId && (
+                            <div className="mt-4">
+                                {registeredEvents[event.id] ? (
+                                    <Button disabled className="bg-gray-300 text-gray-600 px-4 py-2 rounded-md flex items-center gap-2">
+                                        <CheckCircle size={16} />
+                                        Registered
+                                    </Button>
+                                ) : (
+                                    <Button 
+                                        onClick={() => handleRegisterForEvent(event.id)}
+                                        className="bg-greenTheme text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                                    >
+                                        Register
+                                    </Button>
+                                )}
+
+                                {/* Show registration success message */}
+                                {registrationMessage[event.id] && (
+                                    <p className="text-green-600 text-sm mt-2">You have successfully registered!</p>
+                                )}
+                            </div>
+                        )}
 
                         <div className="flex items-center gap-4 mt-4">
                             <button

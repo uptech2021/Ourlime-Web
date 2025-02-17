@@ -39,7 +39,7 @@ const EventCommentModal: React.FC<EventCommentModalProps> = ({ onClose, eventId 
         const loadComments = async () => {
             const fetchedComments = await fetchCommentsForEvent(eventId);
             setComments(fetchedComments);
-            console.log("Event comments: ", fetchedComments);
+            console.log(`Event comments for: ${eventId} `, fetchedComments);
         };
 
         loadComments();
