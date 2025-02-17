@@ -197,3 +197,24 @@
   animation: bounce-subtle 3s ease-in-out infinite;
 }
 
+
+/* profile header */
+.custom-scrollbar {
+  scrollbar-width: thin;
+  scrollbar-color: #10B981 #E5E7EB;
+}
+
+.custom-scrollbar::-webkit-scrollbar {
+  width: 6px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-track {
+  background: #E5E7EB;
+  border-radius: 3px;
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background-color: #10B981;
+  border-radius: 3px;
+}
+

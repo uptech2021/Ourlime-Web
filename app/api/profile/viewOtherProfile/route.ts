@@ -12,13 +12,13 @@ export async function GET(request: Request) {
     const viewProfileService = ViewOtherProfileService.getInstance();
     
     try {
-        const profileResult = await viewProfileService.fetchUserProfile(username);
+        const result = await viewProfileService.fetchUserProfile(username);
 
-        if ('error' in profileResult) {
+        if ('error' in result) {
             return NextResponse.redirect(new URL('/404', request.url));
         }
 
-        return NextResponse.json(profileResult);
+        return NextResponse.json(result);
     } catch (error) {
         return NextResponse.redirect(new URL('/404', request.url));
     }

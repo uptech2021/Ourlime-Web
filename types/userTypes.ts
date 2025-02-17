@@ -15,8 +15,10 @@ type UserData = {
     createdAt: Timestamp;
     bio?: string;
     profileImages?: {
-        [key: string]: string; // This allows for dynamic profile image types
+        [key: string]: string; 
     };
+    friendsCount?: number;
+    postsCount?: number;
 };
 
 
@@ -46,7 +48,7 @@ type SearchUser = {
 
 
 type Post = {
-	id: string;
+	id: string; 
 	caption: string;
 	description: string;
 	visibility: string;
@@ -119,6 +121,7 @@ type Address = {
 type AddressSectionProps = {
     userData: UserData;
 }
+
 export type {
 	UserData, 
 	ProfileImage,

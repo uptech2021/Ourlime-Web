@@ -1,19 +1,19 @@
 import Image from 'next/image';
 
 type Community = {
-    id: string;
-    title: string;
-    membershipCount: number;
-    imageUrl: string;
-  };
-  
-  type RightSectionProps = {
-    topCommunities: Community[];
-  };
+  id: string;
+  title: string;
+  membershipCount: number;
+  imageUrl: string;
+};
+
+type RightSectionProps = {
+  topCommunities: Community[];
+};
 
 export default function RightSection({ topCommunities }: RightSectionProps) {
-    return (
-        <section className=" w-full
+  return (
+    <section className=" w-full
 		bg-white rounded-lg shadow-md 
 		p-4 md:p-6
 		order-2 lg:order-1
@@ -23,16 +23,16 @@ export default function RightSection({ topCommunities }: RightSectionProps) {
 		scrollbar-thin scrollbar-thumb-gray-200
 		hidden lg:block
         z-10">
-            {/* Communities Grid */}
-            <div className="mb-8">
+      {/* Communities Grid */}
+      <div className="mb-8">
         <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
           Communities
           <button
-  onClick={() => (window.location.href = "/communities")}
-  className="text-sm text-greenTheme hover:underline"
->
-  See All
-</button>
+            onClick={() => (window.location.href = "/communities")}
+            className="text-sm text-greenTheme hover:underline"
+          >
+            See All
+          </button>
 
         </h2>
         <div className="grid grid-cols-2 gap-3">
@@ -61,55 +61,55 @@ export default function RightSection({ topCommunities }: RightSectionProps) {
           ))}
         </div>
       </div>
-            {/* Events Grid */}
-            <div className="mb-8">
-							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
-								Upcoming Events
-								<button className="text-sm text-greenTheme hover:underline">View All</button>
-							</h2>
-							<div className="space-y-4">
-                    {[
-                        { title: 'Tech Conference 2024', date: 'Mar 15', image: 'https://picsum.photos/200/200?random=5' },
-                        { title: 'Design Workshop', date: 'Mar 20', image: 'https://picsum.photos/200/200?random=6' },
-                        { title: 'Startup Meetup', date: 'Mar 25', image: 'https://picsum.photos/200/200?random=7' }
-                    ].map((event, index) => (
-                        <div key={index} className="flex gap-3 
+      {/* Events Grid */}
+      <div className="mb-8">
+        <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+          Upcoming Events
+          <button className="text-sm text-greenTheme hover:underline">View All</button>
+        </h2>
+        <div className="space-y-4">
+          {[
+            { title: 'Tech Conference 2024', date: 'Mar 15', image: 'https://picsum.photos/200/200?random=5' },
+            { title: 'Design Workshop', date: 'Mar 20', image: 'https://picsum.photos/200/200?random=6' },
+            { title: 'Startup Meetup', date: 'Mar 25', image: 'https://picsum.photos/200/200?random=7' }
+          ].map((event, index) => (
+            <div key={index} className="flex gap-3 
                 items-center 
                 cursor-pointer 
                 hover:bg-gray-50 
                 p-2 rounded-lg 
                 transition-all 
                 duration-300">
-                            <Image
-                                src={event.image}
-                                alt={event.title}
-                                width={60}
-                                height={60}
-                                className="rounded-lg object-cover flex-shrink-0"
-                                unoptimized={true}
-                            />
-                            <div>
-                                <p className="font-medium text-sm">{event.title}</p>
-                                <p className="text-gray-500 text-xs">{event.date}</p>
-                            </div>
-                        </div>
-                    ))}
-                </div>
+              <Image
+                src={event.image}
+                alt={event.title}
+                width={60}
+                height={60}
+                className="rounded-lg object-cover flex-shrink-0"
+                unoptimized={true}
+              />
+              <div>
+                <p className="font-medium text-sm">{event.title}</p>
+                <p className="text-gray-500 text-xs">{event.date}</p>
+              </div>
             </div>
+          ))}
+        </div>
+      </div>
 
-            {/* Jobs Grid */}
-						<div>
-							<h2 className="text-lg font-bold mb-4 flex items-center justify-between">
-								Featured Jobs
-								<button className="text-sm text-greenTheme hover:underline">Browse All</button>
-							</h2>
-							<div className="space-y-4">
-                    {[
-                        { role: 'Senior Developer', company: 'TechCorp', location: 'Remote', image: 'https://picsum.photos/200/200?random=8' },
-                        { role: 'UX Designer', company: 'DesignLabs', location: 'New York', image: 'https://picsum.photos/200/200?random=9' },
-                        { role: 'Product Manager', company: 'StartupX', location: 'San Francisco', image: 'https://picsum.photos/200/200?random=10' }
-                    ].map((job, index) => (
-                        <div key={index} className=" border rounded-lg 
+      {/* Jobs Grid */}
+      <div>
+        <h2 className="text-lg font-bold mb-4 flex items-center justify-between">
+          Featured Jobs
+          <button className="text-sm text-greenTheme hover:underline">Browse All</button>
+        </h2>
+        <div className="space-y-4">
+          {[
+            { role: 'Senior Developer', company: 'TechCorp', location: 'Remote', image: 'https://picsum.photos/200/200?random=8' },
+            { role: 'UX Designer', company: 'DesignLabs', location: 'New York', image: 'https://picsum.photos/200/200?random=9' },
+            { role: 'Product Manager', company: 'StartupX', location: 'San Francisco', image: 'https://picsum.photos/200/200?random=10' }
+          ].map((job, index) => (
+            <div key={index} className=" border rounded-lg 
                 p-3 
                 cursor-pointer 
                 hover:border-greenTheme 
@@ -117,25 +117,25 @@ export default function RightSection({ topCommunities }: RightSectionProps) {
                 duration-300
                 transform hover:scale-[1.02]
                 hover:shadow-md">
-                            <div className="flex gap-3 items-center">
-                                <Image
-                                    src={job.image}
-                                    alt={job.company}
-                                    width={40}
-                                    height={40}
-                                    className="rounded-lg"
-                                    unoptimized={true}
-                                />
-                                <div>
-                                    <p className="font-medium text-sm">{job.role}</p>
-                                    <p className="text-gray-500 text-xs">{job.company}</p>
-                                    <p className="text-gray-400 text-xs">{job.location}</p>
-                                </div>
-                            </div>
-                        </div>
-                    ))}
+              <div className="flex gap-3 items-center">
+                <Image
+                  src={job.image}
+                  alt={job.company}
+                  width={40}
+                  height={40}
+                  className="rounded-lg"
+                  unoptimized={true}
+                />
+                <div>
+                  <p className="font-medium text-sm">{job.role}</p>
+                  <p className="text-gray-500 text-xs">{job.company}</p>
+                  <p className="text-gray-400 text-xs">{job.location}</p>
                 </div>
+              </div>
             </div>
-        </section>
-    );
+          ))}
+        </div>
+      </div>
+    </section>
+  );
 }
