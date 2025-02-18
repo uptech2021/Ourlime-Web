@@ -8,6 +8,8 @@ import { CircleUser, ImageIcon, Info, Users, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PostAndDetails } from '@/components/viewOthers/PostAndDetails';
 import { AboutDetails } from '@/components/viewOthers/AboutDetails';
+import { FriendDetails } from '@/components/viewOthers/FriendDetails';
+import { PhotosAndVideosDetails } from '@/components/viewOthers/PhotosAndVideosDetails';
 
 export default function ViewProfile() {
     const [viewedUser, setViewedUser] = useState<UserData | null>(null);
@@ -16,6 +18,7 @@ export default function ViewProfile() {
     const [images, setImages] = useState([]);
     const [following, setFollowing] = useState([]);
     const [followers, setFollowers] = useState([]);
+    const [friends, setFriends] = useState([]);
     const [about, setAbout] = useState({
         workExperience: [],
         education: [],
@@ -42,6 +45,7 @@ export default function ViewProfile() {
                     setFollowing(data.following);
                     setFollowers(data.followers);
                     setAbout(data.about);
+                    setFriends(data.friends);
                 }
 
                 console.log("fetchinng all data", data);
@@ -96,19 +100,11 @@ export default function ViewProfile() {
                             </button>
 
                             <button
-                                onClick={() => setActiveTab('photos')}
+                                onClick={() => setActiveTab('photos_and_videos')}
                                 className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'photos' ? 'text-greenTheme border-b-2 border-greenTheme' : 'text-gray-600 hover:text-greenTheme'}`}
                             >
                                 <ImageIcon size={18} />
-                                <span>Photos</span>
-                            </button>
-
-                            <button
-                                onClick={() => setActiveTab('videos')}
-                                className={`px-2 md:px-3 py-3 font-medium whitespace-nowrap flex items-center gap-2 ${activeTab === 'videos' ? 'text-greenTheme border-b-2 border-greenTheme' : 'text-gray-600 hover:text-greenTheme'}`}
-                            >
-                                <Video size={18} />
-                                <span>Videos</span>
+                                <span>Photos & Videos</span>
                             </button>
                         </div>
                     </div>
@@ -153,6 +149,36 @@ export default function ViewProfile() {
                                         className="w-full"
                                     >
                                         <AboutDetails about={about} userData={viewedUser} />
+                                    </motion.div>
+                                )}
+                                {activeTab === 'friends' && (
+                                    <motion.div
+                                        key="friends"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{
+                                            duration: 0.2,
+                                            ease: "easeInOut"
+                                        }}
+                                        className="w-full"
+                                    >
+                                        <FriendDetails friends={friends} />
+                                    </motion.div>
+                                )}
+                                {activeTab === 'photos_and_videos' && (
+                                    <motion.div
+                                        key="photos_and_videos"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{
+                                            duration: 0.2,
+                                            ease: "easeInOut"
+                                        }}
+                                        className="w-full"
+                                    >
+                                        <PhotosAndVideosDetails media={images} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

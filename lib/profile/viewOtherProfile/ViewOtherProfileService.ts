@@ -162,6 +162,52 @@ export class ViewOtherProfileService {
                     }
                 };
             }));
+
+            const friends = await Promise.all([...friendsSnapshot1.docs, ...friendsSnapshot2.docs].map(async (docSnapshot) => {
+                const friendshipData = docSnapshot.data();
+                const friendId = friendshipData.userId1 === userId ? friendshipData.userId2 : friendshipData.userId1;
+                
+                const friendUserRef = doc(db, 'users', friendId);
+                const friendUserDoc = await getDoc(friendUserRef);
+                const friendUserData = friendUserDoc.data() as UserData;
+            
+                const profileImageQuery = query(
+                    collection(db, 'profileImages'),
+                    where('userId', '==', friendId)
+                );
+                const profileSetAsQuery = query(
+                    collection(db, 'profileImageSetAs'),
+                    where('userId', '==', friendId),
+                    where('setAs', '==', 'profile')
+                );
+                
+                const [profileImagesSnap, setAsSnap] = await Promise.all([
+                    getDocs(profileImageQuery),
+                    getDocs(profileSetAsQuery)
+                ]);
+            
+                let profileImage = null;
+                if (!setAsSnap.empty) {
+                    const setAsDoc = setAsSnap.docs[0].data();
+                    const matchingImage = profileImagesSnap.docs.find(img => img.id === setAsDoc.profileImageId);
+                    if (matchingImage) {
+                        profileImage = matchingImage.data().imageURL;
+                    }
+                }
+            
+                return {
+                    id: docSnapshot.id,
+                    friendshipStatus: friendshipData.friendshipStatus,
+                    createdAt: friendshipData.createdAt,
+                    user: {
+                        id: friendUserDoc.id,
+                        firstName: friendUserData.firstName,
+                        lastName: friendUserData.lastName,
+                        userName: friendUserData.userName,
+                        profileImage
+                    }
+                };
+            }));
             
             const posts = await Promise.all(postsSnapshot.docs.map(async (doc) => {
                 const postData = doc.data();
@@ -244,6 +290,7 @@ export class ViewOtherProfileService {
                 images: userImages,
                 following,
                 followers,
+                friends,
                 about: {
                     workExperience: workExperienceSnapshot.docs.map(doc => ({
                         id: doc.id,
