@@ -1,6 +1,6 @@
 import { db } from '@/lib/firebaseConfig';
-import { collection, query, where, getDocs, getDoc, doc, DocumentData, DocumentReference } from 'firebase/firestore';
-import { UserData, Post } from '@/types/userTypes';
+import { collection, query, where, getDocs, getDoc, doc, DocumentData, DocumentReference, orderBy } from 'firebase/firestore';
+import { UserData, AboutItem } from '@/types/userTypes';
 
 export class ViewOtherProfileService {
     private static instance: ViewOtherProfileService;
@@ -43,43 +43,23 @@ export class ViewOtherProfileService {
                 communityVariantsSnapshot,
                 communityCountsSnapshot,
                 followingSnapshot,
-                followersSnapshot
+                followersSnapshot,
+                workExperienceSnapshot,
+                educationSnapshot,
+                aboutSnapshot
             ] = await Promise.all([
-                getDocs(query(
-                    collection(this.db, 'profileImages'),
-                    where('userId', '==', userId)
-                )),
-                getDocs(query(
-                    collection(this.db, 'profileImageSetAs'),
-                    where('userId', '==', userId)
-                )),
-                getDocs(query(
-                    collection(this.db, 'feedPosts'),
-                    where('userId', '==', userId)
-                )),
-                getDocs(query(
-                    collection(this.db, 'friendship'),
-                    where('userId1', '==', userId),
-                    where('friendshipStatus', '==', 'accepted')
-                )),
-                getDocs(query(
-                    collection(this.db, 'friendship'),
-                    where('userId2', '==', userId),
-                    where('friendshipStatus', '==', 'accepted')
-                )),
-                getDocs(query(
-                    collection(this.db, 'communityVariant'),
-                    where('userId', '==', userId)
-                )),
+                getDocs(query(collection(this.db, 'profileImages'), where('userId', '==', userId))),
+                getDocs(query(collection(this.db, 'profileImageSetAs'), where('userId', '==', userId))),
+                getDocs(query(collection(this.db, 'feedPosts'), where('userId', '==', userId))),
+                getDocs(query(collection(this.db, 'friendship'), where('userId1', '==', userId), where('friendshipStatus', '==', 'accepted'))),
+                getDocs(query(collection(this.db, 'friendship'), where('userId2', '==', userId), where('friendshipStatus', '==', 'accepted'))),
+                getDocs(query(collection(this.db, 'communityVariant'), where('userId', '==', userId))),
                 getDocs(collection(this.db, 'communityVariantMembershipAndLikeCount')),
-                getDocs(query(
-                    collection(this.db, 'followers'),
-                    where('followerId', '==', userId)
-                )),
-                getDocs(query(
-                    collection(db, 'followers'),
-                    where('followeeId', '==', userId)
-                ))
+                getDocs(query(collection(this.db, 'followers'), where('followerId', '==', userId))),
+                getDocs(query(collection(db, 'followers'), where('followeeId', '==', userId))),
+                getDocs(query(collection(this.db, 'users', userId, 'workExperience'), orderBy('startDate', 'desc'))),
+                getDocs(query(collection(this.db, 'users', userId, 'education'), orderBy('startDate', 'desc'))),
+                getDocs(query(collection(this.db, 'users', userId, 'about')))
             ]);
 
             const profileImages = {};
@@ -231,6 +211,14 @@ export class ViewOtherProfileService {
                 };
             }));
 
+            const aboutData = aboutSnapshot.docs.map(doc => ({
+                id: doc.id,
+                ...doc.data()
+            })) as AboutItem[];
+            
+            const interests = aboutData.filter(item => item.type === 'interests');
+            const skills = aboutData.filter(item => item.type === 'skills');
+            
             return {
                 status: 'success',
                 user: {
@@ -255,7 +243,19 @@ export class ViewOtherProfileService {
                 communities,
                 images: userImages,
                 following,
-                followers
+                followers,
+                about: {
+                    workExperience: workExperienceSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    })),
+                    education: educationSnapshot.docs.map(doc => ({
+                        id: doc.id,
+                        ...doc.data()
+                    })),
+                    interests,
+                    skills
+                }
             };
 
         } catch (error) {

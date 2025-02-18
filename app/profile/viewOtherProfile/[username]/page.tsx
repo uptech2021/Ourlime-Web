@@ -7,6 +7,7 @@ import { ViewOtherProfileHeader } from '@/components/commonProfileHeader/ViewOth
 import { CircleUser, ImageIcon, Info, Users, Video } from 'lucide-react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { PostAndDetails } from '@/components/viewOthers/PostAndDetails';
+import { AboutDetails } from '@/components/viewOthers/AboutDetails';
 
 export default function ViewProfile() {
     const [viewedUser, setViewedUser] = useState<UserData | null>(null);
@@ -15,6 +16,12 @@ export default function ViewProfile() {
     const [images, setImages] = useState([]);
     const [following, setFollowing] = useState([]);
     const [followers, setFollowers] = useState([]);
+    const [about, setAbout] = useState({
+        workExperience: [],
+        education: [],
+        interests: [],
+        skills: []
+    });
     const [loading, setLoading] = useState(true);
     const params = useParams();
     const username = (params.username as string).replace('@', '');
@@ -26,7 +33,7 @@ export default function ViewProfile() {
             try {
                 const response = await fetch(`/api/profile/viewOtherProfile?username=${username}`);
                 const data = await response.json();
-    
+
                 if (data.status === 'success') {
                     setViewedUser(data.user);
                     setPosts(data.posts);
@@ -34,6 +41,7 @@ export default function ViewProfile() {
                     setImages(data.images);
                     setFollowing(data.following);
                     setFollowers(data.followers);
+                    setAbout(data.about);
                 }
 
                 console.log("fetchinng all data", data);
@@ -43,7 +51,7 @@ export default function ViewProfile() {
                 setLoading(false);
             }
         };
-        
+
         fetchOtherUserProfile();
     }, [username]);
 
@@ -53,7 +61,7 @@ export default function ViewProfile() {
                 <div className="animate-pulse">Loading profile...</div>
             </div>
         );
-    
+
     }
 
     return (
@@ -122,13 +130,29 @@ export default function ViewProfile() {
                                         }}
                                         className="w-full"
                                     >
-                                        <PostAndDetails 
-                                            posts={posts}   
-                                            communities={communities} 
+                                        <PostAndDetails
+                                            posts={posts}
+                                            communities={communities}
                                             images={images}
                                             following={following}
                                             followers={followers}
+                                            about={about}
                                         />
+                                    </motion.div>
+                                )}
+                                {activeTab === 'about' && (
+                                    <motion.div
+                                        key="about"
+                                        initial={{ opacity: 0, y: 10 }}
+                                        animate={{ opacity: 1, y: 0 }}
+                                        exit={{ opacity: 0, y: -10 }}
+                                        transition={{
+                                            duration: 0.2,
+                                            ease: "easeInOut"
+                                        }}
+                                        className="w-full"
+                                    >
+                                        <AboutDetails about={about} userData={viewedUser} />
                                     </motion.div>
                                 )}
                             </AnimatePresence>

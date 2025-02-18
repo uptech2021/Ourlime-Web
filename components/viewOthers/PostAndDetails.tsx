@@ -6,6 +6,7 @@ import { CommunitySlider } from './communitySlider/CommunitySlider';
 import { ImageSlider } from './imageSlider/ImageSlider';
 import { FollowingSlider } from './followingSlider/FollowingSlider';
 import { FollowersSlider } from './followerSlider/FollowingSlider';
+import { AboutSection } from './about/about';
 
 interface PostAndDetailsProps {
     posts: Post[];
@@ -13,9 +14,18 @@ interface PostAndDetailsProps {
     images?: any[];
     following?: any[];
     followers?: any[];
+    about?: {
+        workExperience: any[];
+        education: any[];
+        interests: any[];
+        skills: any[];
+    };
 }
 
-export const PostAndDetails = ({ posts, communities, images, following, followers }: PostAndDetailsProps) => {
+export const PostAndDetails = ({ 
+    posts, communities, images, 
+    following, followers, about
+}: PostAndDetailsProps) => {
     return (
         <div className="grid grid-cols-1 lg:grid-cols-3 gap-4 -mx-4 sm:-mx-6 lg:-mx-8">
             {/* Main Content - Posts Column */}
@@ -38,6 +48,7 @@ export const PostAndDetails = ({ posts, communities, images, following, follower
                 <div className="bg-white rounded-xl shadow-sm p-3">
                     <h3 className="font-semibold text-lg mb-3">About</h3>
                     {/* About content */}
+                    {about && <AboutSection about={about} />}
                 </div>
 
                 {/* Community Card */}

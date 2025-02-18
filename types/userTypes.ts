@@ -122,6 +122,13 @@ type AddressSectionProps = {
     userData: UserData;
 }
 
+type AboutItem = {
+    id: string;
+    type: 'interests' | 'skills';
+    value: string;
+    createdAt: Timestamp;
+}
+
 export type {
 	UserData, 
 	ProfileImage,
@@ -134,5 +141,6 @@ export type {
 	ContactSectionProps,
 	AddressSetAs,
 	Address,
-	AddressSectionProps
+	AddressSectionProps,
+    AboutItem
 }
