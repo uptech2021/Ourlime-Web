@@ -2,30 +2,41 @@ import { Timestamp } from "firebase/firestore";
 import { CommunityVariantDetailsSummary } from "./communityTypes";
 
 type UserData = {
-	id: string;
-	firstName: string;
-	lastName: string;
-	userName: string;
-	email: string;
-	gender: string;
-	birthday: string;
-	country: string;
-	isAdmin: boolean;
-	last_loggedIn: Date;
-	userTier: number;
-	createdAt: Date;
-    profileImage?: string;
-	bio?:string;
+    id: string;
+    firstName: string;
+    lastName: string;
+    userName: string;
+    email: string;
+    gender: string;
+    birthday: string;
+    country: string;
+    isAdmin: boolean;
+    last_loggedIn: Timestamp;
+    userTier: number;
+    createdAt: Timestamp;
+    bio?: string;
+    profileImages?: {
+        [key: string]: string; 
+    };
+    friendsCount?: number;
+    postsCount?: number;
 };
 
-type ProfileImage = {
-	id: string;
-	imageURL: string;
-	userId: string;
-	typeOfImage: string;
-	createdAt: Date;
-	updatedAt: Date;
 
+type ProfileImage = {
+    id: string;
+    imageURL: string;
+    userId: string;
+    typeOfImage: string;
+    createdAt: Date;
+    updatedAt: Date;
+};
+
+type ProfileImageSetAs = {
+    id: string;
+    userId: string;
+    profileImageId: string;
+    setAs: 'profile' | 'coverProfile' | 'postProfile' | 'jobProfile';
 };
 
 type SearchUser = {
@@ -38,7 +49,7 @@ type SearchUser = {
 
 
 type Post = {
-	id: string;
+	id: string; 
 	caption: string;
 	description: string;
 	visibility: string;
@@ -133,9 +144,11 @@ type Address = {
 type AddressSectionProps = {
     userData: UserData;
 }
+
 export type {
 	UserData, 
 	ProfileImage,
+	ProfileImageSetAs,
 	SearchUser,
 	Post,
 	BasePost,

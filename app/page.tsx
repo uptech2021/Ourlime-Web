@@ -92,7 +92,6 @@ export default function Page() {
 				);
 				const setAsSnapshot = await getDocs(profileSetAsQuery);
 
-
 				let profileImageUrl = null;
 				if (!setAsSnapshot.empty) {
 					const setAsDoc = setAsSnapshot.docs[0].data();
@@ -311,7 +310,7 @@ export default function Page() {
 		return (
 			<>
 				{/* Bottom Navigation Bar */}
-				<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 z-50 lg:hidden">
+				<div className="fixed bottom-0 left-0 right-0 bg-white border-t border-gray-200 lg:hidden">
 					<div className="flex justify-around items-center h-16">
 						<button
 							onClick={() => setActiveTab('feed')}
@@ -346,7 +345,6 @@ export default function Page() {
 				<div className={`
 					fixed inset-0 
 					bg-white 
-					z-40 
 					transition-transform duration-300 
 					lg:hidden
 					${activeTab !== 'feed' ? 'translate-x-0' : 'translate-x-full'}
@@ -561,7 +559,8 @@ export default function Page() {
 		<div className="min-h-screen w-full bg-gray-100">
 
 			{/* Main content with three-column layout */}
-			<main className="pt-36 w-full 2xl:w-9/12 2xl:mx-auto tvScreen:w-7/12 px-2 md:px-8">
+			<main className="pt-12 sm:pt-20 md:pt-28 lg:pt-36 w-full 2xl:w-9/12 2xl:mx-auto tvScreen:w-7/12 px-2 md:px-8">
+
 				<div className="grid grid-cols-1 lg:grid-cols-[1fr_minmax(0,2fr)_1fr] gap-4 lg:gap-4">
 					<div>
 						{/* Section 1: Profile Details - Fixed */}

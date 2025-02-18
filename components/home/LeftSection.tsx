@@ -4,6 +4,7 @@ import Image from 'next/image';
 import { UserData, SearchUser } from '@/types/userTypes';
 import { addDoc, collection, deleteDoc, getDocs, onSnapshot, query, where } from 'firebase/firestore';
 import { auth, db } from '@/lib/firebaseConfig';
+import Link from 'next/link';
 
 type LeftSectionProps = {
     profileImage: { imageURL: string } | null;
@@ -52,9 +53,9 @@ const UserModal = ({ selectedUser, setShowUserModal, onAddFriend, onFollow, isFo
                         <div className="flex flex-col items-center">
                             {/* Profile Image */}
                             <div className="w-24 h-24 rounded-full overflow-hidden mb-4 ring-4 ring-greenTheme/20">
-                                {selectedUser?.profileImage ? (
+                                {selectedUser?.profileImages?.profile ? (
                                     <Image
-                                        src={selectedUser.profileImage}
+                                        src={selectedUser.profileImages.profile}
                                         alt={selectedUser.firstName}
                                         width={96}
                                         height={96}
@@ -70,6 +71,7 @@ const UserModal = ({ selectedUser, setShowUserModal, onAddFriend, onFollow, isFo
                                         </span>
                                     </div>
                                 )}
+
                             </div>
 
                             {/* User Details */}
@@ -255,20 +257,20 @@ export default function LeftSection({
 
     const [localSearchTerm, setLocalSearchTerm] = useState('');
     const [displayUsers, setDisplayUsers] = useState<SearchUser[]>([]);
-    
+
     useEffect(() => {
         setDisplayUsers(tabUsers);
     }, [tabUsers]);
-    
+
     const handleLocalSearch = (e: React.ChangeEvent<HTMLInputElement>) => {
         const searchTerm = e.target.value.toLowerCase();
         setLocalSearchTerm(searchTerm);
-    
+
         if (searchTerm === '') {
             setDisplayUsers(tabUsers);
             return;
         }
-    
+
         const filtered = tabUsers.filter(user =>
             user?.userName?.toLowerCase().includes(searchTerm) ||
             user?.firstName?.toLowerCase().includes(searchTerm) ||
@@ -276,7 +278,7 @@ export default function LeftSection({
         );
         setDisplayUsers(filtered);
     };
-    
+
 
 
 
@@ -364,7 +366,7 @@ export default function LeftSection({
             await addDoc(friendshipRef, {
                 userId1: userData.id,
                 userId2: selectedUser.id,
-                friendshipStatus: 'accepted',
+                friendshipStatus: 'pending',
                 typeOfFriendship: 'friend',
                 createdAt: timestamp,
                 updatedAt: timestamp
@@ -384,8 +386,6 @@ export default function LeftSection({
     };
 
     // END HERE
-
-
 
     // ADD A FOLLOWING LOGIC
     // START HERE
@@ -445,10 +445,10 @@ export default function LeftSection({
             {/* Wrapper for entire section */}
             <section
                 className="bg-white rounded-lg shadow-md 
-                           p-3 order-2 lg:order-1 sticky top-36
-                           h-[calc(100vh-9rem)] overflow-y-auto 
-                           scrollbar-thin scrollbar-thumb-gray-200 
-                           hidden lg:block w-full"
+                            p-3 order-2 lg:order-1 sticky top-36
+                            h-[calc(100vh-9rem)] overflow-y-auto 
+                            scrollbar-thin scrollbar-thumb-gray-200 
+                            hidden lg:block w-full"
             >
                 {/* Profile Section */}
                 <div className="flex flex-col items-center mb-4">
@@ -560,13 +560,19 @@ export default function LeftSection({
                                         )}
                                     </div>
                                     <div className="flex flex-col">
-                                        <span className="font-medium text-sm">
-                                            {`${user.firstName} ${user.lastName}`}
-                                        </span>
-                                        <span className="text-xs text-gray-500">
-                                            @{user.userName}
-                                        </span>
+                                        <Link
+                                            href={`/profile/viewOtherProfile/${user.userName}`}
+                                            className="hover:underline flex flex-col"
+                                        >
+                                            <span className="font-medium text-sm">
+                                                {`${user.firstName} ${user.lastName}`}
+                                            </span>
+                                            <span className="text-xs text-gray-500">
+                                                @{user.userName}
+                                            </span>
+                                        </Link>
                                     </div>
+
                                 </div>
 
                                 {/* Action Button based on tab */}

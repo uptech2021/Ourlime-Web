@@ -19,7 +19,6 @@ interface ProfileHeaderProps {
     userImages: ProfileImage[];
 }
 
-
 export default function ProfileHeader({ onCustomizationSelect }: ProfileHeaderProps) {
     const [userData, setUserData] = useState<UserData | null>(null);
     const { profileImage } = useProfileStore();
@@ -32,8 +31,6 @@ export default function ProfileHeader({ onCustomizationSelect }: ProfileHeaderPr
     const [isEditingBio, setIsEditingBio] = useState(false);
     const [newBio, setNewBio] = useState(userData?.bio || '');
     const { firstName, lastName, userName } = useProfileStore();
-
-
 
     const handleImageSelect = async (selectedImage: ProfileImage) => {
         const user = auth.currentUser;
@@ -217,8 +214,6 @@ export default function ProfileHeader({ onCustomizationSelect }: ProfileHeaderPr
     
         return () => unsubscribe();
     }, []);
-    
-
     
     return (
         <div className="flex-shrink-0">

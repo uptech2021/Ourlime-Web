@@ -1,9 +1,16 @@
+import { Timestamp } from "firebase/firestore";
+
+// types/productTypes.ts
 export interface Product {
     id: string;
     title: string;
     shortDescription: string;
     longDescription: string;
     thumbnailImage: string;
+    category: string;
+    createdAt: Timestamp;
+    views?: string
+
 }
 
 export interface Color {
@@ -18,14 +25,16 @@ export interface Size {
 
 export interface ColorVariant {
     id: string;
-    name: string;
-    hexCode: string;
+    colorVariantName: string;
+    colorId: string;
+    productId: string;
 }
 
 export interface SizeVariant {
     id: string;
-    name: string;
-    measurement: string;
+    sizeVariantName: string;
+    sizeId: string;
+    productId: string;
 }
 
 export interface ProductVariant {
@@ -53,5 +62,3 @@ export interface ProductFormData {
     selectedBaseColor?: string;
     selectedBaseSize?: string;
 }
-
-

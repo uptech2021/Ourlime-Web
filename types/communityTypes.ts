@@ -14,12 +14,38 @@ export type Community = {
     userId: string;
     categoryId: string;
     bannerImageUrl: string;
-    membershipCount: number;
-    membershipLikes: number;
     topMembers: string[];
     creatorProfileImage?: string | null;
     creatorName: string;
     isMember: boolean;
     requestStatus: string;
     createdAt: Date;
-  }
+    // createdAt: string;
+    membershipCount: number;
+    membershipLikes: number;
+}
+
+export interface CommunityMember {
+    userId: string;
+    communityVariantId: string;
+    status: 'active' | 'pending' | 'blocked';
+    role: 'admin' | 'moderator' | 'member';
+    joinedAt: string;
+}
+
+export interface CommunityCategory {
+    id: string;
+    name: string;
+    description: string;
+    icon: string;
+}
+
+export interface CommunityPost {
+    id: string;
+    communityVariantId: string;
+    userId: string;
+    content: string;
+    media?: string[];
+    createdAt: string;
+    updatedAt: string;
+}
