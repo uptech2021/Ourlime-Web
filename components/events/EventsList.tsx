@@ -44,6 +44,23 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
     useEffect(() => {
         if (!currentUserId) return;
 
+        const fetchLikedEvents = async () => {
+            try {
+                const likesQuery = query(collection(db, 'eventVariantLikes'), where('userId', '==', currentUserId));
+                const likesSnapshot = await getDocs(likesQuery);
+
+                const likedEventIds: { [key: string]: boolean } = {};
+                likesSnapshot.docs.forEach(doc => {
+                    const data = doc.data();
+                    likedEventIds[data.eventVariantId] = true;
+                });
+
+                setLikedEvents(likedEventIds);
+            } catch (error) {
+                console.error("Error fetching liked events:", error);
+            }
+        };
+
         const fetchRegisteredEvents = async () => {
             try {
                 const registeredQuery = query(collection(db, 'eventSubscription'), where('userId', '==', currentUserId));
@@ -61,11 +78,54 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
             }
         };
 
+        fetchLikedEvents();
         fetchRegisteredEvents();
     }, [currentUserId]);
 
+    const handleLike = async (eventId: string) => {
+        if (!currentUserId) return;
+
+        try {
+            const likeRef = doc(db, 'eventVariantLikes', `${eventId}_${currentUserId}`);
+            const likeCounterRef = doc(db, 'eventLikeCounter', eventId);
+
+            if (likedEvents[eventId]) {
+                await deleteDoc(likeRef);
+                await updateDoc(likeCounterRef, {
+                    like: increment(-1),
+                });
+                setLikedEvents((prev) => {
+                    const updatedLikes = { ...prev };
+                    delete updatedLikes[eventId];
+                    return updatedLikes;
+                });
+            } else {
+                await setDoc(likeRef, {
+                    eventVariantId: eventId,
+                    userId: currentUserId
+                });
+
+                const likeCounterSnap = await getDoc(likeCounterRef);
+                if (likeCounterSnap.exists()) {
+                    await updateDoc(likeCounterRef, {
+                        like: increment(1),
+                    });
+                } else {
+                    await setDoc(likeCounterRef, { 
+                        like: 1,
+                        eventVariantId: eventId 
+                    });
+                }
+
+                setLikedEvents((prev) => ({ ...prev, [eventId]: true }));
+            }
+        } catch (error) {
+            console.error('Error liking event:', error);
+        }
+    };
+
     const handleRegisterForEvent = async (eventId: string) => {
-        if (registeredEvents[eventId]) return; // Prevent multiple registrations
+        if (registeredEvents[eventId]) return;
 
         try {
             await addDoc(collection(db, 'eventSubscription'), {
@@ -77,7 +137,6 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
             setRegisteredEvents(prev => ({ ...prev, [eventId]: true }));
             setRegistrationMessage(prev => ({ ...prev, [eventId]: true }));
 
-            // Hide message after 3 seconds
             setTimeout(() => {
                 setRegistrationMessage(prev => {
                     const updatedMessages = { ...prev };
@@ -119,7 +178,6 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
                         </p>
                         <p className="text-sm text-gray-500">{event.location}</p>
 
-                        {/* Show Register button only if user didn't create the event */}
                         {event.userId !== currentUserId && (
                             <div className="mt-4">
                                 {registeredEvents[event.id] ? (
@@ -130,13 +188,12 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
                                 ) : (
                                     <Button 
                                         onClick={() => handleRegisterForEvent(event.id)}
-                                        className="bg-greenTheme text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
                                     >
                                         Register
                                     </Button>
                                 )}
 
-                                {/* Show registration success message */}
                                 {registrationMessage[event.id] && (
                                     <p className="text-green-600 text-sm mt-2">You have successfully registered!</p>
                                 )}
@@ -145,11 +202,13 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
 
                         <div className="flex items-center gap-4 mt-4">
                             <button
-                                onClick={() => console.log('Liked')}
-                                className="flex items-center gap-2 text-gray-600 hover:text-red-500 transition-colors"
+                                onClick={() => handleLike(event.id)}
+                                className={`flex items-center gap-2 ${
+                                    likedEvents[event.id] ? 'text-greenTheme' : 'text-gray-600'
+                                } hover:text-greenTheme transition-colors`}
                             >
-                                <Heart className="w-5 h-5" />
-                                Like
+                                <Heart className="w-5 h-5" fill={likedEvents[event.id] ? 'currentColor' : 'none'} />
+                                <span>{likedEvents[event.id] ? 'Liked' : 'Like'}</span>
                             </button>
 
                             <button
