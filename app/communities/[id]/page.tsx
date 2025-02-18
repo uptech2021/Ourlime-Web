@@ -7,7 +7,7 @@
     import { getFriends } from '@/helpers/friendsAndFollowingHelper';
     import { UserData, ProfileImage, BasePost } from '@/types/userTypes';
     import { fetchCommunityData, fetchCommunityMembers, fetchCommunityPosts } from '@/helpers/communities';
-    import { addDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, writeBatch, serverTimestamp, increment, doc } from 'firebase/firestore';
+    import { addDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, writeBatch, serverTimestamp, increment, doc, updateDoc } from 'firebase/firestore';
     import { db, auth } from '@/lib/firebaseConfig';
     import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
     import PostMedia from '@/components/communities/PostMedia';
@@ -19,6 +19,7 @@
     import { event } from 'cypress/types/jquery';
     import Slider from '@/components/comm/Slider';
     import { Community } from '@/types/communityTypes';
+    import { uploadFile } from '@/helpers/firebaseStorage';
 
     // type BasePost = {
     //     id: string;
@@ -93,6 +94,12 @@
         const communityVariantId = id? String(id): "";
         const currentUserId = auth.currentUser?.uid;
         const [communityData, setCommunityData] = useState<Community>();
+        const [isEditFormOpen, setIsEditFormOpen] = useState(false);
+        const [editTitle, setEditTitle] = useState(communityData?.title || '');
+        const [editDescription, setEditDescription] = useState(communityData?.description || '');
+        const [editImageUrl, setEditImageUrl] = useState(communityData?.imageUrl || '');
+        const [editIsPrivate, setEditIsPrivate] = useState(communityData?.isPrivate || false);
+        const [communityImage, setCommunityImage] = useState<File | null>(null);
 
         const loadCommunityData = async () => {
             const fetchedCommunityData = await fetchCommunityData(communityVariantId);
@@ -107,6 +114,8 @@
             const loadMembers = async () => {
                 const fetchedMembers = await fetchCommunityMembers(communityVariantId);
                 setMembers(fetchedMembers);
+
+                console.log("Fetched Members: ", fetchedMembers)
             };
             loadMembers();
         }, [communityVariantId]);
@@ -231,7 +240,43 @@
         const closeEventCommentModal = () => {
             setIsEventCommentModalOpen(false);
         }
-        
+
+        const handleEditSubmit = async (e: React.FormEvent) => {
+            e.preventDefault();
+
+            const communityRef = doc(db, 'communityVariant', communityData.id);
+            let imageUrl = editImageUrl;
+
+            if (communityImage) {
+                try {
+                    imageUrl = await uploadFile(communityImage, `images/communities/thumbnails/${communityImage.name}`);
+                } catch (error) {
+                    console.error('Error uploading image: ', error);
+                    return;
+                }
+            }
+
+            try {
+                await updateDoc(communityRef, {
+                    title: editTitle,
+                    description: editDescription,
+                    imageUrl: imageUrl,
+                    isPrivate: editIsPrivate,
+                });
+
+                console.log('Community data updated successfully');
+                setIsEditFormOpen(false);
+            } catch (error) {
+                console.error('Error updating community data: ', error);
+            }
+        };
+
+        const handleImageChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+            if (e.target.files && e.target.files.length > 0) {
+                setCommunityImage(e.target.files[0]);
+            }
+        };
+
         return (
             <>
                 <div className="min-h-screen bg-gray-50">
@@ -251,7 +296,7 @@
                                 <ul className="mt-4 space-y-2">
                                     {members.map(member => (
                                         <li key={member.id} className="flex items-center gap-2">
-                                        <img src={member.profileImage} alt={member.userName} className="rounded-full w-10 h-10" />
+                                        <img src={member.profileImages?.['undefined'] || 'image' || ''} alt={member.userName} className="rounded-full w-10 h-10" />
                                         <div>
                                             <div className="font-semibold">{`${member.firstName} ${member.lastName}`}</div>
                                             <div className="text-sm text-gray-500">@{member.userName}</div>
@@ -282,6 +327,14 @@
                                                 More
                                             </button>
                                         </div>
+                                        {/* Move the Edit Button Below All Other Data */}
+                                        {communityData?.userId === currentUserId && (
+                                            <button 
+                                                onClick={() => setIsEditFormOpen(prev => !prev)} 
+                                                className="mt-4 px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                                {isEditFormOpen ? 'Cancel Edit' : 'Edit Community'}
+                                            </button>
+                                        )}  
                                     </div>
                                 ) : (
                                     <p>Loading community data or community not found.</p>
@@ -426,6 +479,54 @@
                     <EventCommentModal
                     onClose={closeEventCommentModal}
                     eventId={selectedEventId} />
+                )}
+
+                {/* Edit Form */}
+                {isEditFormOpen && (
+                    <form onSubmit={handleEditSubmit} className="bg-white p-4 rounded-lg shadow-md mt-4">
+                        <div>
+                            <label>Title:</label>
+                            <input 
+                                type="text" 
+                                value={editTitle} 
+                                onChange={(e) => setEditTitle(e.target.value)} 
+                                className="border rounded p-2 w-full" 
+                                placeholder="Edit Title"
+                            />
+                        </div>
+                        <div>
+                            <label>Description:</label>
+                            <textarea 
+                                value={editDescription} 
+                                onChange={(e) => setEditDescription(e.target.value)} 
+                                className="border rounded p-2 w-full" 
+                                placeholder="Edit Description"
+                            />
+                        </div>
+                        <div>
+                            <label>Image:</label>
+                            <input 
+                                placeholder='Change Image'
+                                type="file" 
+                                accept="image/*" 
+                                onChange={handleImageChange} 
+                                className="border rounded p-2 w-full" 
+                            />
+                        </div>
+                        <div>
+                            <label>
+                                <input 
+                                    type="checkbox" 
+                                    checked={editIsPrivate} 
+                                    onChange={(e) => setEditIsPrivate(e.target.checked)} 
+                                />
+                                Private
+                            </label>
+                        </div>
+                        <button type="submit" className="mt-2 px-4 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                            Save Changes
+                        </button>
+                    </form>
                 )}
             </>
         );

@@ -31,34 +31,25 @@ export const fetchCommunityMembers = async (communityVariantId: string): Promise
         // Fetch user data
         const userDocRef = doc(db, 'users', userId);
         const userDocSnap = await getDoc(userDocRef);
-        const userData = userDocSnap.data();
+        const userData = userDocSnap.data() as UserData;
 
-        // Fetch profile image
+        // Fetch profile images
         const profileImagesQuery = query(
             collection(db, 'profileImages'),
             where('userId', '==', userId)
         );
         const profileImagesSnapshot = await getDocs(profileImagesQuery);
-        const profileSetAsQuery = query(
-            collection(db, 'profileImageSetAs'),
-            where('userId', '==', userId),
-            where('setAs', '==', 'profile')
-        );
-        const setAsSnapshot = await getDocs(profileSetAsQuery);
 
-        let profileImage = null;
-        if (!setAsSnapshot.empty) {
-            const setAsDoc = setAsSnapshot.docs[0].data();
-            const matchingImage = profileImagesSnapshot.docs
-                .find(img => img.id === setAsDoc.profileImageId);
-            if (matchingImage) {
-                profileImage = matchingImage.data();
-            }
-        }
+        // Populate profileImages object
+        const profileImages: { [key: string]: string } = {};
+        profileImagesSnapshot.docs.forEach(imgDoc => {
+            const imgData = imgDoc.data();
+            profileImages[imgData.typeOfImage] = imgData.imageURL; // Assuming typeOfImage is a key
+        });
 
         return {
             ...userData,
-            profileImage: profileImage?.imageURL,
+            profileImages, // Assign the populated profileImages object
         } as UserData;
     }));
 
