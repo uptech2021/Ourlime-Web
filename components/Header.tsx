@@ -22,7 +22,7 @@ export default function Header(): JSX.Element {
         { name: 'Events', href: '/events' },
         { name: 'Jobs', href: '/jobs' },
         { name: 'Communities', href: '/communities' },
-        { name: 'Marketplace', href: '/marketplace' }
+        { name: 'Marketplace', href: '/market' }
     ];
 
     if (noHeaderPages.includes(pathname)) {
