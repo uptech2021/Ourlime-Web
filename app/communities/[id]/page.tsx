@@ -523,7 +523,7 @@
                                 Private
                             </label>
                         </div>
-                        <button type="submit" className="mt-2 px-4 py-1.5 bg-green-500 text-white rounded-lg hover:bg-green-600 transition-colors">
+                        <button type="submit" className="mt-2 px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors">
                             Save Changes
                         </button>
                     </form>
