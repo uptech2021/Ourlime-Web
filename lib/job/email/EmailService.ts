@@ -42,14 +42,13 @@ export class EmailService {
                                 <table role="presentation" cellspacing="0" cellpadding="0" border="0" width="600" style="margin: 0 auto; background-color: #ffffff; border-radius: 8px; overflow: hidden; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
                                     <!-- Header -->
                                     <tr>
-                                    // Update the img src in the email template
-                                    <td style="background: linear-gradient(to right, #00ff5e, #00e676); padding: 40px 40px; text-align: center;">
-                                        <img src="https://firebasestorage.googleapis.com/v0/b/ourlime-web.appspot.com/o/logo.png" 
-                                             alt="Ourlime Logo" 
-                                             width="150" 
-                                             style="margin-bottom: 20px;">
-                                        <h1 style="color: #ffffff; margin: 0; font-size: 24px;">New Job Application Received</h1>
-                                    </td>
+                                        <td style="background: linear-gradient(to right, #00ff5e, #00e676); padding: 40px 40px; text-align: center;">
+                                            <img src="https://ourlime.com/images/transparentLogo.png"
+                                            alt="Ourlime Logo"
+                                            width="150"
+                                            style="margin-bottom: 20px;"
+                                            <h1 style="color: #ffffff; margin: 0; font-size: 24px;">New Job Application Received</h1>
+                                        </td>
                                     
                                     </tr>
 
