@@ -314,7 +314,7 @@
                                         <h2 className="text-xl font-bold break-words">{communityData.title}</h2>
                                         <p className="text-gray-600 text-sm my-2 break-words">{communityData.description}</p>
                                         <div className="flex flex-wrap items-center gap-2 sm:gap-4">
-                                            <button className="px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors">
+                                            <button className="px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-green-600 transition-colors">
                                                 Join Community
                                             </button>
                                             <button className="p-1.5 hover:bg-gray-100 rounded-full transition-colors" title='heart'>
@@ -323,15 +323,12 @@
                                             <button className="px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
                                                 Share
                                             </button>
-                                            <button className="px-4 py-1.5 border border-gray-200 rounded-lg hover:bg-gray-50 transition-colors">
-                                                More
-                                            </button>
                                         </div>
                                         {/* Move the Edit Button Below All Other Data */}
                                         {communityData?.userId === currentUserId && (
                                             <button 
                                                 onClick={() => setIsEditFormOpen(prev => !prev)} 
-                                                className="mt-4 px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-blue-600 transition-colors">
+                                                className="mt-4 px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-blue-600 transition-colors">
                                                 {isEditFormOpen ? 'Cancel Edit' : 'Edit Community'}
                                             </button>
                                         )}  
@@ -340,14 +337,62 @@
                                     <p>Loading community data or community not found.</p>
                                 )}
 
+                                {/* Edit Form */}
+                                {isEditFormOpen && (
+                                    <form onSubmit={handleEditSubmit} className="bg-white p-4 rounded-lg shadow-md mt-4">
+                                        <div>
+                                            <label>Title:</label>
+                                            <input 
+                                                type="text" 
+                                                value={editTitle} 
+                                                onChange={(e) => setEditTitle(e.target.value)} 
+                                                className="border rounded p-2 w-full" 
+                                                placeholder="Edit Title"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label>Description:</label>
+                                            <textarea 
+                                                value={editDescription} 
+                                                onChange={(e) => setEditDescription(e.target.value)} 
+                                                className="border rounded p-2 w-full" 
+                                                placeholder="Edit Description"
+                                            />
+                                        </div>
+                                        <div>
+                                            <label>Image:</label>
+                                            <input 
+                                                placeholder='Change Image'
+                                                type="file" 
+                                                accept="image/*" 
+                                                onChange={handleImageChange} 
+                                                className="border rounded p-2 w-full" 
+                                            />
+                                        </div>
+                                        <div>
+                                            <label>
+                                                <input 
+                                                    type="checkbox" 
+                                                    checked={editIsPrivate} 
+                                                    onChange={(e) => setEditIsPrivate(e.target.checked)} 
+                                                />
+                                                Private
+                                            </label>
+                                        </div>
+                                        <button type="submit" className="mt-2 px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-green-600 transition-colors">
+                                            Save Changes
+                                        </button>
+                                    </form>
+                                )}
+
                                 <div className='flex gap-4 lg:hidden'>
                                     <button 
-                                    className="px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors"
+                                    className="px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-green-600 transition-colors"
                                     onClick={() => setIsCommunityPostModalOpen(true)}>
                                         Create Post +
                                     </button>
                                     <button 
-                                    className="px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors" 
+                                    className="px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-green-600 transition-colors" 
                                     onClick={() => setIsEventModalOpen(true)}>
                                         Host Event +
                                     </button>
@@ -427,11 +472,11 @@
                                     <p>Online: 76 Members</p>
                                 </div>
                                 <button 
-                                className="hidden lg:block px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors"
+                                className="hidden lg:block px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-green-600 transition-colors"
                                 onClick={() => setIsCommunityPostModalOpen(true)}>
                                     Create Post +
                                 </button>
-                                <button className="hidden lg:block mt-2 px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors" 
+                                <button className="hidden lg:block mt-2 px-4 py-1.5 bg-greenTheme text-black rounded-lg hover:bg-green-600 transition-colors" 
                                 onClick={() => setIsEventModalOpen(true)}>
                                     Host Event +
                                 </button>
@@ -479,54 +524,6 @@
                     <EventCommentModal
                     onClose={closeEventCommentModal}
                     eventId={selectedEventId} />
-                )}
-
-                {/* Edit Form */}
-                {isEditFormOpen && (
-                    <form onSubmit={handleEditSubmit} className="bg-white p-4 rounded-lg shadow-md mt-4">
-                        <div>
-                            <label>Title:</label>
-                            <input 
-                                type="text" 
-                                value={editTitle} 
-                                onChange={(e) => setEditTitle(e.target.value)} 
-                                className="border rounded p-2 w-full" 
-                                placeholder="Edit Title"
-                            />
-                        </div>
-                        <div>
-                            <label>Description:</label>
-                            <textarea 
-                                value={editDescription} 
-                                onChange={(e) => setEditDescription(e.target.value)} 
-                                className="border rounded p-2 w-full" 
-                                placeholder="Edit Description"
-                            />
-                        </div>
-                        <div>
-                            <label>Image:</label>
-                            <input 
-                                placeholder='Change Image'
-                                type="file" 
-                                accept="image/*" 
-                                onChange={handleImageChange} 
-                                className="border rounded p-2 w-full" 
-                            />
-                        </div>
-                        <div>
-                            <label>
-                                <input 
-                                    type="checkbox" 
-                                    checked={editIsPrivate} 
-                                    onChange={(e) => setEditIsPrivate(e.target.checked)} 
-                                />
-                                Private
-                            </label>
-                        </div>
-                        <button type="submit" className="mt-2 px-4 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600 transition-colors">
-                            Save Changes
-                        </button>
-                    </form>
                 )}
             </>
         );

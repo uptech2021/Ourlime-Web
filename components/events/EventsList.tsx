@@ -188,7 +188,7 @@ export default function EventsList({ communityVariantId }: EventsListProps) {
                                 ) : (
                                     <Button 
                                         onClick={() => handleRegisterForEvent(event.id)}
-                                        className="bg-blue-600 text-white px-4 py-2 rounded-md hover:bg-blue-700 transition"
+                                        className="bg-greenTheme text-black px-4 py-2 rounded-md hover:bg-blue-700 transition"
                                     >
                                         Register
                                     </Button>
