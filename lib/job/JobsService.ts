@@ -32,7 +32,8 @@ export class JobsService {
 
     public async createJob(jobData: any) {
         try {
-            // Create main job document
+            console.log('Creating job with data:', jobData);
+            
             const jobRef = await addDoc(collection(this.db, 'jobs'), {
                 basic_info: {
                     title: jobData.jobTitle,
@@ -43,8 +44,8 @@ export class JobsService {
                     updatedAt: Timestamp.now(),
                     userId: jobData.userId,
                     priceRange: {
-                        from: jobData.priceRange.from,
-                        to: jobData.priceRange.to
+                        from: Number(jobData.priceRange.from),
+                        to: Number(jobData.priceRange.to)
                     },
                     location: jobData.location
                 },
@@ -53,35 +54,30 @@ export class JobsService {
                     requirements: jobData.requirements || [],
                     qualifications: jobData.qualifications || []
                 },
-                category_specific: {
-                    ...(jobData.jobCategory === 'professional' && {
-                        name: jobData.companyDetails.name,
-                        size: jobData.companyDetails.size,
-                        industry: jobData.companyDetails.industry,
-                        benefits: jobData.companyDetails.benefits || []
-                    }),
-                    ...(jobData.jobCategory === 'freelancer' && jobData.projectDetails),
-                    ...(jobData.jobCategory === 'quickTask' && jobData.taskDetails)
-                }
+                category_specific: jobData.category_specific || {}
             });
     
-            // Create questions subcollection
-            if (jobData.questions && jobData.questions.length > 0) {
+            if (jobData.questions?.length > 0) {
                 const questionsCollection = collection(jobRef, 'questions');
-                await Promise.all(jobData.questions.map(async (question: any) => {
-                    await addDoc(questionsCollection, {
-                        question: question.question,
-                        type: question.answerType,
-                        options: question.answerType !== 'input' ? question.options : []
-                    });
-                }));
+                await Promise.all(
+                    jobData.questions.map((question: any) => 
+                        addDoc(questionsCollection, {
+                            question: question.question,
+                            type: question.answerType,
+                            options: question.answerType !== 'input' ? question.options : []
+                        })
+                    )
+                );
             }
     
+            console.log('Job created successfully with ID:', jobRef.id);
             return jobRef.id;
         } catch (error) {
-            throw new Error('Failed to create job');
+            console.error('Detailed error in createJob:', error);
+            throw new Error(`Failed to create job: ${error.message}`);
         }
     }
+    
 
     public async fetchJobs() {
         try {
@@ -154,7 +150,6 @@ export class JobsService {
         }
     }
     
-
     public async updateJob(jobId: string, jobData: any) {
         try {
             const jobRef = doc(this.db, 'jobs', jobId);

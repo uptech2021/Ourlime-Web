@@ -40,7 +40,9 @@ export const sidebarItems = [
         href: '#',
         subItems: [
             { id: 'add-job', label: 'Post New Job', href: '/profile/jobs/add' },
-            { id: 'manage-jobs', label: 'Manage Jobs', href: '/profile/jobs/manage' }
+            { id: 'manage-jobs', label: 'Manage Jobs', href: '/profile/jobs/manage' },
+            { id: 'update-jobs', label: 'Update Jobs', href: '/profile/jobs/update' },
+            { id: 'delete-jobs', label: 'Delete Jobs', href: '/profile/jobs/delete' }
         ]
     },
     { id: 'posts', label: 'Posts', icon: ImageIcon, href: '/profile/posts' },

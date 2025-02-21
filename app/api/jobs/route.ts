@@ -26,32 +26,7 @@ export async function POST(request: NextRequest) {
             }, { status: 400 });
         }
 
-        const formattedJobData = {
-            basic_info: {
-                title: jobData.jobTitle,
-                description: jobData.jobDescription,
-                type: jobData.jobCategory,
-                status: 'active',
-                createdAt: new Date(),
-                updatedAt: new Date(),
-                userId: jobData.userId,
-                priceRange: jobData.priceRange,
-                location: jobData.location
-            },
-            details: {
-                skills: jobData.skills || [],
-                requirements: jobData.requirements || [],
-                qualifications: jobData.qualifications || []
-            },
-            category_specific: {
-                professional: jobData.companyDetails,
-                freelancer: jobData.projectDetails,
-                quickTask: jobData.taskDetails
-            }[jobData.jobCategory],
-            questions: jobData.questions || []
-        };
-
-        const jobId = await jobsService.createJob(formattedJobData);
+        const jobId = await jobsService.createJob(jobData);
         
         return NextResponse.json({
             status: 'success',
@@ -65,6 +40,7 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
     }
 }
+
 
 export async function GET(request: NextRequest) {
     try {

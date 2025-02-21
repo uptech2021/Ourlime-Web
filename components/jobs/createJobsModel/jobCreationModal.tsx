@@ -153,13 +153,13 @@ export default function JobCreationModal({ isOpen, onClose }: JobCreationModalPr
     const handleSubmit = async (e: React.FormEvent) => {
         e.preventDefault();
         setIsSubmitting(true);
-
+    
         if (!auth.currentUser?.uid || !title || !description || !priceFrom || !priceTo) {
             toast.error('Please fill in all required fields');
             setIsSubmitting(false);
             return;
         }
-
+    
         const categoryData = {
             professional: { 
                 companyDetails: {
@@ -170,7 +170,7 @@ export default function JobCreationModal({ isOpen, onClose }: JobCreationModalPr
             freelancer: { projectDetails },
             quickTask: { taskDetails }
         }[jobCategory];
-
+    
         const jobData = {
             userId: auth.currentUser.uid,
             jobTitle: title,
@@ -190,18 +190,18 @@ export default function JobCreationModal({ isOpen, onClose }: JobCreationModalPr
                 answerType: q.answerType,
                 options: q.answerType !== 'input' ? q.options.filter(opt => opt.trim() !== '') : []
             })),
-            ...categoryData
+            category_specific: categoryData
         };
-
+    
         try {
             const response = await fetch('/api/jobs', {
                 method: 'POST',
                 headers: { 'Content-Type': 'application/json' },
                 body: JSON.stringify(jobData)
             });
-
+    
             const data = await response.json();
-
+    
             if (data.status === 'success') {
                 toast.success('Job created successfully!');
                 setTimeout(() => onClose(), 1000);
@@ -214,9 +214,7 @@ export default function JobCreationModal({ isOpen, onClose }: JobCreationModalPr
             setIsSubmitting(false);
         }
     };
-
-
-
+    
 
     return (
         <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-[9999]" role="dialog" aria-modal="true" aria-labelledby="modal-title">

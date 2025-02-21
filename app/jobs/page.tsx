@@ -67,7 +67,7 @@ export default function JobsPage() {
             setIsLoading(true);
             const response = await fetch('/api/jobs');
             const data = await response.json();
-            
+
             if (data.status === 'success') {
                 console.log(data);
                 setJobs(data.jobs);
@@ -102,8 +102,6 @@ export default function JobsPage() {
             case 'freelance':
                 return <FreelanceProjectsList jobs={jobs} />;
         }
-        
-        
     };
 
     return (
@@ -118,8 +116,9 @@ export default function JobsPage() {
                         </h1>
                         <p className="text-lg lg:text-xl text-gray-600">
                             Discover <span className="text-greenTheme font-semibold">
-                                {professionalJobs.length + quickTasks.length + freelanceProjects.length}
+                                {jobs.length}
                             </span> job opportunities waiting for you
+
                         </p>
                     </div>
 
