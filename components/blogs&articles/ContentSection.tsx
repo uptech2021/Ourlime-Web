@@ -4,7 +4,7 @@ import { useState, useEffect } from 'react';
 import { Clock, ThumbsUp, MessageCircle, Share2, TrendingUp, BookOpen, Edit } from 'lucide-react';
 import { Button } from '@nextui-org/react';
 
-interface Post {
+interface BlogsAndArticalPost {
     id: string;
     type: 'blog' | 'article';
     title: string;
@@ -24,7 +24,7 @@ interface Post {
     trending?: boolean;
 }
 
-const featuredContent = [
+const featuredContent: BlogsAndArticalPost[] = [
     {
         id: '1',
         type: 'article',
@@ -81,7 +81,7 @@ const featuredContent = [
     }
 ];
 
-const regularPosts: Post[] = [
+const regularPosts: BlogsAndArticalPost[] = [
     {
         id: '4',
         type: 'blog',
@@ -117,7 +117,6 @@ const regularPosts: Post[] = [
         shares: 92,
         publishedAt: '2024-01-11'
     }
-    // Add more regular posts as needed
 ];
 
 const HeroSection = () => {
@@ -215,8 +214,7 @@ const HeroSection = () => {
     );
 };
 
-
-const PostCard = ({ post }: { post: Post }) => (
+const PostCard = ({ post }: { post: BlogsAndArticalPost }) => (
     <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
         <div className="aspect-[16/9] relative overflow-hidden">
             <img
@@ -290,7 +288,7 @@ export default function ContentSection() {
     });
 
     return (
-        <div className="w-full lg:w-2/3">
+        <div className="w-full lg:w-4/5">
             <HeroSection />
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
@@ -300,8 +298,8 @@ export default function ContentSection() {
                         <button
                             onClick={() => setContentType('all')}
                             className={`px-4 py-2 text-sm ${contentType === 'all'
-                                    ? 'bg-greenTheme text-white'
-                                    : 'bg-white hover:bg-gray-50'
+                                ? 'bg-greenTheme text-white'
+                                : 'bg-white hover:bg-gray-50'
                                 }`}
                         >
                             All
@@ -309,8 +307,8 @@ export default function ContentSection() {
                         <button
                             onClick={() => setContentType('articles')}
                             className={`px-4 py-2 text-sm ${contentType === 'articles'
-                                    ? 'bg-greenTheme text-white'
-                                    : 'bg-white hover:bg-gray-50'
+                                ? 'bg-greenTheme text-white'
+                                : 'bg-white hover:bg-gray-50'
                                 }`}
                         >
                             Articles
@@ -318,8 +316,8 @@ export default function ContentSection() {
                         <button
                             onClick={() => setContentType('blogs')}
                             className={`px-4 py-2 text-sm ${contentType === 'blogs'
-                                    ? 'bg-greenTheme text-white'
-                                    : 'bg-white hover:bg-gray-50'
+                                ? 'bg-greenTheme text-white'
+                                : 'bg-white hover:bg-gray-50'
                                 }`}
                         >
                             Blogs
@@ -337,11 +335,12 @@ export default function ContentSection() {
                 </div>
             </div>
 
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-4 lg:gap-6">
                 {filteredPosts.map(post => (
                     <PostCard key={post.id} post={post} />
                 ))}
             </div>
+
 
             <div className="text-center mt-8">
                 <Button
