@@ -23,6 +23,7 @@ export type Community = {
     // createdAt: string;
     membershipCount: number;
     membershipLikes: number;
+    members: string[];
 }
 
 export interface CommunityMember {
@@ -31,6 +32,10 @@ export interface CommunityMember {
     status: 'active' | 'pending' | 'blocked';
     role: 'admin' | 'moderator' | 'member';
     joinedAt: string;
+    profileImage: string;
+    firstName: string;
+    lastName: string;
+    userName: string;
 }
 
 export interface CommunityCategory {

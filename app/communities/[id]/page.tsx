@@ -7,7 +7,7 @@
     import { getFriends } from '@/helpers/friendsAndFollowingHelper';
     import { UserData, ProfileImage, BasePost } from '@/types/userTypes';
     import { fetchCommunityData, fetchCommunityMembers, fetchCommunityPosts } from '@/helpers/communities';
-    import { addDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, writeBatch, serverTimestamp, increment, doc, updateDoc } from 'firebase/firestore';
+    import { addDoc, collection, query, where, getDocs, deleteDoc, onSnapshot, writeBatch, serverTimestamp, increment, doc, updateDoc, arrayRemove } from 'firebase/firestore';
     import { db, auth } from '@/lib/firebaseConfig';
     import CreateCommunityPost from '@/components/communities/CreateCommunityPosts';
     import PostMedia from '@/components/communities/PostMedia';
@@ -18,8 +18,9 @@
     import EventCommentModal from '@/components/events/EventCommentModal';
     import { event } from 'cypress/types/jquery';
     import Slider from '@/components/comm/Slider';
-    import { Community } from '@/types/communityTypes';
+    import { Community, CommunityMember } from '@/types/communityTypes';
     import { uploadFile } from '@/helpers/firebaseStorage';
+    import ConfirmationModal from '@/components/ConfirmationModal';
 
     // type BasePost = {
     //     id: string;
@@ -86,7 +87,7 @@
         const [selectedEventId, setSelectedEventId] = useState<string | null>(null);
         const [isCommunityPostModalOpen, setIsCommunityPostModalOpen] = useState(false);
         const [selectedPostId, setSelectedPostId] = useState<string | null>(null);
-        const [members, setMembers] = useState<UserData[]>([]);
+        const [members, setMembers] = useState<CommunityMember[]>([]);
         const [posts, setPosts] = useState<BasePost[]>([]);
         const [likedPosts, setLikedPosts] = useState<{ [key: string]: boolean }>({});
         const [likeCounts, setLikeCounts] = useState<{ [key: string]: number }>({});
@@ -100,6 +101,9 @@
         const [editImageUrl, setEditImageUrl] = useState(communityData?.imageUrl || '');
         const [editIsPrivate, setEditIsPrivate] = useState(communityData?.isPrivate || false);
         const [communityImage, setCommunityImage] = useState<File | null>(null);
+        const [isModalOpen, setIsModalOpen] = useState(false);
+        const [selectedUserId, setSelectedUserId] = useState<string | null>(null);
+        const [selectedUserName, setSelectedUserName] = useState<string>('');
 
         const loadCommunityData = async () => {
             const fetchedCommunityData = await fetchCommunityData(communityVariantId);
@@ -110,28 +114,25 @@
             loadCommunityData();
         }, [communityVariantId]);
         
-        useEffect(() => {
-            const loadMembers = async () => {
-                const fetchedMembers = await fetchCommunityMembers(communityVariantId);
-                setMembers(fetchedMembers);
+        const loadMembers = async () => {
+            const fetchedMembers = await fetchCommunityMembers(communityVariantId);
+            setMembers(fetchedMembers);
+            setCommunityData(prevCommunity => 
+                prevCommunity ? { ...prevCommunity, members: fetchedMembers.map(member => member.userId) } : prevCommunity
+            );
+        };
 
-                console.log("Fetched Members: ", fetchedMembers)
-            };
+        const loadPosts = async () => {
+            if (communityVariantId) {
+                const fetchedCommunityPosts = await fetchCommunityPosts(communityVariantId);
+                setPosts(fetchedCommunityPosts);
+            }
+        };
+
+        useEffect(() => {
             loadMembers();
-        }, [communityVariantId]);
-
-        useEffect(() => {
-            const loadPosts = async () => {
-                if (communityVariantId) {
-                    const fetchedCommunityPosts = await fetchCommunityPosts(communityVariantId);
-                    setPosts(fetchedCommunityPosts);
-                }
-            };
-
             loadPosts();
         }, [communityVariantId]);
-        console.log("Fetched Posts: ", posts);
-
 
         // Check if user has liked the post
         useEffect(() => {
@@ -277,6 +278,68 @@
             }
         };
 
+        const removeUserFromCommunity = async (userId: string) => {
+            // Check if the current user is an admin
+            if (communityData.userId !== currentUserId) {
+                console.error('You do not have permission to remove users from this community.');
+                return;
+            }
+        
+            try {
+                // Query to find the membership document for the user
+                const membershipRef = collection(db, 'communityVariantMembership');
+                const membershipQuery = query(membershipRef, where('userId', '==', userId), where('communityVariantId', '==', communityData.id));
+                const membershipSnapshot = await getDocs(membershipQuery);
+        
+                if (!membershipSnapshot.empty) {
+                    // Delete the membership document
+                    const membershipDoc = membershipSnapshot.docs[0];
+                    await deleteDoc(doc(membershipRef, membershipDoc.id));
+        
+                    // Optionally, delete all posts related to the user
+                    const postsRef = collection(db, 'communityPosts'); // Adjust the collection name as necessary
+                    const postsQuery = query(postsRef, where('userId', '==', userId), where('communityVariantId', '==', communityData.id));
+                    const postsSnapshot = await getDocs(postsQuery);
+        
+                    // Delete each post
+                    const deletePromises = postsSnapshot.docs.map(postDoc => deleteDoc(doc(postsRef, postDoc.id)));
+                    await Promise.all(deletePromises);
+        
+                    console.log(`User ${userId} removed from the community and their posts deleted successfully.`);
+                    
+                    // Optionally, update local state to reflect the change
+                    setCommunityData(prevCommunity => 
+                        prevCommunity ? { ...prevCommunity, members: prevCommunity.members.filter(member => member !== userId) } : prevCommunity
+                    );
+                } else {
+                    console.error('Membership document not found for the user.');
+                }
+            } catch (error) {
+                console.error('Error removing user from community: ', error);
+            }
+        };
+
+        const openModal = (userId: string, userName: string) => {
+            setSelectedUserId(userId);
+            setSelectedUserName(userName);
+            setIsModalOpen(true);
+        };
+
+        const closeModal = () => {
+            setIsModalOpen(false);
+            setSelectedUserId(null);
+            setSelectedUserName('');
+        };
+
+        const handleRemoveUser = async () => {
+            if (selectedUserId) {
+                await removeUserFromCommunity(selectedUserId);
+                await loadMembers();
+                await loadPosts();
+                closeModal();
+            }
+        };
+
         return (
             <>
                 <div className="min-h-screen bg-gray-50">
@@ -295,13 +358,20 @@
                                 <h2 className="text-lg font-bold mt-6">Members</h2>
                                 <ul className="mt-4 space-y-2">
                                     {members.map(member => (
-                                        <li key={member.id} className="flex items-center gap-2">
-                                        <img src={member.profileImages?.['undefined'] || 'image' || ''} alt={member.userName} className="rounded-full w-10 h-10" />
-                                        <div>
-                                            <div className="font-semibold">{`${member.firstName} ${member.lastName}`}</div>
-                                            <div className="text-sm text-gray-500">@{member.userName}</div>
+                                        <div key={member.userId} className="flex items-center gap-2">
+                                            <img src={member.profileImage || ''} alt={`${member.firstName} ${member.lastName}`} className="rounded-full w-10 h-10" />
+                                            <div>
+                                                <span className="font-semibold">{member.firstName} {member.lastName}</span>
+                                                <div className="text-sm text-gray-500">@{member.userName}</div>
+                                            </div>
+                                            {communityData.userId === currentUserId && ( // Check if the current user is an admin
+                                                <button 
+                                                    onClick={() => openModal(member.userId, `${member.firstName} ${member.lastName}`)} 
+                                                    className="text-red-500 hover:text-red-700">
+                                                    Remove
+                                                </button>
+                                            )}
                                         </div>
-                                    </li>
                                     ))}
                                 </ul>
                             </section>
@@ -525,6 +595,14 @@
                     onClose={closeEventCommentModal}
                     eventId={selectedEventId} />
                 )}
+
+                {/* Confirmation Modal */}
+                <ConfirmationModal 
+                    isOpen={isModalOpen} 
+                    onClose={closeModal} 
+                    onConfirm={handleRemoveUser} 
+                    userName={selectedUserName} 
+                />
             </>
         );
     }

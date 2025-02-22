@@ -2,7 +2,7 @@ import { collection, getDocs, query, where, doc, getDoc } from "firebase/firesto
 import { db } from "@/lib/firebaseConfig";
 import { UserData, Post, BasePost } from "@/types/userTypes"; // Adjust the import based on your project structure
 import { Comment, Reply } from "@/types/global";
-import { CommunityVariantDetailsSummary, Community } from "@/types/communityTypes";
+import { CommunityVariantDetailsSummary, Community, CommunityMember } from "@/types/communityTypes";
 import { error } from "console";
 
 export const fetchCommunityData = async (communityVariantId: string): Promise<Community | null> => {
@@ -19,41 +19,58 @@ export const fetchCommunityData = async (communityVariantId: string): Promise<Co
     return { id: communitySnapshot.id, ...communitySnapshot.data() } as Community;
 };
 
-export const fetchCommunityMembers = async (communityVariantId: string): Promise<UserData[]> => {
+export const fetchCommunityMembers = async (communityVariantId: string): Promise<CommunityMember[]> => {
     const membersRef = collection(db, 'communityVariantMembership');
     const q = query(membersRef, where('communityVariantId', '==', communityVariantId));
     const snapshot = await getDocs(q);
 
-    const membersData = await Promise.all(snapshot.docs.map(async (memberDoc) => {
+    const membersData: CommunityMember[] = await Promise.all(snapshot.docs.map(async (memberDoc) => {
         const memberData = memberDoc.data();
         const userId = memberData.userId;
 
-        // Fetch user data
+        // Fetch additional user data
         const userDocRef = doc(db, 'users', userId);
         const userDocSnap = await getDoc(userDocRef);
         const userData = userDocSnap.data() as UserData;
 
-        // Fetch profile images
+        // Fetch user's profile image
         const profileImagesQuery = query(
             collection(db, 'profileImages'),
             where('userId', '==', userId)
         );
         const profileImagesSnapshot = await getDocs(profileImagesQuery);
 
-        // Populate profileImages object
-        const profileImages: { [key: string]: string } = {};
-        profileImagesSnapshot.docs.forEach(imgDoc => {
-            const imgData = imgDoc.data();
-            profileImages[imgData.typeOfImage] = imgData.imageURL; // Assuming typeOfImage is a key
-        });
+        const profileSetAsQuery = query(
+            collection(db, 'profileImageSetAs'),
+            where('userId', '==', userId),
+            where('setAs', '==', 'profile')
+        );
+        const setAsSnapshot = await getDocs(profileSetAsQuery);
+
+        let profileImage = null;
+        if (!setAsSnapshot.empty) {
+            const setAsDoc = setAsSnapshot.docs[0].data();
+            const matchingImage = profileImagesSnapshot.docs
+                .find(img => img.id === setAsDoc.profileImageId);
+            if (matchingImage) {
+                profileImage = matchingImage.data().imageURL; // Ensure we get the imageURL
+            }
+        }
 
         return {
-            ...userData,
-            profileImages, // Assign the populated profileImages object
-        } as UserData;
+            userId: userId,
+            communityVariantId: communityVariantId,
+            status: memberData.status, // Assuming status is stored in Firestore
+            role: memberData.role, // Assuming role is stored in Firestore
+            joinedAt: memberData.joinedAt, // Assuming joinedAt is stored in Firestore
+            profileImage: profileImage, // Add profile image
+            firstName: userData.firstName, // Add first name
+            lastName: userData.lastName, // Add last name
+            userName: userData.userName, // Add username
+        } as CommunityMember;
     }));
 
-    return membersData;
+    return membersData; // Return the array of CommunityMember objects
 };
 
 export const fetchCommunityPosts = async (communityVariantId: string): Promise<BasePost[]> => {
@@ -298,3 +315,4 @@ export const fetchRepliesForCommunityPostComments = async (collectionName: strin
         return [];
     }
 };
+

@@ -208,6 +208,7 @@ export default function CommunitiesPage() {
             userId: auth.currentUser.uid,
             communityVariantId: communityId,
             isMember: true,
+            isAdmin: true,
             from: serverTimestamp(),
             to: null
           });
@@ -358,6 +359,7 @@ export default function CommunitiesPage() {
     const [imageUrl, setImageUrl] = useState('');
     const [selectedCategory, setSelectedCategory] = useState('');
     const [isPrivate, setIsPrivate] = useState(false);
+    const [isAdmin, setIsAdmin] = useState(false);
 
 
 
@@ -405,6 +407,7 @@ export default function CommunitiesPage() {
         setSelectedCategory('');
         setIsPrivate(false);
         setIsModalOpen(false);
+        setIsAdmin(true);
 
         // Refresh communities list
         window.location.reload();
