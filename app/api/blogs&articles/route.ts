@@ -47,3 +47,22 @@ export async function POST(request: NextRequest) {
         }, { status: 500 });
     }
 }
+
+export async function GET() {
+    try {
+        const blogsService = BlogsAndArticlesService.getInstance();
+        const posts = await blogsService.getPosts();
+        
+        return NextResponse.json({
+            status: 'success',
+            data: posts
+        });
+
+    } catch (error) {
+        console.error('API Error:', error);
+        return NextResponse.json({
+            status: 'error',
+            message: 'Failed to fetch posts'
+        }, { status: 500 });
+    }
+}

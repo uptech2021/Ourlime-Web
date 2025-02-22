@@ -429,7 +429,6 @@ export default function CreatePostModal({ isOpen, onClose }: CreatePostModalProp
                                         ))}
                                     </div>
                                 </div>
-
                             </div>
 
                             <div className="space-y-6">

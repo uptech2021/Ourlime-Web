@@ -4,6 +4,7 @@ import ContentSection from '@/components/blogs&articles/ContentSection';
 import FilterSection from '@/components/blogs&articles/FilterSection';
 import CreatePostModal from '@/components/blogs&articles/createPostModel/createPostModel';
 import { useState } from 'react';
+import { Toaster } from 'react-hot-toast';
 
 export default function BlogsAndArticles() {
     const [isFilterOpen, setIsFilterOpen] = useState(false);
@@ -22,11 +23,20 @@ export default function BlogsAndArticles() {
                         <ContentSection />
                     </div>
                 </main>
-
             </div>
             <CreatePostModal
                 isOpen={isCreateModalOpen}
                 onClose={() => setIsCreateModalOpen(false)}
+            />
+            <Toaster 
+                position="top-center"
+                toastOptions={{
+                    duration: 3000,
+                    style: {
+                        background: '#333',
+                        color: '#fff',
+                    },
+                }}
             />
         </>
     );

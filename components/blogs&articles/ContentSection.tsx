@@ -24,115 +24,24 @@ interface BlogsAndArticalPost {
     trending?: boolean;
 }
 
-const featuredContent: BlogsAndArticalPost[] = [
-    {
-        id: '1',
-        type: 'article',
-        title: 'The Evolution of AI in Modern Software Development',
-        excerpt: 'Exploring how artificial intelligence is revolutionizing the way we build and deploy software...',
-        category: 'Technology',
-        author: {
-            name: 'Dr. Sarah Chen',
-            avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330'
-        },
-        coverImage: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa',
-        readTime: 8,
-        likes: 342,
-        comments: 56,
-        shares: 89,
-        publishedAt: '2024-01-15',
-        isFeatured: true
-    },
-    {
-        id: '2',
-        type: 'blog',
-        title: 'From Junior to Senior: A Developer&apos;s Journey',
-        excerpt: 'Personal insights and lessons learned during my five-year journey in software development...',
-        category: 'Career Growth',
-        author: {
-            name: 'James Wilson',
-            avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e'
-        },
-        coverImage: 'https://images.unsplash.com/photo-1498050108023-c5249f4df085',
-        readTime: 6,
-        likes: 256,
-        comments: 42,
-        shares: 67,
-        publishedAt: '2024-01-14',
-        isFeatured: true
-    },
-    {
-        id: '3',
-        type: 'article',
-        title: 'The Future of Web3: Beyond the Hype',
-        excerpt: 'A deep dive into the practical applications and real-world impact of Web3 technologies...',
-        category: 'Blockchain',
-        author: {
-            name: 'Maya Patel',
-            avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80'
-        },
-        coverImage: 'https://images.unsplash.com/photo-1639762681485-074b7f938ba0',
-        readTime: 10,
-        likes: 423,
-        comments: 78,
-        shares: 156,
-        publishedAt: '2024-01-13',
-        isFeatured: true
-    }
-];
-
-const regularPosts: BlogsAndArticalPost[] = [
-    {
-        id: '4',
-        type: 'blog',
-        title: 'Understanding TypeScript Generics',
-        excerpt: 'A comprehensive guide to mastering TypeScript generics with practical examples...',
-        category: 'Development',
-        author: {
-            name: 'Alex Johnson',
-            avatar: 'https://images.unsplash.com/photo-1527980965255-d3b416303d12'
-        },
-        coverImage: 'https://images.unsplash.com/photo-1461749280684-dccba630e2f6',
-        readTime: 7,
-        likes: 189,
-        comments: 34,
-        shares: 45,
-        publishedAt: '2024-01-12',
-        trending: true
-    },
-    {
-        id: '5',
-        type: 'article',
-        title: 'The Rise of Micro-Frontends',
-        excerpt: 'How micro-frontend architecture is changing the way we build web applications...',
-        category: 'Architecture',
-        author: {
-            name: 'Emma Davis',
-            avatar: 'https://images.unsplash.com/photo-1534528741775-53994a69daeb'
-        },
-        coverImage: 'https://images.unsplash.com/photo-1558655146-9f40138edfeb',
-        readTime: 9,
-        likes: 276,
-        comments: 48,
-        shares: 92,
-        publishedAt: '2024-01-11'
-    }
-];
-
-const HeroSection = () => {
+const HeroSection = ({ featuredPosts }: { featuredPosts: BlogsAndArticalPost[] }) => {
     const [currentIndex, setCurrentIndex] = useState(0);
 
     useEffect(() => {
+        if (featuredPosts.length === 0) return;
+        
         const timer = setInterval(() => {
-            setCurrentIndex((prev) => (prev + 1) % featuredContent.length);
+            setCurrentIndex((prev) => (prev + 1) % featuredPosts.length);
         }, 5000);
 
         return () => clearInterval(timer);
-    }, []);
+    }, [featuredPosts.length]);
+
+    if (featuredPosts.length === 0) return null;
 
     return (
         <div className="relative h-[280px] sm:h-[320px] md:h-[360px] rounded-xl overflow-hidden mb-8">
-            {featuredContent.map((post, index) => (
+            {featuredPosts.map((post, index) => (
                 <div
                     key={post.id}
                     className={`absolute inset-0 transition-opacity duration-1000 ease-in-out
@@ -200,7 +109,7 @@ const HeroSection = () => {
             ))}
 
             <div className="absolute bottom-4 right-4 sm:bottom-6 sm:right-8 flex gap-2">
-                {featuredContent.map((_, index) => (
+                {featuredPosts.map((_, index) => (
                     <button
                         key={index}
                         onClick={() => setCurrentIndex(index)}
@@ -214,82 +123,129 @@ const HeroSection = () => {
     );
 };
 
-const PostCard = ({ post }: { post: BlogsAndArticalPost }) => (
-    <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
-        <div className="aspect-[16/9] relative overflow-hidden">
-            <img
-                src={post.coverImage}
-                alt={post.title}
-                className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
-            />
-            {post.trending && (
-                <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
-                    <TrendingUp size={12} />
-                    Trending
-                </div>
-            )}
-        </div>
-        <div className="p-4">
-            <div className="flex items-center gap-2 mb-2">
-                <span className="text-greenTheme text-sm">{post.category}</span>
-                <span className="text-gray-400">•</span>
-                <span className={`text-sm flex items-center gap-1 ${post.type === 'article' ? 'text-blue-600' : 'text-purple-600'
-                    }`}>
-                    {post.type === 'article' ? <BookOpen size={14} /> : <Edit size={14} />}
-                    {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
-                </span>
-                <span className="text-gray-400">•</span>
-                <span className="text-gray-500 text-sm flex items-center gap-1">
-                    <Clock size={14} />
-                    {post.readTime} min read
-                </span>
+const PostCard = ({ post }: { post: BlogsAndArticalPost }) => {
+    const defaultAvatar = "https://images.unsplash.com/photo-1494790108377-be9c29b29330";
+    const defaultAuthorName = "Anonymous";
+
+    const authorAvatar = post.author?.avatar || defaultAvatar;
+    const authorName = post.author?.name || defaultAuthorName;
+
+    return (
+        <div className="bg-white rounded-lg overflow-hidden shadow-sm hover:shadow-md transition-shadow">
+            <div className="aspect-[16/9] relative overflow-hidden">
+                <img
+                    src={post.coverImage}
+                    alt={post.title}
+                    className="object-cover w-full h-full hover:scale-105 transition-transform duration-300"
+                />
+                {post.trending && (
+                    <div className="absolute top-2 right-2 bg-red-500 text-white px-2 py-1 rounded-full text-xs flex items-center gap-1">
+                        <TrendingUp size={12} />
+                        Trending
+                    </div>
+                )}
             </div>
-            <h3 className="font-bold text-lg mb-2 hover:text-greenTheme transition-colors">
-                {post.title}
-            </h3>
-            <p className="text-gray-600 text-sm mb-4 line-clamp-2">
-                {post.excerpt}
-            </p>
-            <div className="flex items-center justify-between">
-                <div className="flex items-center gap-2">
-                    <img
-                        src={post.author.avatar}
-                        alt={post.author.name}
-                        className="w-8 h-8 rounded-full object-cover"
-                    />
-                    <span className="text-sm font-medium">{post.author.name}</span>
+            <div className="p-4">
+                <div className="flex items-center gap-2 mb-2">
+                    <span className="text-greenTheme text-sm">{post.category}</span>
+                    <span className="text-gray-400">•</span>
+                    <span className={`text-sm flex items-center gap-1 ${post.type === 'article' ? 'text-blue-600' : 'text-purple-600'}`}>
+                        {post.type === 'article' ? <BookOpen size={14} /> : <Edit size={14} />}
+                        {post.type.charAt(0).toUpperCase() + post.type.slice(1)}
+                    </span>
+                    <span className="text-gray-400">•</span>
+                    <span className="text-gray-500 text-sm flex items-center gap-1">
+                        <Clock size={14} />
+                        {post.readTime} min read
+                    </span>
                 </div>
-                <div className="flex items-center gap-3 text-gray-500">
-                    <button className="hover:text-greenTheme transition-colors flex items-center gap-1">
-                        <ThumbsUp size={18} />
-                        <span className="text-sm">{post.likes}</span>
-                    </button>
-                    <button className="hover:text-greenTheme transition-colors flex items-center gap-1">
-                        <MessageCircle size={18} />
-                        <span className="text-sm">{post.comments}</span>
-                    </button>
-                    <button className="hover:text-greenTheme transition-colors flex items-center gap-1">
-                        <Share2 size={18} />
-                        <span className="text-sm">{post.shares}</span>
-                    </button>
+                <h3 className="font-bold text-lg mb-2 hover:text-greenTheme transition-colors">
+                    {post.title}
+                </h3>
+                <p className="text-gray-600 text-sm mb-4 line-clamp-2">
+                    {post.excerpt}
+                </p>
+                <div className="flex items-center justify-between">
+                    <div className="flex items-center gap-2">
+                        <img
+                            src={authorAvatar}
+                            alt={authorName}
+                            className="w-8 h-8 rounded-full object-cover"
+                        />
+                        <span className="text-sm font-medium">{authorName}</span>
+                    </div>
+                    <div className="flex items-center gap-3 text-gray-500">
+                        <button className="hover:text-greenTheme transition-colors flex items-center gap-1">
+                            <ThumbsUp size={18} />
+                            <span className="text-sm">{post.likes}</span>
+                        </button>
+                        <button className="hover:text-greenTheme transition-colors flex items-center gap-1">
+                            <MessageCircle size={18} />
+                            <span className="text-sm">{post.comments}</span>
+                        </button>
+                        <button className="hover:text-greenTheme transition-colors flex items-center gap-1">
+                            <Share2 size={18} />
+                            <span className="text-sm">{post.shares}</span>
+                        </button>
+                    </div>
                 </div>
             </div>
         </div>
-    </div>
-);
+    );
+};
 
 export default function ContentSection() {
     const [contentType, setContentType] = useState<'all' | 'articles' | 'blogs'>('all');
     const [sortBy, setSortBy] = useState<'latest' | 'trending'>('latest');
+    const [posts, setPosts] = useState<BlogsAndArticalPost[]>([]);
 
-    const filteredPosts = regularPosts.filter(post => {
+    const fetchPosts = async () => {
+        try {
+            const response = await fetch('/api/blogs&articles');
+            const data = await response.json();
+
+            if (data.status === 'success') {
+                const formattedPosts = data.data.map(post => ({
+                    id: post.id,
+                    type: post.type,
+                    title: post.title,
+                    excerpt: post.excerpt,
+                    category: post.categories[0]?.name || 'Uncategorized',
+                    author: {
+                        name: 'Anonymous',
+                        avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330'
+                    },
+                    coverImage: post.coverImage,
+                    readTime: post.engagement[0]?.readTimeAverage || 0,
+                    likes: post.engagement[0]?.likesCount || 0,
+                    comments: post.engagement[0]?.commentsCount || 0,
+                    shares: post.engagement[0]?.sharesCount || 0,
+                    publishedAt: new Date(post.createdAt.seconds * 1000).toISOString(),
+                    trending: post.flags?.trending || false,
+                    isFeatured: post.flags?.isFeatured || false
+                }));
+                setPosts(formattedPosts);
+            }
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+        }
+    };
+
+    useEffect(() => {
+        fetchPosts();
+    }, []);
+
+    const featuredPosts = posts.filter(post => post.isFeatured);
+    const filteredPosts = posts.filter(post => {
         if (contentType === 'all') return true;
         return post.type === (contentType === 'articles' ? 'article' : 'blog');
     });
 
     return (
         <div className="w-full lg:w-4/5">
-            <HeroSection />
+            {/* <HeroSection featuredPosts={featuredPosts} /> */}
+            <HeroSection featuredPosts={posts} />
+
 
             <div className="flex flex-col sm:flex-row justify-between items-start sm:items-center gap-4 mb-6">
                 <h2 className="text-xl font-bold">Latest Posts</h2>
@@ -341,7 +297,6 @@ export default function ContentSection() {
                 ))}
             </div>
 
-
             <div className="text-center mt-8">
                 <Button
                     className="bg-greenTheme text-white px-8 py-2 rounded-lg hover:bg-greenTheme/90 transition-colors"
@@ -351,7 +306,6 @@ export default function ContentSection() {
                 </Button>
             </div>
 
-            {/* Newsletter Section */}
             <div className="mt-12 bg-white p-8 rounded-lg shadow-sm">
                 <div className="text-center mb-6">
                     <h3 className="text-2xl font-bold mb-2">Stay Updated</h3>
@@ -371,4 +325,5 @@ export default function ContentSection() {
         </div>
     );
 }
+
 

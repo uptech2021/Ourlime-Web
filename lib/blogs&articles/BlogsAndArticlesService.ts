@@ -4,7 +4,9 @@ import {
     doc,
     setDoc,
     serverTimestamp, 
-    Firestore
+    Firestore,
+    getDocs,
+    getDoc
 } from 'firebase/firestore';
 
 export class BlogsAndArticlesService {
@@ -121,4 +123,45 @@ export class BlogsAndArticlesService {
             throw new Error('Failed to create post');
         }
     }
+
+    public async getPosts() {
+        try {
+            const postsRef = collection(db, 'blogsAndArticles');
+            const postsSnapshot = await getDocs(postsRef);
+            
+            const posts = await Promise.all(postsSnapshot.docs.map(async (doc) => {
+                const postData = doc.data();
+                
+                // Get engagement metrics
+                const engagementRef = collection(db, `blogsAndArticles/${doc.id}/engagement`);
+                const engagementSnapshot = await getDocs(engagementRef);
+                const engagement = engagementSnapshot.docs.map(doc => doc.data());
+    
+                // Get categories
+                const categoryRef = collection(db, `blogsAndArticles/${doc.id}/categories`);
+                const categorySnapshot = await getDocs(categoryRef);
+                const categories = categorySnapshot.docs.map(cat => cat.data());
+                
+                // Get tags
+                const tagsRef = collection(db, `blogsAndArticles/${doc.id}/tags`);
+                const tagsSnapshot = await getDocs(tagsRef);
+                const tags = tagsSnapshot.docs.map(tag => tag.data());
+    
+                return {
+                    id: doc.id,
+                    ...postData,
+                    engagement,
+                    categories,
+                    tags
+                };
+            }));
+    
+            return posts;
+        } catch (error) {
+            console.error('Error fetching posts:', error);
+            throw new Error('Failed to fetch posts');
+        }
+    }
+    
+    
 }
