@@ -54,7 +54,7 @@ export default function PromotionSlider() {
     };
 
     return (
-        <div className="hidden lg:block mb-8">
+        <div className="hidden lg:block mb-1">
             <Swiper
                 slidesPerView={1}
                 spaceBetween={20}

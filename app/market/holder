@@ -7,6 +7,7 @@ import ProductDetailsSidebar from '@/components/market/products/ProductDetailsSi
 import PromotionSlider from '@/components/market/promotion/PromotionSlider';
 import ProductFilter from '@/components/market/filters/ProductFilter';
 import { Product, Color, Size, ColorVariant, SizeVariant, ProductVariant } from '@/types/productTypes';
+import { MarketService } from '@/lib/services/MarketService';
 import { motion, AnimatePresence } from 'framer-motion';
 
 export default function MarketPage() {
@@ -23,62 +24,29 @@ export default function MarketPage() {
     const [variants, setVariants] = useState<ProductVariant[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
-    const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
+    const [priceRange, setPriceRange] = useState<[number, number]>([0, 1000]);
     const [selectedColors, setSelectedColors] = useState<string[]>([]);
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
     const [marketData, setMarketData] = useState<any>(null);
     const [inputValue, setInputValue] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
-    const [shouldFilter, setShouldFilter] = useState(false);
 
+    // filter after hitting enter
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             setSearchTerm(inputValue);
-            setShouldFilter(true);
-            
-            const params = new URLSearchParams(window.location.search);
-            if (inputValue) {
-                params.set('q', inputValue);
-            } else {
-                params.delete('q');
-            }
-            window.history.replaceState({}, '', `${window.location.pathname}?${params.toString()}`);
         }
     };
 
+    // Load initial data and URL params
     useEffect(() => {
         const loadInitialData = async () => {
-            const params = new URLSearchParams(window.location.search);
-            const urlCategories = params.getAll('categories');
-            const urlColors = params.getAll('colors');
-            const urlSizes = params.getAll('sizes');
-            const minPrice = params.get('minPrice');
-            const maxPrice = params.get('maxPrice');
-            const query = params.get('q');
-    
-            // Set price range from URL or default to midpoint
-            const defaultMax = 100000;
-            if (minPrice && maxPrice) {
-                const min = parseInt(minPrice);
-                const max = parseInt(maxPrice);
-                setPriceRange([min, max]);
-            } else {
-                const midPoint = Math.floor(defaultMax / 2);
-                setPriceRange([0, midPoint]);
-            }
-    
-            if (urlCategories.length) setSelectedCategories(urlCategories);
-            if (urlColors.length) setSelectedColors(urlColors);
-            if (urlSizes.length) setSelectedSizes(urlSizes);
-            if (query) {
-                setInputValue(query);
-                setSearchTerm(query);
-            }
-
-            const response = await fetch('/api/market/fetch');    
+            // URL params logic stays the same
+            
+            const response = await fetch('/api/market/fetch');
             const result = await response.json();
-
-            if (result.status === 'success') {
+            
+            if (result.status === 'success' && result.data.data) {
                 const marketData = result.data.data;
                 setCategories(marketData.categories);
                 setColors(marketData.colors);
@@ -91,58 +59,55 @@ export default function MarketPage() {
             }
             setIsLoading(false);
         };
-
+    
         loadInitialData();
     }, []);
-
+    
+    // Handle filters
     useEffect(() => {
-        if (!shouldFilter) return;
-
         const handleFilters = async () => {
             const params = new URLSearchParams();
-
+            
             if (selectedCategories.length > 0) {
                 selectedCategories.forEach(cat => params.append('categories', cat));
             }
-            if (selectedColors.length > 0) {
-                selectedColors.forEach(color => params.append('colors', color));
-            }
-            if (selectedSizes.length > 0) {
-                selectedSizes.forEach(size => params.append('sizes', size));
-            }
-
+            selectedColors.forEach(color => params.append('colors', color));
+            selectedSizes.forEach(size => params.append('sizes', size));
             params.set('minPrice', priceRange[0].toString());
             params.set('maxPrice', priceRange[1].toString());
             if (searchTerm) params.set('q', searchTerm);
-
-            const endpoint = params.toString()
-                ? `/api/market/search_and_filter?${params.toString()}`
-                : '/api/market/fetch';
-
-            const response = await fetch(endpoint);
-            const result = await response.json();
-
-            if (result.status === 'success') {
-                const filteredData = result.data.data;
-                setProducts(filteredData.products);
-                setMarketData(filteredData);
+    
+            window.history.replaceState({}, '', `${window.location.pathname}${params.toString() ? `?${params.toString()}` : ''}`);
+    
+            const response = await fetch(`/api/market/search_and_filter?${params.toString()}`);
+            const data = await response.json();
+            
+            if (data.status === 'success') {
+                setProducts(data.data.products);
+                setMarketData(data.data);
             }
         };
-
-        handleFilters();
-        setShouldFilter(false);
-    }, [shouldFilter, selectedCategories, selectedColors, selectedSizes, priceRange, searchTerm]);
-
     
+        handleFilters();
+    }, [selectedCategories, selectedColors, selectedSizes, priceRange, searchTerm]);
+    
+
     const getProductPriceDisplay = (productId: string) => {
         const productVariants = (variants || []).filter(v => v.productId === productId);
         const prices = productVariants.map(v => v.price);
+
         if (prices.length === 0) return 'Price unavailable';
+
         const minPrice = Math.min(...prices);
         const maxPrice = Math.max(...prices);
+
         return minPrice === maxPrice ? `$${minPrice}` : `$${minPrice} - $${maxPrice}`;
     };
 
+    if (isLoading) {
+        return <div>Loading...</div>;
+    }
+    // filter design
     const containerVariants = {
         hidden: { opacity: 0 },
         visible: {
@@ -153,15 +118,15 @@ export default function MarketPage() {
             }
         }
     };
-
+    
     const productVariants = {
-        hidden: {
+        hidden: { 
             opacity: 0,
             y: 20,
             scale: 0.95,
             rotateX: -10
         },
-        visible: {
+        visible: { 
             opacity: 1,
             y: 0,
             scale: 1,
@@ -185,10 +150,6 @@ export default function MarketPage() {
         }
     };
 
-    if (isLoading) {
-        return <div>Loading...</div>;
-    }
-
     return (
         <div className="min-h-screen w-full bg-gray-100">
             <main className="pt-16 sm:pt-20 md:pt-32 lg:pt-36 w-full 2xl:w-9/12 2xl:mx-auto tvScreen:w-7/12 px-2 md:px-8">
@@ -209,29 +170,18 @@ export default function MarketPage() {
                             isMobileOpen={isSidebarOpen}
                             onMobileClose={() => setIsSidebarOpen(false)}
                             selectedCategories={selectedCategories}
-                            setSelectedCategories={(cats) => {
-                                setSelectedCategories(cats);
-                                setShouldFilter(true);
-                            }}
+                            setSelectedCategories={setSelectedCategories}
                             selectedColors={selectedColors}
-                            setSelectedColors={(colors) => {
-                                setSelectedColors(colors);
-                                setShouldFilter(true);
-                            }}
+                            setSelectedColors={setSelectedColors}
                             selectedSizes={selectedSizes}
-                            setSelectedSizes={(sizes) => {
-                                setSelectedSizes(sizes);
-                                setShouldFilter(true);
-                            }}
+                            setSelectedSizes={setSelectedSizes}
                             priceRange={priceRange}
-                            setPriceRange={(newRange) => {
-                                setPriceRange(newRange);
-                                setShouldFilter(true);
-                            }}
+                            setPriceRange={setPriceRange}
                             categories={categories}
                             colors={colors}
                             sizes={sizes}
                         />
+
                         <div className="flex-1 overflow-y-auto mb-10">
                             <div className="bg-white rounded-xl p-4 shadow-sm mb-6">
                                 <div className="flex items-center gap-4">
@@ -295,7 +245,7 @@ export default function MarketPage() {
                                             initial="hidden"
                                             animate="visible"
                                             exit="exit"
-                                            whileHover={{
+                                            whileHover={{ 
                                                 scale: 1.02,
                                                 y: -5,
                                                 transition: { duration: 0.2 }
@@ -425,17 +375,14 @@ export default function MarketPage() {
                                                             setIsSidebarProductOpen(true);
                                                         }}
                                                         className={`
-                                                            px-3 py-1.5 bg-greenTheme text-white rounded-lg hover:bg-green-600
-                                                            transition-colors flex items-center justify-center gap-2
-                                                            text-xs font-medium
-                                                            min-w-[100px] max-w-[120px]
-                                                            ${viewMode === 'grid' ? 'w-full sm:w-auto' : ''}
-                                                        `}
+                                                                    px-4 py-2 bg-greenTheme text-white rounded-lg hover:bg-green-600
+                                                                    transition-colors flex items-center justify-center gap-2
+                                                                    ${viewMode === 'grid' ? 'w-full sm:w-auto' : ''}
+                                                                `}
                                                         title={`View details for ${product.title}`}
                                                     >
                                                         View Details
                                                     </button>
-
                                                 </div>
                                             </div>
                                         </motion.div>
@@ -459,5 +406,6 @@ export default function MarketPage() {
             )}
         </div>
     );
+
 
 }
