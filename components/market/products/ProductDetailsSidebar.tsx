@@ -3,17 +3,54 @@
 import { useEffect, useState } from 'react';
 import { Heart, MessageCircle, X, Star, Shield, Clock, Package, Truck } from 'lucide-react';
 import Image from 'next/image';
-import { Product, ColorVariant, SizeVariant, ProductVariant } from '@/types/productTypes';
+import { Product, ColorVariants, SizeVariants, ProductVariant } from '@/types/productTypes';
+
+interface OwnershipData {
+    id: string;
+    productId: string;
+    userId: string;
+    sellerType: 'business' | 'personal';
+    profileImage: string;
+    businessDetails: {
+        businessName: string;
+        description: string;
+        location: string;
+        established: string;
+    };
+    businessProfile: {
+        rating: {
+            overall: number;
+            service: number;
+            delivery: number;
+            product: number;
+        };
+        feedback: {
+            satisfaction: number;
+            resolution: number;
+            responseTime: number;
+        };
+        reviews: {
+            total: number;
+            positive: number;
+            negative: number;
+        };
+    };
+    businessOwner: {
+        name: string;
+        email: string;
+    };
+}
 
 interface ProductDetailsSidebarProps {
     isOpen: boolean;
     onClose: () => void;
     product: Product;
     marketData: {
-        colorVariants: ColorVariant[];
-        sizeVariants: SizeVariant[];
+        colorVariants: ColorVariants[];
+        sizeVariants: SizeVariants[];
         variants: ProductVariant[];
-        subImages: any[]; // Add proper type from your types file
+        subImages: any[];
+        ownership: OwnershipData[];
     };
 }
 
@@ -22,6 +59,9 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
     const [selectedVariantPrice, setSelectedVariantPrice] = useState<number | null>(null);
+
+    // Get ownership data for this product
+    const ownership = marketData.ownership.find(o => o.productId === product.id);
 
     // Filter data specific to this product
     const productColorVariants = marketData.colorVariants.filter(cv => cv.productId === product.id);
@@ -43,7 +83,6 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
     useEffect(() => {
         let variant;
 
-        // Handle different variant combinations
         if (productColorVariants.length > 0 && productSizeVariants.length > 0) {
             variant = productVariants.find(v =>
                 v.colorVariantId === selectedColor &&
@@ -62,57 +101,10 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
         if (variant) {
             setSelectedVariantPrice(variant.price);
         } else {
-            // If no variant is selected, show the default price range
             const minPrice = Math.min(...productVariants.map(v => v.price));
-            const maxPrice = Math.max(...productVariants.map(v => v.price));
             setSelectedVariantPrice(minPrice);
         }
     }, [selectedColor, selectedSize, productVariants, productColorVariants.length, productSizeVariants.length]);
-
-
-
-    // Static data for marketplace features
-    const sellerMetrics = {
-        rating: 4.8,
-        responseRate: "98%",
-        shippingSpeed: "Fast",
-        totalReviews: 1243,
-        memberSince: "2021"
-    };
-
-    const specifications = {
-        material: "Premium Cotton Blend",
-        dimensions: "24\" x 36\"",
-        weight: "0.5 kg",
-        origin: "Made in Trinidad and Tobago",
-        warranty: "12 months manufacturer warranty"
-    };
-
-    const shippingInfo = {
-        methods: ["Standard", "Express", "Next Day"],
-        estimatedDays: "3-5 business days",
-        returnPeriod: "30 days",
-        shippingFee: "Free over $50"
-    };
-
-    const reviews = {
-        average: 4.5,
-        total: 128,
-        breakdown: {
-            5: 80,
-            4: 30,
-            3: 10,
-            2: 5,
-            1: 3
-        }
-    };
-
-    const guarantees = [
-        { title: "Authentic Products", icon: Shield },
-        { title: "Fast Delivery", icon: Truck },
-        { title: "30-Day Returns", icon: Package },
-        { title: "24/7 Support", icon: Clock }
-    ];
 
     const renderStars = (rating: number) => {
         return [...Array(5)].map((_, index) => (
@@ -199,21 +191,29 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                             <div className="flex items-center gap-3">
                                 <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
                                     <Image
-                                        src="/images/transparentLogo.png"
-                                        alt="Shop logo"
+                                        src={ownership?.profileImage || "/images/transparentLogo.png"}
+                                        alt={ownership?.businessDetails?.businessName || "Shop logo"}
                                         width={40}
                                         height={40}
                                         className="object-cover"
+                                        loader={({ src }) => src}
+                                        unoptimized={true}
                                     />
                                 </div>
                                 <div>
                                     <div className="flex items-center gap-1">
-                                        <h3 className="text-sm font-medium">Tech Store Ltd</h3>
+                                        <h3 className="text-sm font-medium">
+                                            {ownership?.businessDetails?.businessName || "Unknown Seller"}
+                                        </h3>
                                         <div className="flex items-center">
-                                            {renderStars(sellerMetrics.rating)}
+                                            {renderStars(ownership?.businessProfile?.rating?.overall || 0)}
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500">Member since {sellerMetrics.memberSince}</p>
+                                    <p className="text-xs text-gray-500">
+                                        {ownership?.businessDetails?.established ?
+                                            `Established ${ownership.businessDetails.established}` :
+                                            "Member since N/A"}
+                                    </p>
                                 </div>
                             </div>
                             <button
@@ -234,7 +234,10 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                         <div className="bg-gray-50 p-3 rounded-xl space-y-2">
                             <div className="flex items-center justify-between">
                                 <h3 className="text-xs font-medium">Price</h3>
-                                <span className="text-xs text-green-600 font-medium">In Stock</span>
+                                <span className="text-xs text-green-600 font-medium">
+                                    {productVariants.some(v => v.quantity > 0) ? 'In Stock' : 'Out of Stock'}
+                                </span>
+
                             </div>
                             <span className="text-base sm:text-lg font-bold text-gray-900">
                                 {selectedVariantPrice
@@ -292,90 +295,86 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                             </div>
                         )}
 
-                        {/* Rest of the sections remain the same */}
-                        {/* Specifications */}
+                        {/* Business Metrics */}
                         <div className="bg-gray-50 p-3 rounded-xl space-y-2">
-                            <h3 className="text-xs font-medium">Specifications</h3>
+                            <h3 className="text-xs font-medium">Business Performance</h3>
                             <div className="grid grid-cols-2 gap-2 text-xs">
-                                {Object.entries(specifications).map(([key, value]) => (
-                                    <div key={key}>
-                                        <span className="text-gray-500 capitalize">{key}: </span>
-                                        <span className="font-medium">{value}</span>
-                                    </div>
-                                ))}
-                            </div>
-                        </div>
-
-                        {/* Shipping Information */}
-                        <div className="bg-gray-50 p-3 rounded-xl space-y-2">
-                            <h3 className="text-xs font-medium">Shipping Information</h3>
-                            <div className="space-y-1 text-xs">
-                                <p><span className="text-gray-500">Delivery: </span>{shippingInfo.estimatedDays}</p>
-                                <p><span className="text-gray-500">Shipping Fee: </span>{shippingInfo.shippingFee}</p>
-                                <p><span className="text-gray-500">Returns: </span>{shippingInfo.returnPeriod}</p>
-                            </div>
-                        </div>
-
-                        {/* Guarantees */}
-                        <div className="grid grid-cols-2 gap-2">
-                            {guarantees.map((guarantee, index) => (
-                                <div key={index} className="flex items-center gap-2 p-2 bg-gray-50 rounded-lg">
-                                    <guarantee.icon size={16} className="text-greenTheme" />
-                                    <span className="text-xs font-medium">{guarantee.title}</span>
+                                <div>
+                                    <span className="text-gray-500">Response Rate: </span>
+                                    <span className="font-medium">{ownership?.businessProfile?.feedback?.responseTime || 0}%</span>
                                 </div>
-                            ))}
+                                <div>
+                                    <span className="text-gray-500">Satisfaction: </span>
+                                    <span className="font-medium">{ownership?.businessProfile?.feedback?.satisfaction || 0}%</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500">Total Reviews: </span>
+                                    <span className="font-medium">{ownership?.businessProfile?.reviews?.total || 0}</span>
+                                </div>
+                                <div>
+                                    <span className="text-gray-500">Positive Reviews: </span>
+                                    <span className="font-medium">{ownership?.businessProfile?.reviews?.positive || 0}</span>
+                                </div>
+                            </div>
                         </div>
 
-                        {/* Reviews Summary */}
+                        {/* Ratings Breakdown */}
                         <div className="bg-gray-50 p-3 rounded-xl">
-                            <div className="flex items-center justify-between mb-2">
-                                <h3 className="text-xs font-medium">Customer Reviews</h3>
-                                <div className="flex items-center gap-1">
-                                    {renderStars(reviews.average)}
-                                    <span className="text-xs text-gray-500">({reviews.total})</span>
+                            <h3 className="text-xs font-medium mb-2">Rating Breakdown</h3>
+                            <div className="space-y-2">
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Overall</span>
+                                    <div className="flex items-center">
+                                        {renderStars(ownership?.businessProfile?.rating?.overall || 0)}
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Service</span>
+                                    <div className="flex items-center">
+                                        {renderStars(ownership?.businessProfile?.rating?.service || 0)}
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Delivery</span>
+                                    <div className="flex items-center">
+                                        {renderStars(ownership?.businessProfile?.rating?.delivery || 0)}
+                                    </div>
+                                </div>
+                                <div className="flex items-center justify-between">
+                                    <span className="text-xs text-gray-500">Product Quality</span>
+                                    <div className="flex items-center">
+                                        {renderStars(ownership?.businessProfile?.rating?.product || 0)}
+                                    </div>
                                 </div>
                             </div>
-                            <div className="space-y-1">
-                                {Object.entries(reviews.breakdown).reverse().map(([rating, count]) => (
-                                    <div key={rating} className="flex items-center gap-2">
-                                        <span className="text-xs w-6">{rating}★</span>
-                                        <div className="flex-1 h-2 bg-gray-200 rounded-full overflow-hidden">
-                                            <div
-                                                className="h-full bg-greenTheme"
-                                                style={{ width: `${(count / reviews.total) * 100}%` }}
-                                            />
-                                        </div>
-                                        <span className="text-xs text-gray-500">{count}</span>
-                                    </div>
-                                ))}
+                        </div>
+
+                        {/* Bottom Actions */}
+                        <div className="border-t p-3 bg-white">
+                            <div className="flex gap-2">
+                                <button
+                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium
+                                        hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                                    title="Add to wishlist"
+                                >
+                                    <Heart size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                    <span className="text-xs sm:text-sm">Add to Wishlist</span>
+                                </button>
+                                <button
+                                    className="flex-1 px-3 py-2 bg-greenTheme text-white rounded-lg font-medium
+                                        hover:bg-green-600 active:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                                    title="Contact seller"
+                                >
+                                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                    <span className="text-xs sm:text-sm">Contact Seller</span>
+                                </button>
                             </div>
                         </div>
-                    </div>
-                </div>
-
-                {/* Bottom Actions */}
-                <div className="border-t p-3 bg-white">
-                    <div className="flex gap-2">
-                        <button
-                            className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium
-                                hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                            title="Add to wishlist"
-                        >
-                            <Heart size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            <span className="text-xs sm:text-sm">Add to Wishlist</span>
-                        </button>
-                        <button
-                            className="flex-1 px-3 py-2 bg-greenTheme text-white rounded-lg font-medium
-                                hover:bg-green-600 active:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                            title="Contact seller"
-                        >
-                            <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
-                            <span className="text-xs sm:text-sm">Contact Seller</span>
-                        </button>
                     </div>
                 </div>
             </div>
         </>
     );
+
 
 }

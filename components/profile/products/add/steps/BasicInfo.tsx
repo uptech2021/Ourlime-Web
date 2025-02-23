@@ -68,7 +68,7 @@ export default function BasicInfo({ formData, setFormData, onNext }: BasicInfoPr
         }));
 
         const isFormValid = !Object.values(validations).some(error => error !== '') && 
-                          formData.thumbnailImage !== undefined;
+                        formData.thumbnailImage !== undefined;
         
         setIsValid(isFormValid);
     };
@@ -282,6 +282,4 @@ export default function BasicInfo({ formData, setFormData, onNext }: BasicInfoPr
         </div>
     );
     
-
-
 }

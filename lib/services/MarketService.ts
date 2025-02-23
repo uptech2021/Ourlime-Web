@@ -1,11 +1,11 @@
 import { db } from '@/lib/firebaseConfig';
-import { collection, getDocs, query, where, Firestore } from 'firebase/firestore';
+import { collection, getDocs, query, where, Firestore, getDoc, doc } from 'firebase/firestore';
 import {
     Product,
-    Color,
-    Size,
-    ColorVariant,
-    SizeVariant,
+    Colors,
+    Sizes,
+    ColorVariants,
+    SizeVariants,
     ProductVariant,
 } from '@/types/productTypes';
 
@@ -57,17 +57,21 @@ export class MarketService {
                 updatedAt: doc.data().updatedAt,
             })) as Product[];
 
+            const productOwnership = await this.getProductOwnership(
+                products.map(p => p.id)
+            );
+
             const colors = colorsSnapshot.docs.map((doc) => ({
                 id: doc.id,
                 colorName: doc.data().colorName,
                 colorCode: doc.data().colorCode,
-            })) as Color[];
+            })) as Colors[];
 
             const sizes = sizesSnapshot.docs.map((doc) => ({
                 id: doc.id,
                 sizeName: doc.data().sizeName,
                 sizeCode: doc.data().sizeCode,
-            })) as Size[];
+            })) as Sizes[];
 
             const colorVariants = colorVariantsSnapshot.docs.map((doc) => {
                 const variantData = doc.data();
@@ -80,7 +84,7 @@ export class MarketService {
                     createdAt: variantData.createdAt,
                     updatedAt: variantData.updatedAt,
                 };
-            }) as ColorVariant[];
+            }) as ColorVariants[];
 
             const sizeVariants = sizeVariantsSnapshot.docs.map((doc) => {
                 const variantData = doc.data();
@@ -93,7 +97,7 @@ export class MarketService {
                     createdAt: variantData.createdAt,
                     updatedAt: variantData.updatedAt,
                 };
-            }) as SizeVariant[];
+            }) as SizeVariants[];
 
             const subImages = subImagesSnapshot.docs.map((doc) => ({
                 id: doc.id,
@@ -124,6 +128,7 @@ export class MarketService {
                 sizeVariants,
                 variants,
                 subImages,
+                ownership: productOwnership,
             };
 
             return { success: true, data: baseData };
@@ -209,4 +214,79 @@ export class MarketService {
             throw new Error('Failed to filter products');
         }
     }
+
+    private async getProductOwnership(productIds: string[]) {
+        const ownershipQuery = query(
+            collection(this.db, 'ownership'),
+            where('productId', 'in', productIds)
+        );
+        const ownershipSnapshot = await getDocs(ownershipQuery);
+        
+        const ownershipData = await Promise.all(
+            ownershipSnapshot.docs.map(async (ownershipDoc) => {
+                const ownership = ownershipDoc.data();
+                console.log('Processing ownership:', ownership);
+                
+                if (ownership.sellerType === 'business') {
+                    const businessDoc = await getDoc(doc(this.db, 'businesses', ownership.userId));
+                    const businessData = businessDoc.data();
+    
+                    let profileImage = null;
+                    
+                    // Get profileImageSetAs first to determine which image to use
+                    const companyProfileQuery = query(
+                        collection(this.db, 'profileImageSetAs'),
+                        where('userId', '==', ownership.userId),
+                        where('setAs', '==', 'companyProfile')
+                    );
+                    
+                    let profileSetAsSnapshot = await getDocs(companyProfileQuery);
+                    
+                    // If no company profile, try regular profile
+                    if (profileSetAsSnapshot.empty) {
+                        const regularProfileQuery = query(
+                            collection(this.db, 'profileImageSetAs'),
+                            where('userId', '==', ownership.userId),
+                            where('setAs', '==', 'profile')
+                        );
+                        profileSetAsSnapshot = await getDocs(regularProfileQuery);
+                    }
+    
+                    if (!profileSetAsSnapshot.empty) {
+                        const setAsData = profileSetAsSnapshot.docs[0].data();
+                        const imageDoc = await getDoc(doc(this.db, 'profileImages', setAsData.profileImageId));
+                        if (imageDoc.exists()) {
+                            profileImage = imageDoc.data().imageURL; // Note: using imageURL instead of imageUrl
+                        }
+                    }
+    
+                    const userDoc = await getDoc(doc(this.db, 'users', ownership.userId));
+                    const userData = userDoc.data();
+    
+                    return {
+                        id: ownershipDoc.id,
+                        ...ownership,
+                        businessDetails: businessData,
+                        profileImage,
+                        businessOwner: {
+                            // name: `${userData?.firstName} ${userData?.lastName}`,
+                            // email: userData?.email
+
+                            name: "buisness owner name",
+                            email: "buisness owner email"
+                        }
+                    };
+                }
+    
+                return {
+                    id: ownershipDoc.id,
+                    ...ownership
+                };
+            })
+        );
+    
+        return ownershipData;
+    }
+    
+    
 }

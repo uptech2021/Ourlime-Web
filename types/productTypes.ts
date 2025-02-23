@@ -13,24 +13,24 @@ export interface Product {
 
 }
 
-export interface Color {
+export interface Colors {
     id: string;
     colorName: string;
 }
 
-export interface Size {
+export interface Sizes {
     id: string;
     sizeName: string;
 }
 
-export interface ColorVariant {
+export interface ColorVariants {
     id: string;
     colorVariantName: string;
     colorId: string;
     productId: string;
 }
 
-export interface SizeVariant {
+export interface SizeVariants {
     id: string;
     sizeVariantName: string;
     sizeId: string;
@@ -55,10 +55,10 @@ export interface ProductFormData {
     thumbnailImage?: File;
     media: File[];
     variants: ProductVariant[];
-    colors: ColorVariant[];
-    sizes: SizeVariant[];
-    newColors: Color[];
-    newSizes: Size[];
+    colors: ColorVariants[];
+    sizes: SizeVariants[];
+    newColors: Colors[];
+    newSizes: Sizes[];
     selectedBaseColor?: string;
     selectedBaseSize?: string;
 }

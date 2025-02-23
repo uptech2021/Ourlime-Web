@@ -6,8 +6,21 @@ import Image from 'next/image';
 import ProductDetailsSidebar from '@/components/market/products/ProductDetailsSidebar';
 import PromotionSlider from '@/components/market/promotion/PromotionSlider';
 import ProductFilter from '@/components/market/filters/ProductFilter';
-import { Product, Color, Size, ColorVariant, SizeVariant, ProductVariant } from '@/types/productTypes';
+import { Product, Colors, Sizes, ColorVariants, SizeVariants, ProductVariant } from '@/types/productTypes';
 import { motion, AnimatePresence } from 'framer-motion';
+
+interface OwnershipData {
+    id: string;
+    productId: string;
+    userId: string;
+    sellerType: 'business' | 'personal';
+    profileImage?: string;
+    businessDetails?: any;
+    businessOwner?: {
+        name: string;
+        email: string;
+    };
+}
 
 export default function MarketPage() {
     const [viewMode, setViewMode] = useState<'grid' | 'list'>('grid');
@@ -16,16 +29,17 @@ export default function MarketPage() {
     const [isSidebarProductOpen, setIsSidebarProductOpen] = useState(false);
     const [products, setProducts] = useState<Product[]>([]);
     const [categories, setCategories] = useState<string[]>([]);
-    const [colors, setColors] = useState<Color[]>([]);
-    const [sizes, setSizes] = useState<Size[]>([]);
-    const [colorVariants, setColorVariants] = useState<ColorVariant[]>([]);
-    const [sizeVariants, setSizeVariants] = useState<SizeVariant[]>([]);
+    const [colors, setColors] = useState<Colors[]>([]);
+    const [sizes, setSizes] = useState<Sizes[]>([]);
+    const [colorVariants, setColorVariants] = useState<ColorVariants[]>([]);
+    const [sizeVariants, setSizeVariants] = useState<SizeVariants[]>([]);
     const [variants, setVariants] = useState<ProductVariant[]>([]);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedCategories, setSelectedCategories] = useState<string[]>([]);
     const [priceRange, setPriceRange] = useState<[number, number]>([0, 100000]);
     const [selectedColors, setSelectedColors] = useState<string[]>([]);
     const [selectedSizes, setSelectedSizes] = useState<string[]>([]);
+    const [ownership, setOwnership] = useState<OwnershipData[]>([]);
     const [marketData, setMarketData] = useState<any>(null);
     const [inputValue, setInputValue] = useState('');
     const [searchTerm, setSearchTerm] = useState('');
@@ -35,7 +49,7 @@ export default function MarketPage() {
         if (e.key === 'Enter') {
             setSearchTerm(inputValue);
             setShouldFilter(true);
-            
+
             const params = new URLSearchParams(window.location.search);
             if (inputValue) {
                 params.set('q', inputValue);
@@ -55,7 +69,7 @@ export default function MarketPage() {
             const minPrice = params.get('minPrice');
             const maxPrice = params.get('maxPrice');
             const query = params.get('q');
-    
+
             // Set price range from URL or default to midpoint
             const defaultMax = 100000;
             if (minPrice && maxPrice) {
@@ -66,7 +80,7 @@ export default function MarketPage() {
                 const midPoint = Math.floor(defaultMax / 2);
                 setPriceRange([0, midPoint]);
             }
-    
+
             if (urlCategories.length) setSelectedCategories(urlCategories);
             if (urlColors.length) setSelectedColors(urlColors);
             if (urlSizes.length) setSelectedSizes(urlSizes);
@@ -75,11 +89,12 @@ export default function MarketPage() {
                 setSearchTerm(query);
             }
 
-            const response = await fetch('/api/market/fetch');    
+            const response = await fetch('/api/market/fetch');
             const result = await response.json();
 
             if (result.status === 'success') {
                 const marketData = result.data.data;
+                console.log("product data found was: ", marketData);
                 setCategories(marketData.categories);
                 setColors(marketData.colors);
                 setSizes(marketData.sizes);
@@ -87,6 +102,7 @@ export default function MarketPage() {
                 setSizeVariants(marketData.sizeVariants);
                 setVariants(marketData.variants);
                 setProducts(marketData.products);
+                setOwnership(marketData.ownership);
                 setMarketData(marketData);
             }
             setIsLoading(false);
@@ -133,7 +149,7 @@ export default function MarketPage() {
         setShouldFilter(false);
     }, [shouldFilter, selectedCategories, selectedColors, selectedSizes, priceRange, searchTerm]);
 
-    
+
     const getProductPriceDisplay = (productId: string) => {
         const productVariants = (variants || []).filter(v => v.productId === productId);
         const prices = productVariants.map(v => v.price);
@@ -323,14 +339,15 @@ export default function MarketPage() {
                                                 {/* Company Logo */}
                                                 <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-lg transform transition-transform group-hover:scale-110">
                                                     <Image
-                                                        src="/images/transparentLogo.png"
-                                                        alt="Ourlime"
+                                                        src={ownership?.find(o => o.productId === product.id)?.profileImage || "/images/transparentLogo.png"}
+                                                        alt="Company Logo"
                                                         width={28}
                                                         height={28}
                                                         className="rounded object-contain"
                                                         loader={({ src }) => src}
                                                         unoptimized={true}
                                                     />
+
                                                 </div>
                                             </div>
 
@@ -454,7 +471,7 @@ export default function MarketPage() {
                         setSelectedProduct(null);
                     }}
                     product={selectedProduct}
-                    marketData={marketData} // Add this line
+                    marketData={marketData}
                 />
             )}
         </div>
