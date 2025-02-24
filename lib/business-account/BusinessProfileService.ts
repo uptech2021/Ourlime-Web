@@ -1,5 +1,4 @@
-// lib/business-account/BusinessProfileService.ts
-import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, where, query, getDocs } from 'firebase/firestore';
+import { doc, getDoc, setDoc, updateDoc, deleteDoc, collection, where, query, getDocs, limit, addDoc } from 'firebase/firestore';
 import { BusinessProfile } from '@/types/businessTypes';
 import { db } from '../firebaseConfig';
 
@@ -18,25 +17,10 @@ export class BusinessProfileService {
         return BusinessProfileService.instance;
     }
 
-    public async getProfile(userId: string): Promise<BusinessProfile | null> {
-        try {
-            // Check if document exists in businesses collection with this userId field
-            const businessQuery = query(
-                collection(this.db, 'businesses'),
-                where('userId', '==', userId)
-            );
-            const querySnapshot = await getDocs(businessQuery);
-            
-            return !querySnapshot.empty ? querySnapshot.docs[0].data() as BusinessProfile : null;
-        } catch (error) {
-            console.error('Error fetching profile:', error);
-            throw error;
-        }
-    }
-
     public async createProfile(profile: Omit<BusinessProfile, 'createdAt' | 'updatedAt' | 'status'>): Promise<void> {
         try {
-            await setDoc(doc(this.db, 'businesses', profile.userId), {
+            const businessesRef = collection(this.db, 'businesses');
+            await addDoc(businessesRef, {
                 ...profile,
                 createdAt: new Date(),
                 updatedAt: new Date(),
@@ -47,18 +31,43 @@ export class BusinessProfileService {
             throw error;
         }
     }
-
+    
+    public async getProfile(userId: string): Promise<BusinessProfile | null> {
+        try {
+            const businessQuery = query(
+                collection(this.db, 'businesses'),
+                where('userId', '==', userId),
+                limit(1)
+            );
+            const querySnapshot = await getDocs(businessQuery);
+            return !querySnapshot.empty ? querySnapshot.docs[0].data() as BusinessProfile : null;
+        } catch (error) {
+            console.error('Error fetching profile:', error);
+            throw error;
+        }
+    }
+    
     public async updateProfile(userId: string, updates: Partial<BusinessProfile>): Promise<void> {
         try {
-            await updateDoc(doc(this.db, 'businesses', userId), {
-                ...updates,
-                updatedAt: new Date()
-            });
+            const businessQuery = query(
+                collection(this.db, 'businesses'),
+                where('userId', '==', userId),
+                limit(1)
+            );
+            const querySnapshot = await getDocs(businessQuery);
+            
+            if (!querySnapshot.empty) {
+                await updateDoc(querySnapshot.docs[0].ref, {
+                    ...updates,
+                    updatedAt: new Date()
+                });
+            }
         } catch (error) {
             console.error('Error updating profile:', error);
             throw error;
         }
     }
+    
 
     public async deleteProfile(userId: string): Promise<void> {
         try {

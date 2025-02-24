@@ -18,54 +18,60 @@ export default function BusinessAccountPage() {
 
     useEffect(() => {
         const checkBusinessStatus = async () => {
+            const user = auth.currentUser;
+            if (!user) {
+                setIsLoading(false);
+                return;
+            }
+
             try {
-                const user = auth.currentUser;
-                if (user) {
-                    const response = await fetch('/api/business-account', {
-                        headers: {
-                            'userId': user.uid
-                        }
-                    });
-                    const data = await response.json();
-                    setIsBusinessAccount(data.isBusinessAccount);
-                }
+                const response = await fetch('/api/business-account', {
+                    headers: {
+                        'userId': user.uid
+                    }
+                });
+                const data = await response.json();
+                console.log('Business account data:', data);
+                setIsBusinessAccount(data.data !== null);
             } catch (error) {
                 console.error('Error checking business status:', error);
             } finally {
                 setIsLoading(false);
             }
         };
+
         checkBusinessStatus();
     }, []);
-    
+
     const handleBusinessRequest = async () => {
+        const user = auth.currentUser;
+        if (!user) return;
+
         setIsLoading(true);
         try {
-            const user = auth.currentUser;
-            if (user) {
-                const response = await fetch('/api/business-account', {
-                    method: 'POST',
-                    headers: {
-                        'Content-Type': 'application/json'
+            const response = await fetch('/api/business-account', {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json'
+                },
+                body: JSON.stringify({
+                    userId: user.uid,
+                    businessName: 'New Business',
+                    description: '',
+                    established: '',
+                    location: '',
+                    contact: {
+                        email: user.email || '',
+                        phone: '',
+                        website: ''
                     },
-                    body: JSON.stringify({
-                        userId: user.uid,
-                        businessName: '',
-                        description: '',
-                        established: '',
-                        location: '',
-                        contact: {
-                            email: user.email || '',
-                            phone: '',
-                        },
-                        categories: []
-                    })
-                });
-                
-                const data = await response.json();
-                if (data.status === 'success') {
-                    setIsBusinessAccount(true);
-                }
+                    categories: []
+                })
+            });
+
+            const data = await response.json();
+            if (data.status === 'success') {
+                setIsBusinessAccount(true);
             }
         } catch (error) {
             console.error('Error requesting business account:', error);

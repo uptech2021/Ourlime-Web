@@ -1,12 +1,51 @@
 'use client';
 
-import { useState, useEffect } from 'react';
+import { useState, useEffect, ChangeEvent } from 'react';
 import { Building2, MapPin, Calendar, Mail, Phone, Globe, Edit, Pencil } from 'lucide-react';
 import { auth } from '@/lib/firebaseConfig';
 
+interface BusinessData {
+    profile: {
+        name: string;
+        established: string;
+        description: string;
+        location: string;
+        contact: {
+            email: string;
+            phone: string;
+            website: string;
+        };
+    };
+    metrics: {
+        totalProducts: number;
+        totalSales: number;
+        avgRating: number;
+        responseRate: string;
+    };
+    feedback: {
+        resolution: number;
+        responseTime: number;
+        satisfaction: number;
+    };
+    rating: {
+        delivery: number;
+        overall: number;
+        product: number;
+        service: number;
+    };
+    reviews: {
+        negative: number;
+        positive: number;
+        total: number;
+    };
+    categories: string[];
+}
+
 export default function BusinessAccountContent() {
     const [isLoading, setIsLoading] = useState(true);
-    const [businessData, setBusinessData] = useState({
+    const [editingField, setEditingField] = useState<string | null>(null);
+    const [tempValue, setTempValue] = useState('');
+    const [businessData, setBusinessData] = useState<BusinessData>({
         profile: {
             name: "",
             established: "",
@@ -68,7 +107,16 @@ export default function BusinessAccountContent() {
         fetchBusinessData();
     }, []);
 
-    const handleEdit = async (field: string, value: string) => {
+    const startEditing = (field: string, currentValue: string) => {
+        setEditingField(field);
+        setTempValue(currentValue);
+    };
+
+    const handleInputChange = (e: ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+        setTempValue(e.target.value);
+    };
+
+    const handleSubmit = async (field: string) => {
         try {
             const user = auth.currentUser;
             if (!user) return;
@@ -81,7 +129,7 @@ export default function BusinessAccountContent() {
                 body: JSON.stringify({
                     userId: user.uid,
                     updates: {
-                        [`profile.${field}`]: value
+                        [`profile.${field}`]: tempValue
                     }
                 })
             });
@@ -92,15 +140,119 @@ export default function BusinessAccountContent() {
                     ...prev,
                     profile: {
                         ...prev.profile,
-                        [field]: value
+                        [field]: tempValue
                     }
                 }));
             }
         } catch (error) {
             console.error('Error updating field:', error);
         }
+        setEditingField(null);
     };
 
+    const renderField = (field: string, value: string, title: string, icon?: React.ReactNode) => {
+        const isEditing = editingField === field;
+        
+        if (!value && !isEditing) {
+            return (
+                <div className="flex items-center gap-2">
+                    {icon}
+                    <button
+                        type="button"
+                        onClick={() => startEditing(field, '')}
+                        className="flex items-center gap-1 text-gray-500 hover:text-greenTheme"
+                        title={`Add ${title}`}
+                    >
+                        <Pencil size={16} />
+                        <span>Add {title}</span>
+                    </button>
+                </div>
+            );
+        }
+
+        if (isEditing) {
+            return (
+                <form onSubmit={(e) => {
+                    e.preventDefault();
+                    handleSubmit(field);
+                }}>
+                    <label htmlFor={`input-${field}`} className="sr-only">{title}</label>
+                    <input
+                        id={`input-${field}`}
+                        type="text"
+                        value={tempValue}
+                        onChange={handleInputChange}
+                        onBlur={() => handleSubmit(field)}
+                        autoFocus
+                        placeholder={`Enter ${title}`}
+                        className="text-2xl font-bold text-gray-900 bg-transparent border-b border-greenTheme outline-none w-full"
+                    />
+                </form>
+            );
+        }
+
+        return (
+            <div className="flex items-center gap-2 group">
+                {icon}
+                <span>{value}</span>
+                <button
+                    type="button"
+                    onClick={() => startEditing(field, value)}
+                    className="opacity-0 group-hover:opacity-100 ml-2"
+                    title={`Edit ${title}`}
+                >
+                    <Pencil size={16} className="text-gray-500" />
+                </button>
+            </div>
+        );
+    };    const renderContactField = (key: string, value: string) => {
+        const isEditing = editingField === `contact.${key}`;
+        const icons = {
+            email: <Mail className="text-gray-500" size={20} />,
+            phone: <Phone className="text-gray-500" size={20} />,
+            website: <Globe className="text-gray-500" size={20} />
+        };
+
+        return (
+            <div key={key} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg relative group">
+                {icons[key as keyof typeof icons]}
+                <div className="w-full">
+                    <p className="text-sm text-gray-500 capitalize">{key}</p>
+                    {isEditing ? (
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSubmit(`contact.${key}`);
+                        }}>
+                            <label htmlFor={`input-${key}`} className="sr-only">{`Enter ${key}`}</label>
+                            <input
+                                id={`input-${key}`}
+                                type="text"
+                                value={tempValue}
+                                onChange={handleInputChange}
+                                onBlur={() => handleSubmit(`contact.${key}`)}
+                                autoFocus
+                                placeholder={`Enter ${key}`}
+                                className="font-medium bg-transparent border-b border-greenTheme outline-none w-full"
+                            />
+                        </form>
+                    ) : (
+                        <div className="flex items-center gap-2">
+                            <span className="font-medium">{value || `Add ${key}`}</span>
+                            <button
+                                type="button"
+                                onClick={() => startEditing(`contact.${key}`, value)}
+                                className="opacity-0 group-hover:opacity-100"
+                                aria-label={`Edit ${key}`}
+                                title={`Edit ${key}`}
+                            >
+                                <Pencil size={14} className="text-gray-500" />
+                            </button>
+                        </div>
+                    )}
+                </div>
+            </div>
+        );
+    };
     if (isLoading) {
         return (
             <div className="flex justify-center items-center h-64">
@@ -114,70 +266,55 @@ export default function BusinessAccountContent() {
             {/* Business Overview */}
             <div className="flex justify-between items-start">
                 <div className="w-full">
-                    <div className="flex items-center gap-2">
-                        <input
-                            type="text"
-                            value={businessData.profile.name}
-                            onChange={(e) => handleEdit('name', e.target.value)}
-                            placeholder="Enter Business Name"
-                            className="text-2xl font-bold text-gray-900 bg-transparent border-b border-transparent hover:border-gray-300 focus:border-greenTheme outline-none"
-                        />
+                    <div className="mb-4">
+                        {renderField('name', businessData.profile.name, 'Business Name')}
                     </div>
                     <div className="flex items-center gap-4 mt-2 text-gray-600">
-                        <div className="flex items-center gap-1">
-                            <Building2 size={16} />
-                            <input
-                                type="text"
-                                value={businessData.profile.established}
-                                onChange={(e) => handleEdit('established', e.target.value)}
-                                placeholder="Year Established"
-                                className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-greenTheme outline-none"
-                            />
-                        </div>
-                        <div className="flex items-center gap-1">
-                            <MapPin size={16} />
-                            <input
-                                type="text"
-                                value={businessData.profile.location}
-                                onChange={(e) => handleEdit('location', e.target.value)}
-                                placeholder="Location"
-                                className="bg-transparent border-b border-transparent hover:border-gray-300 focus:border-greenTheme outline-none"
-                            />
-                        </div>
+                        {renderField('established', businessData.profile.established, 'Year Established', <Building2 size={16} />)}
+                        {renderField('location', businessData.profile.location, 'Location', <MapPin size={16} />)}
                     </div>
                 </div>
             </div>
 
             {/* Business Description */}
             <div className="bg-gray-50 p-4 rounded-lg relative group">
-                <textarea
-                    value={businessData.profile.description}
-                    onChange={(e) => handleEdit('description', e.target.value)}
-                    placeholder="Enter your business description"
-                    className="w-full text-gray-700 bg-transparent border-none focus:ring-0 resize-none"
-                    rows={3}
-                />
+                {editingField === 'description' ? (
+                    <form onSubmit={(e) => {
+                        e.preventDefault();
+                        handleSubmit('description');
+                    }}>
+                        <textarea
+                            value={tempValue}
+                            onChange={handleInputChange}
+                            onBlur={() => handleSubmit('description')}
+                            autoFocus
+                            placeholder="Enter your business description"
+                            className="w-full text-gray-700 bg-transparent border-none focus:ring-0 resize-none"
+                            rows={3}
+                        />
+                    </form>
+                ) : (
+                    <div className="flex items-start gap-2">
+                        <p className="text-gray-700">
+                            {businessData.profile.description || 'Add business description'}
+                        </p>
+                        <button
+                            type="button"
+                            onClick={() => startEditing('description', businessData.profile.description)}
+                            className="opacity-0 group-hover:opacity-100"
+                            title="Edit description"
+                        >
+                            <Pencil size={16} className="text-gray-500" />
+                        </button>
+                    </div>
+                )}
             </div>
 
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {businessData.profile.contact && Object.entries(businessData.profile.contact).map(([key, value]) => (
-                    <div key={key} className="flex items-center gap-2 p-3 bg-gray-50 rounded-lg relative group">
-                        {key === 'email' && <Mail className="text-gray-500" size={20} />}
-                        {key === 'phone' && <Phone className="text-gray-500" size={20} />}
-                        {key === 'website' && <Globe className="text-gray-500" size={20} />}
-                        <div className="w-full">
-                            <p className="text-sm text-gray-500 capitalize">{key}</p>
-                            <input
-                                type="text"
-                                value={value || ''}
-                                onChange={(e) => handleEdit(`contact.${key}`, e.target.value)}
-                                placeholder={`Enter ${key}`}
-                                className="font-medium bg-transparent border-b border-transparent hover:border-gray-300 focus:border-greenTheme outline-none w-full"
-                            />
-                        </div>
-                    </div>
-                ))}
+                {Object.entries(businessData.profile.contact).map(([key, value]) => 
+                    renderContactField(key, value)
+                )}
             </div>
 
             {/* Business Metrics */}
@@ -204,7 +341,7 @@ export default function BusinessAccountContent() {
             <div>
                 <h3 className="text-lg font-semibold mb-3">Business Categories</h3>
                 <div className="flex flex-wrap gap-2">
-                    {businessData.categories && businessData.categories.length > 0 ? (
+                    {businessData.categories.length > 0 ? (
                         businessData.categories.map((category, index) => (
                             <span
                                 key={index}
@@ -217,14 +354,16 @@ export default function BusinessAccountContent() {
                         <span className="text-gray-500">No categories added yet</span>
                     )}
                     <button
-                        onClick={() => handleEdit('categories', '')}
+                        type="button"
+                        onClick={() => startEditing('categories', '')}
                         className="px-3 py-1 border border-dashed border-gray-300 text-gray-500 rounded-full text-sm hover:border-greenTheme hover:text-greenTheme"
+                        title="Add Category"
                     >
                         + Add Category
                     </button>
                 </div>
             </div>
-
         </div>
     );
+
 }
