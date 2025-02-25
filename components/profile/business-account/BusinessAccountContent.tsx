@@ -121,6 +121,34 @@ export default function BusinessAccountContent() {
             const user = auth.currentUser;
             if (!user) return;
 
+            let updates = {};
+
+            if (field === 'categories') {
+
+                // Only proceed if tempValue is not empty
+                if (tempValue.trim()) {
+                    const updatedCategories = [...businessData.categories, tempValue.trim()];
+                    updates = {
+                        categories: updatedCategories
+                    };
+                } else {
+                    setEditingField(null);
+                    return; // Exit early if empty string
+                }
+            } else if (field.startsWith('contact.')) {
+                const [_, contactField] = field.split('.');
+                updates = {
+                    'profile.contact': {
+                        ...businessData.profile.contact,
+                        [contactField]: tempValue
+                    }
+                };
+            } else {
+                updates = {
+                    [`profile.${field}`]: tempValue
+                };
+            }
+
             const response = await fetch('/api/business-account', {
                 method: 'PUT',
                 headers: {
@@ -128,21 +156,33 @@ export default function BusinessAccountContent() {
                 },
                 body: JSON.stringify({
                     userId: user.uid,
-                    updates: {
-                        [`profile.${field}`]: tempValue
-                    }
+                    updates: updates
                 })
             });
 
             const data = await response.json();
             if (data.status === 'success') {
-                setBusinessData(prev => ({
-                    ...prev,
-                    profile: {
-                        ...prev.profile,
-                        [field]: tempValue
-                    }
-                }));
+                if (field === 'categories') {
+                    setBusinessData(prev => ({
+                        ...prev,
+                        categories: [...prev.categories, tempValue]
+                    }));
+                } else {
+                    setBusinessData(prev => ({
+                        ...prev,
+                        profile: {
+                            ...prev.profile,
+                            ...(field.startsWith('contact.')
+                                ? {
+                                    contact: {
+                                        ...prev.profile.contact,
+                                        [field.split('.')[1]]: tempValue
+                                    }
+                                }
+                                : { [field]: tempValue })
+                        }
+                    }));
+                }
             }
         } catch (error) {
             console.error('Error updating field:', error);
@@ -150,9 +190,10 @@ export default function BusinessAccountContent() {
         setEditingField(null);
     };
 
+
     const renderField = (field: string, value: string, title: string, icon?: React.ReactNode) => {
         const isEditing = editingField === field;
-        
+
         if (!value && !isEditing) {
             return (
                 <div className="flex items-center gap-2">
@@ -205,7 +246,7 @@ export default function BusinessAccountContent() {
                 </button>
             </div>
         );
-    };    const renderContactField = (key: string, value: string) => {
+    }; const renderContactField = (key: string, value: string) => {
         const isEditing = editingField === `contact.${key}`;
         const icons = {
             email: <Mail className="text-gray-500" size={20} />,
@@ -312,7 +353,7 @@ export default function BusinessAccountContent() {
 
             {/* Contact Information */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-                {Object.entries(businessData.profile.contact).map(([key, value]) => 
+                {Object.entries(businessData.profile.contact).map(([key, value]) =>
                     renderContactField(key, value)
                 )}
             </div>
@@ -353,16 +394,33 @@ export default function BusinessAccountContent() {
                     ) : (
                         <span className="text-gray-500">No categories added yet</span>
                     )}
-                    <button
-                        type="button"
-                        onClick={() => startEditing('categories', '')}
-                        className="px-3 py-1 border border-dashed border-gray-300 text-gray-500 rounded-full text-sm hover:border-greenTheme hover:text-greenTheme"
-                        title="Add Category"
-                    >
-                        + Add Category
-                    </button>
+                    {editingField === 'categories' ? (
+                        <form onSubmit={(e) => {
+                            e.preventDefault();
+                            handleSubmit('categories');
+                        }}>
+                            <input
+                                type="text"
+                                value={tempValue}
+                                onChange={handleInputChange}
+                                onBlur={() => handleSubmit('categories')}
+                                autoFocus
+                                placeholder="Enter category"
+                                className="px-3 py-1 border border-gray-300 rounded-full text-sm focus:border-greenTheme outline-none"
+                            />
+                        </form>
+                    ) : (
+                        <button
+                            type="button"
+                            onClick={() => startEditing('categories', '')}
+                            className="px-3 py-1 border border-dashed border-gray-300 text-gray-500 rounded-full text-sm hover:border-greenTheme hover:text-greenTheme"
+                        >
+                            + Add Category
+                        </button>
+                    )}
                 </div>
             </div>
+
         </div>
     );
 

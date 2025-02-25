@@ -1,7 +1,7 @@
 'use client'
 
 import { useEffect, useState } from 'react';
-import { Heart, MessageCircle, X, Star, Shield, Clock, Package, Truck } from 'lucide-react';
+import { Heart, MessageCircle, X, Star, Shield, Clock, Package, Truck, ExternalLink, Globe } from 'lucide-react';
 import Image from 'next/image';
 import { Product, ColorVariants, SizeVariants, ProductVariant } from '@/types/productTypes';
 
@@ -12,10 +12,15 @@ interface OwnershipData {
     sellerType: 'business' | 'personal';
     profileImage: string;
     businessDetails: {
-        businessName: string;
+        name: string;  // Changed from businessName
         description: string;
         location: string;
         established: string;
+        contact: {     // Added contact object
+            email: string;
+            phone: string;
+            website: string;
+        }
     };
     businessProfile: {
         rating: {
@@ -40,6 +45,7 @@ interface OwnershipData {
         email: string;
     };
 }
+
 
 interface ProductDetailsSidebarProps {
     isOpen: boolean;
@@ -147,7 +153,7 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                 </div>
 
                 {/* Main Content */}
-                <div className="flex-1 overflow-y-auto">
+                <div className="flex-1 overflow-y-auto pb-[80px]"> {/* Added pb-[80px] for bottom padding */}
                     <div className="p-3 sm:p-4 space-y-4">
                         {/* Image Gallery */}
                         <div className="flex gap-3 h-[400px]">
@@ -187,42 +193,75 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                         </div>
 
                         {/* Seller Info */}
-                        <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
-                            <div className="flex items-center gap-3">
-                                <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
-                                    <Image
-                                        src={ownership?.profileImage || "/images/transparentLogo.png"}
-                                        alt={ownership?.businessDetails?.businessName || "Shop logo"}
-                                        width={40}
-                                        height={40}
-                                        className="object-cover"
-                                        loader={({ src }) => src}
-                                        unoptimized={true}
-                                    />
-                                </div>
-                                <div>
-                                    <div className="flex items-center gap-1">
-                                        <h3 className="text-sm font-medium">
-                                            {ownership?.businessDetails?.businessName || "Unknown Seller"}
-                                        </h3>
-                                        <div className="flex items-center">
-                                            {renderStars(ownership?.businessProfile?.rating?.overall || 0)}
+                        {ownership?.sellerType === 'business' && (
+                            <div className="flex items-center justify-between bg-gray-50 p-3 rounded-xl">
+                                <div className="flex items-center gap-3">
+                                    <div className="w-10 h-10 rounded-full overflow-hidden bg-gray-200">
+                                        <Image
+                                            src={ownership?.profileImage || "/images/transparentLogo.png"}
+                                            alt={ownership?.businessDetails?.name || "Shop logo"}
+                                            width={40}
+                                            height={40}
+                                            className="object-cover"
+                                            loader={({ src }) => src}
+                                            unoptimized={true}
+                                        />
+                                    </div>
+                                    <div>
+                                        <div className="flex items-center gap-1">
+                                            <h3 className="text-sm font-medium">
+                                                {ownership?.businessDetails?.name}
+                                            </h3>
+                                            <div className="flex items-center">
+                                                {renderStars(ownership?.businessProfile?.rating?.overall || 0)}
+                                            </div>
+                                        </div>
+                                        <div className="space-y-1">
+                                            <p className="text-xs text-gray-500">
+                                                {ownership?.businessDetails?.established &&
+                                                    `Established ${ownership.businessDetails.established}`}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                                {ownership?.businessDetails?.location}
+                                            </p>
+                                            <p className="text-xs text-gray-600">
+                                                {ownership?.businessDetails?.contact?.email}
+                                            </p>
                                         </div>
                                     </div>
-                                    <p className="text-xs text-gray-500">
-                                        {ownership?.businessDetails?.established ?
-                                            `Established ${ownership.businessDetails.established}` :
-                                            "Member since N/A"}
-                                    </p>
+                                </div>
+                                <button
+                                    className="text-xs font-medium text-greenTheme hover:underline"
+                                    title="View shop"
+                                >
+                                    View Shop
+                                </button>
+                            </div>
+                        )}
+
+                        {ownership?.sellerType === 'business' && ownership?.businessDetails?.contact?.website && (
+                            <div className="bg-gray-50 p-3 rounded-xl">
+                                <h3 className="text-xs font-medium mb-2">Business Website</h3>
+                                <div className="flex items-center justify-between">
+                                    <div className="flex items-center gap-2">
+                                        <Globe size={16} className="text-gray-500" />
+                                        <span className="text-sm text-gray-700">
+                                            {ownership.businessDetails.contact.website}
+                                        </span>
+                                    </div>
+                                    <a
+                                        href={`${ownership.businessDetails.contact.website}`}
+                                        target="_blank"
+                                        rel="noopener noreferrer"
+                                        className="text-xs font-medium text-greenTheme hover:underline flex items-center gap-1"
+                                    >
+                                        Visit Website
+                                        <ExternalLink size={12} />
+                                    </a>
                                 </div>
                             </div>
-                            <button
-                                className="text-xs font-medium text-greenTheme hover:underline"
-                                title="View shop"
-                            >
-                                View Shop
-                            </button>
-                        </div>
+                        )}
+
 
                         {/* Product Info */}
                         <div>
@@ -232,27 +271,73 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
 
                         {/* Price and Stock */}
                         <div className="bg-gray-50 p-3 rounded-xl space-y-2">
-                            <div className="flex items-center justify-between">
-                                <h3 className="text-xs font-medium">Price</h3>
-                                <span className="text-xs text-green-600 font-medium">
-                                    {productVariants.some(v => v.quantity > 0) ? 'In Stock' : 'Out of Stock'}
-                                </span>
+                            {ownership?.sellerType === 'business' ? (
+                                <>
+                                    <div className="flex items-center justify-between">
+                                        <h3 className="text-xs font-medium">Price</h3>
+                                        <div className="flex items-center gap-2">
+                                            <span className="text-xs text-green-600 font-medium">
+                                                {productVariants.some(v => v.quantity > 0) ? 'In Stock' : 'Out of Stock'}
+                                            </span>
+                                            {productVariants.some(v => v.quantity > 0) && (
+                                                <div className="flex items-center gap-2">
+                                                    <label className="text-xs text-gray-500">Qty:</label>
+                                                    <select
+                                                        className="text-xs border rounded-md px-2 py-1 bg-white"
+                                                        defaultValue={1}
+                                                        aria-label="Quantity selector"
+                                                        title="Select quantity"
+                                                    >
+                                                        {[...Array(Math.min(10, productVariants[0]?.quantity || 0))].map((_, i) => (
+                                                            <option key={i + 1} value={i + 1}>{i + 1}</option>
+                                                        ))}
+                                                    </select>
+                                                </div>
 
-                            </div>
-                            <span className="text-base sm:text-lg font-bold text-gray-900">
-                                {selectedVariantPrice
-                                    ? `$${selectedVariantPrice.toFixed(2)}`
-                                    : productVariants.length > 0
-                                        ? (() => {
-                                            const minPrice = Math.min(...productVariants.map(v => v.price));
-                                            const maxPrice = Math.max(...productVariants.map(v => v.price));
-                                            return minPrice === maxPrice
-                                                ? `$${minPrice.toFixed(2)}`
-                                                : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
-                                        })()
-                                        : 'Price unavailable'
-                                }
-                            </span>
+                                            )}
+                                        </div>
+                                    </div>
+                                    <div className="flex items-center justify-between">
+                                        <span className="text-base sm:text-lg font-bold text-gray-900">
+                                            {selectedVariantPrice
+                                                ? `$${selectedVariantPrice.toFixed(2)}`
+                                                : productVariants.length > 0
+                                                    ? (() => {
+                                                        const minPrice = Math.min(...productVariants.map(v => v.price));
+                                                        const maxPrice = Math.max(...productVariants.map(v => v.price));
+                                                        return minPrice === maxPrice
+                                                            ? `$${minPrice.toFixed(2)}`
+                                                            : `$${minPrice.toFixed(2)} - $${maxPrice.toFixed(2)}`;
+                                                    })()
+                                                    : 'Price unavailable'
+                                            }
+                                        </span>
+                                        <span className="text-xs text-gray-500">
+                                            {productVariants[0]?.quantity || 0} units available
+                                        </span>
+                                    </div>
+                                </>
+                            ) : (
+                                <div className="flex items-center justify-between">
+                                    <h3 className="text-xs font-medium">Price</h3>
+                                    <span className="text-base sm:text-lg font-bold text-gray-900">
+                                        {selectedVariantPrice
+                                            ? `$${selectedVariantPrice.toFixed(2)}`
+                                            : productVariants.length > 0
+                                                ? `$${productVariants[0].price.toFixed(2)}`
+                                                : 'Price unavailable'
+                                        }
+                                    </span>
+                                </div>
+                            )}
+                        </div>
+
+                        {/* Long Description */}
+                        <div className="bg-gray-50 p-3 rounded-xl">
+                            <h3 className="text-xs font-medium mb-2">Product Description</h3>
+                            <p className="text-sm text-gray-700 whitespace-pre-wrap">
+                                {product.longDescription}
+                            </p>
                         </div>
 
                         {/* Variants Selection */}
@@ -295,81 +380,87 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                             </div>
                         )}
 
-                        {/* Business Metrics */}
-                        <div className="bg-gray-50 p-3 rounded-xl space-y-2">
-                            <h3 className="text-xs font-medium">Business Performance</h3>
-                            <div className="grid grid-cols-2 gap-2 text-xs">
-                                <div>
-                                    <span className="text-gray-500">Response Rate: </span>
-                                    <span className="font-medium">{ownership?.businessProfile?.feedback?.responseTime || 0}%</span>
+                        {ownership?.sellerType === 'business' && (
+                            <>
+                                {/* Business Metrics */}
+                                <div className="bg-gray-50 p-3 rounded-xl space-y-2">
+                                    <h3 className="text-xs font-medium">Business Performance</h3>
+                                    <div className="grid grid-cols-2 gap-2 text-xs">
+                                        <div>
+                                            <span className="text-gray-500">Response Rate: </span>
+                                            <span className="font-medium">{ownership?.businessProfile?.feedback?.responseTime || 0}%</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500">Satisfaction: </span>
+                                            <span className="font-medium">{ownership?.businessProfile?.feedback?.satisfaction || 0}%</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500">Total Reviews: </span>
+                                            <span className="font-medium">{ownership?.businessProfile?.reviews?.total || 0}</span>
+                                        </div>
+                                        <div>
+                                            <span className="text-gray-500">Positive Reviews: </span>
+                                            <span className="font-medium">{ownership?.businessProfile?.reviews?.positive || 0}</span>
+                                        </div>
+                                    </div>
                                 </div>
-                                <div>
-                                    <span className="text-gray-500">Satisfaction: </span>
-                                    <span className="font-medium">{ownership?.businessProfile?.feedback?.satisfaction || 0}%</span>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Total Reviews: </span>
-                                    <span className="font-medium">{ownership?.businessProfile?.reviews?.total || 0}</span>
-                                </div>
-                                <div>
-                                    <span className="text-gray-500">Positive Reviews: </span>
-                                    <span className="font-medium">{ownership?.businessProfile?.reviews?.positive || 0}</span>
-                                </div>
-                            </div>
-                        </div>
 
-                        {/* Ratings Breakdown */}
-                        <div className="bg-gray-50 p-3 rounded-xl">
-                            <h3 className="text-xs font-medium mb-2">Rating Breakdown</h3>
-                            <div className="space-y-2">
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Overall</span>
-                                    <div className="flex items-center">
-                                        {renderStars(ownership?.businessProfile?.rating?.overall || 0)}
+                                {/* Ratings Breakdown */}
+                                <div className="bg-gray-50 p-3 rounded-xl">
+                                    <h3 className="text-xs font-medium mb-2">Rating Breakdown</h3>
+                                    <div className="space-y-2">
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-500">Overall</span>
+                                            <div className="flex items-center">
+                                                {renderStars(ownership?.businessProfile?.rating?.overall || 0)}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-500">Service</span>
+                                            <div className="flex items-center">
+                                                {renderStars(ownership?.businessProfile?.rating?.service || 0)}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-500">Delivery</span>
+                                            <div className="flex items-center">
+                                                {renderStars(ownership?.businessProfile?.rating?.delivery || 0)}
+                                            </div>
+                                        </div>
+                                        <div className="flex items-center justify-between">
+                                            <span className="text-xs text-gray-500">Product Quality</span>
+                                            <div className="flex items-center">
+                                                {renderStars(ownership?.businessProfile?.rating?.product || 0)}
+                                            </div>
+                                        </div>
                                     </div>
                                 </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Service</span>
-                                    <div className="flex items-center">
-                                        {renderStars(ownership?.businessProfile?.rating?.service || 0)}
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Delivery</span>
-                                    <div className="flex items-center">
-                                        {renderStars(ownership?.businessProfile?.rating?.delivery || 0)}
-                                    </div>
-                                </div>
-                                <div className="flex items-center justify-between">
-                                    <span className="text-xs text-gray-500">Product Quality</span>
-                                    <div className="flex items-center">
-                                        {renderStars(ownership?.businessProfile?.rating?.product || 0)}
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
+                            </>
+                        )}
+                    </div>
+                </div>
 
-                        {/* Bottom Actions */}
-                        <div className="border-t p-3 bg-white">
-                            <div className="flex gap-2">
-                                <button
-                                    className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium
-                                        hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center gap-2"
-                                    title="Add to wishlist"
-                                >
-                                    <Heart size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                    <span className="text-xs sm:text-sm">Add to Wishlist</span>
-                                </button>
-                                <button
-                                    className="flex-1 px-3 py-2 bg-greenTheme text-white rounded-lg font-medium
+                {/* Bottom Actions */}
+                <div className="fixed bottom-0 left-0 right-0 border-t p-3 bg-white z-[402] sm:w-[480px] lg:w-[580px] ml-auto">
+                    <div className="flex gap-2">
+                        {ownership?.sellerType === 'business' && (
+                            <button
+                                className="flex-1 px-3 py-2 border border-gray-300 rounded-lg text-gray-700 font-medium
+                                            hover:bg-gray-50 active:bg-gray-100 transition-colors flex items-center justify-center gap-2"
+                                title="Add to wishlist"
+                            >
+                                <Heart size={16} className="sm:w-[18px] sm:h-[18px]" />
+                                <span className="text-xs sm:text-sm">Add to Wishlist</span>
+                            </button>
+                        )}
+                        <button
+                            className="flex-1 px-3 py-2 bg-greenTheme text-white rounded-lg font-medium
                                         hover:bg-green-600 active:bg-green-700 transition-colors flex items-center justify-center gap-2"
-                                    title="Contact seller"
-                                >
-                                    <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
-                                    <span className="text-xs sm:text-sm">Contact Seller</span>
-                                </button>
-                            </div>
-                        </div>
+                            title="Contact seller"
+                        >
+                            <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
+                            <span className="text-xs sm:text-sm">Contact Seller</span>
+                        </button>
                     </div>
                 </div>
             </div>

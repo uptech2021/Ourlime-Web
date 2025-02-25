@@ -337,18 +337,20 @@ export default function MarketPage() {
                                                     className="object-cover group-hover:scale-105 transition-transform duration-300"
                                                 />
                                                 {/* Company Logo */}
-                                                <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-lg transform transition-transform group-hover:scale-110">
-                                                    <Image
-                                                        src={ownership?.find(o => o.productId === product.id)?.profileImage || "/images/transparentLogo.png"}
-                                                        alt="Company Logo"
-                                                        width={28}
-                                                        height={28}
-                                                        className="rounded object-contain"
-                                                        loader={({ src }) => src}
-                                                        unoptimized={true}
-                                                    />
+                                                {ownership?.find(o => o.productId === product.id)?.sellerType === 'business' && (
+                                                    <div className="absolute bottom-2 left-2 bg-white/90 backdrop-blur-sm p-1.5 rounded-lg shadow-lg transform transition-transform group-hover:scale-110">
+                                                        <Image
+                                                            src={ownership?.find(o => o.productId === product.id)?.profileImage || "/images/transparentLogo.png"}
+                                                            alt="Company Logo"
+                                                            width={28}
+                                                            height={28}
+                                                            className="rounded object-contain"
+                                                            loader={({ src }) => src}
+                                                            unoptimized={true}
+                                                        />
+                                                    </div>
+                                                )}
 
-                                                </div>
                                             </div>
 
                                             {/* Content Section */}

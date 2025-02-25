@@ -16,6 +16,7 @@ export default function BusinessAccountPage() {
     const [isLoading, setIsLoading] = useState(true);
     const { profileImage, userImages } = useProfileStore();
 
+    
     useEffect(() => {
         const checkBusinessStatus = async () => {
             const user = auth.currentUser;

@@ -1,13 +1,16 @@
 import { BusinessProfile } from "@/types/businessTypes";
 import { BusinessMetricsService } from "./BusinessMetricsService";
 import { BusinessProfileService } from "./BusinessProfileService";
+import { ValidationService } from "./ValidationService";
 
 export class BusinessAccountService {
     private static instance: BusinessAccountService;
+    private readonly validationService: ValidationService;
     private readonly metricsService: BusinessMetricsService;
     private readonly profileService: BusinessProfileService;
 
     private constructor() {
+        this.validationService = ValidationService.getInstance();
         this.metricsService = BusinessMetricsService.getInstance();
         this.profileService = BusinessProfileService.getInstance();
     }
@@ -62,6 +65,13 @@ export class BusinessAccountService {
     }
 
     public async createBusinessAccount(data: any): Promise<void> {
+        // First validate the business email
+        const isValidEmail = await this.validationService.validateBusinessEmail(data.contact?.email);
+        
+        if (!isValidEmail) {
+            throw new Error('Invalid business email');
+        }
+    
         const newProfile: BusinessProfile = {
             userId: data.userId,
             profile: {
@@ -105,6 +115,7 @@ export class BusinessAccountService {
     
         await this.profileService.createProfile(newProfile);
     }
+    
     
 
     public async updateBusinessAccount(userId: string, updates: any) {

@@ -9,6 +9,43 @@ import {
     ProductVariant,
 } from '@/types/productTypes';
 
+interface BusinessData {
+    profile: {
+        name: string;
+        established: string;
+        description: string;
+        location: string;
+        contact: {
+            email: string;
+            phone: string;
+            website: string;
+        };
+    };
+    metrics: {
+        totalProducts: number;
+        totalSales: number;
+        avgRating: number;
+        responseRate: string;
+    };
+    feedback: {
+        resolution: number;
+        responseTime: number;
+        satisfaction: number;
+    };
+    rating: {
+        delivery: number;
+        overall: number;
+        product: number;
+        service: number;
+    };
+    reviews: {
+        negative: number;
+        positive: number;
+        total: number;
+    };
+    categories: string[];
+}
+
 export class MarketService {
     private static instance: MarketService;
     private readonly db: Firestore;
@@ -215,6 +252,92 @@ export class MarketService {
         }
     }
 
+    private async getProductOwnershipWithBusiness(userId: string) {
+        console.log('Fetching business data for userId:', userId);
+    
+        const businessQuery = query(
+            collection(this.db, 'businesses'),
+            where('userId', '==', userId)
+        );
+        const businessSnapshot = await getDocs(businessQuery);
+        const businessData = !businessSnapshot.empty ? businessSnapshot.docs[0].data() : null;
+        console.log('Raw business data:', businessData);
+    
+        // Rest of the function remains the same
+        let profileImage = null;
+
+        const companyProfileQuery = query(
+            collection(this.db, 'profileImageSetAs'),
+            where('userId', '==', userId),
+            where('setAs', '==', 'companyProfile')
+        );
+        
+        let profileSetAsSnapshot = await getDocs(companyProfileQuery);
+        console.log('Company profile snapshot:', profileSetAsSnapshot.docs.map(d => d.data()));
+    
+        if (profileSetAsSnapshot.empty) {
+            const regularProfileQuery = query(
+                collection(this.db, 'profileImageSetAs'),
+                where('userId', '==', userId),
+                where('setAs', '==', 'profile')
+            );
+            profileSetAsSnapshot = await getDocs(regularProfileQuery);
+            console.log('Regular profile snapshot:', profileSetAsSnapshot.docs.map(d => d.data()));
+        }
+    
+        if (!profileSetAsSnapshot.empty) {
+            const setAsData = profileSetAsSnapshot.docs[0].data();
+            const imageDoc = await getDoc(doc(this.db, 'profileImages', setAsData.profileImageId));
+            if (imageDoc.exists()) {
+                profileImage = imageDoc.data().imageURL;
+                console.log('Found profile image:', profileImage);
+            }
+        }
+    
+        const businessDetails = {
+            name: businessData?.profile?.name || '',
+            description: businessData?.profile?.description || '',
+            established: businessData?.profile?.established || '',
+            location: businessData?.profile?.location || '',
+            contact: {
+                email: businessData?.profile?.contact?.email || '',
+                phone: businessData?.profile?.contact?.phone || '',
+                website: businessData?.profile?.contact?.website || ''
+            },
+            categories: businessData?.categories || []
+        };
+    
+        console.log('Processed business details:', businessDetails);
+    
+        return {
+            businessDetails: {
+                name: businessData?.profile?.name || '',
+                description: businessData?.profile?.description || '',
+                established: businessData?.profile?.established || '',
+                location: businessData?.profile?.location || '',
+                contact: {
+                    email: businessData?.profile?.contact?.email || '',
+                    phone: businessData?.profile?.contact?.phone || '',
+                    website: businessData?.profile?.contact?.website || ''
+                },
+                categories: businessData?.categories || []
+            },
+            businessProfile: businessData?.businessProfile || {
+                reviews: { total: 0, positive: 0, negative: 0 },
+                feedback: { resolution: 0, satisfaction: 0, responseTime: 0 },
+                rating: { product: 0, service: 0, overall: 0, delivery: 0 }
+            },
+            metrics: businessData?.metrics || {
+                totalProducts: 0,
+                totalSales: 0,
+                avgRating: 0,
+                responseRate: '0%'
+            },
+            profileImage
+        };
+    }
+    
+    
     private async getProductOwnership(productIds: string[]) {
         const ownershipQuery = query(
             collection(this.db, 'ownership'),
@@ -225,56 +348,23 @@ export class MarketService {
         const ownershipData = await Promise.all(
             ownershipSnapshot.docs.map(async (ownershipDoc) => {
                 const ownership = ownershipDoc.data();
-                console.log('Processing ownership:', ownership);
                 
                 if (ownership.sellerType === 'business') {
-                    const businessDoc = await getDoc(doc(this.db, 'businesses', ownership.userId));
-                    const businessData = businessDoc.data();
-    
-                    let profileImage = null;
+                    const businessInfo = await this.getProductOwnershipWithBusiness(ownership.userId);
                     
-                    // Get profileImageSetAs first to determine which image to use
-                    const companyProfileQuery = query(
-                        collection(this.db, 'profileImageSetAs'),
-                        where('userId', '==', ownership.userId),
-                        where('setAs', '==', 'companyProfile')
+                    // Get product-specific reviews
+                    const reviewsQuery = query(
+                        collection(this.db, 'productReviews'),
+                        where('productId', '==', ownership.productId)
                     );
-                    
-                    let profileSetAsSnapshot = await getDocs(companyProfileQuery);
-                    
-                    // If no company profile, try regular profile
-                    if (profileSetAsSnapshot.empty) {
-                        const regularProfileQuery = query(
-                            collection(this.db, 'profileImageSetAs'),
-                            where('userId', '==', ownership.userId),
-                            where('setAs', '==', 'profile')
-                        );
-                        profileSetAsSnapshot = await getDocs(regularProfileQuery);
-                    }
-    
-                    if (!profileSetAsSnapshot.empty) {
-                        const setAsData = profileSetAsSnapshot.docs[0].data();
-                        const imageDoc = await getDoc(doc(this.db, 'profileImages', setAsData.profileImageId));
-                        if (imageDoc.exists()) {
-                            profileImage = imageDoc.data().imageURL; // Note: using imageURL instead of imageUrl
-                        }
-                    }
-    
-                    const userDoc = await getDoc(doc(this.db, 'users', ownership.userId));
-                    const userData = userDoc.data();
+                    const reviewsSnapshot = await getDocs(reviewsQuery);
+                    const reviews = reviewsSnapshot.docs.map(doc => doc.data());
     
                     return {
                         id: ownershipDoc.id,
                         ...ownership,
-                        businessDetails: businessData,
-                        profileImage,
-                        businessOwner: {
-                            // name: `${userData?.firstName} ${userData?.lastName}`,
-                            // email: userData?.email
-
-                            name: "buisness owner name",
-                            email: "buisness owner email"
-                        }
+                        ...businessInfo,
+                        productReviews: reviews
                     };
                 }
     
@@ -287,6 +377,5 @@ export class MarketService {
     
         return ownershipData;
     }
-    
     
 }
