@@ -29,7 +29,6 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
     const [message, setMessage] = useState('');
     const [friends, setFriends] = useState([]);
     const [messages, setMessages] = useState<Message[]>([]);
-
     const chatService = ChatService.getInstance();
     const userData = useProfileStore();
     const { getMessages, sendMessage } = useMessages();
@@ -123,17 +122,33 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             setMessages([]);
         }
     };
-
+    
     const handleSendMessage = async () => {
         if (!message.trim() || !selectedFriend?.id) return;
+    
+        const messageText = message.trim();
+        const newMessage: Message = {
+            id: `temp-${Date.now()}`,
+            message: messageText,
+            senderId: userData.id,
+            receiverId: selectedFriend.id,
+            timestamp: new Timestamp(Math.floor(Date.now() / 1000), 0),
+            status: 'sent'
+        };
+    
+        setMessages(prev => [...prev, newMessage]);
+        setMessage('');
+    
         try {
-            const result = await sendMessage(selectedFriend.id, message.trim());
-            setMessage('');
+            await sendMessage(selectedFriend.id, messageText);
         } catch (error) {
             console.error('Error sending message:', error);
+            setMessages(prev => prev.filter(msg => msg.id !== newMessage.id));
+            setMessage(messageText);
         }
     };
-
+    
+    
     const handleKeyPress = (e: React.KeyboardEvent) => {
         if (e.key === 'Enter' && !e.shiftKey) {
             e.preventDefault();
@@ -315,8 +330,6 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
                 )}
             </div>
 
-
-
             <div className="p-2 md:p-4 border-t border-gray-200">
                 <div className="flex items-center gap-1.5 md:gap-2">
                     <button className="p-1.5 md:p-2 hover:bg-gray-100 rounded-full transition-colors" title='clip'>
@@ -375,7 +388,6 @@ export const ChatWindow = ({ isCompact }: ChatWindowProps) => {
             </button>
         </div>
     );
-
 
     if (isCompact) {
         return (

@@ -133,8 +133,6 @@ export class ChatService {
         }
     }
 
-    
-    
     public subscribeToMessages(
         receiverId: string, 
         senderId: string, 
