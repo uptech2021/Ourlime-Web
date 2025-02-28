@@ -2,6 +2,8 @@
 
 import { Button, Checkbox, DatePicker, Select, SelectItem } from '@nextui-org/react';
 import { useEffect, useState } from 'react';
+import { db } from '@/lib/firebaseConfig';
+import { collection, query, where, getDocs } from 'firebase/firestore';
 import { Dispatch, SetStateAction } from 'react';
 import styles from "./register.module.css"
 import TermsModal from './TermsModal';
@@ -11,6 +13,24 @@ import transparentLogo from 'public/images/transparentLogo.png';
 import Image from 'next/image';
 import { gsap } from 'gsap';
 
+const checkUserExists = async (email: string, username: string) => {
+	const usersRef = collection(db, 'users');
+	const promises = [];
+
+	if (email) {
+		const emailQuery = query(usersRef, where('email', '==', email));
+		promises.push(getDocs(emailQuery));
+	}
+
+	if (username) {
+		const usernameQuery = query(usersRef, where('username', '==', username));
+		promises.push(getDocs(usernameQuery));
+	}
+
+	const results = await Promise.all(promises);
+	const exists = results.some(snapshot => !snapshot.empty);
+	return exists;
+};
 
 type FirstStepProps = {
 	setUserName: Dispatch<SetStateAction<string>>;
@@ -38,11 +58,15 @@ type FirstStepProps = {
 };
 
 export default function FirstStep({
+	setUserName,
+	userNameError,
 	userExistsError,
 	firstNameError,
 	lastNameError,
 	genderError,
+	setEmail,
 	emailExistsError,
+	emailError,
 	setBirthday,
 	birthdayError,
 	setPassword,
@@ -124,10 +148,13 @@ export default function FirstStep({
 			});
 		}
 	};
+	
+	
 
 	const totalSteps = 5;
 	const currentStep = 1;
 	const progressPercentage = (currentStep / totalSteps) * 100;
+
 
 	return (
 		<div className='step-1 border-none bg-black bg-opacity-[50%] px-5 py-4 mt-5 h-screen relative'>

@@ -45,6 +45,16 @@ export default function MarketPage() {
     const [searchTerm, setSearchTerm] = useState('');
     const [shouldFilter, setShouldFilter] = useState(false);
 
+    const [isChatOpen, setIsChatOpen] = useState(false);
+    const [selectedSeller, setSelectedSeller] = useState(null);
+    const [selectedProductContext, setSelectedProductContext] = useState(null);
+
+    const handleContactSeller = (sellerData: any, productContext: any) => {
+        setSelectedSeller(sellerData);
+        setSelectedProductContext(productContext);
+        setIsChatOpen(true);
+    };
+
     const handleSearch = (e: React.KeyboardEvent<HTMLInputElement>) => {
         if (e.key === 'Enter') {
             setSearchTerm(inputValue);
@@ -474,6 +484,7 @@ export default function MarketPage() {
                     }}
                     product={selectedProduct}
                     marketData={marketData}
+                    onContactSeller={handleContactSeller}
                 />
             )}
         </div>

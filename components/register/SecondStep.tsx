@@ -1,7 +1,7 @@
 'use client';
 import { Button } from '@nextui-org/react';
 import Image from 'next/image';
-import { Dispatch, SetStateAction, useState, useCallback } from 'react';
+import { Dispatch, SetStateAction, useState } from 'react';
 import 'react-image-crop/dist/ReactCrop.css';
 import transparentLogo from 'public/images/transparentLogo.png';
 
@@ -31,13 +31,8 @@ export default function SecondStep({
 	selectedCartoonAvatarWhiteGirl,
 	selectedRealisticAvatarWhiteMan,
 	selectedRealisticAvatarBlackWoman,
-	profilePicture,
-	setProfilePicture,
 }: SecondStepProps) {
 	const [imageUpload, setImageUpload] = useState(false);
-
-
-
 	return (
 		<div className="step-2 mt-5 flex flex-col justify-center relative">
 			{/* Custom progress bar */}
@@ -46,7 +41,6 @@ export default function SecondStep({
 					className="h-full bg-greenTheme transition-all duration-700 ease-in-out relative progress-bar"
 					style={{ width: `${progressPercentage}%` }}
 				>
-
 					<Image
 						src={transparentLogo}
 						alt="Logo"
@@ -75,8 +69,6 @@ export default function SecondStep({
 								src="/images/register/cartoonAvatarBlackBoy.svg"
 								alt="avatar"
 							/>
-
-
 							<Image
 								width={50}
 								height={50}
@@ -185,9 +177,7 @@ export default function SecondStep({
 						</div>
 					</div>
 				</div>
-
 				{/* <ImageCropper /> */}
-
 				<h3
 					onClick={() => setStep(2.1)}
 					className="text-bold cursor-pointer text-center text-lg text-greenTheme underline"

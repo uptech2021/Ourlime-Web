@@ -1,285 +1,179 @@
 'use client';
 
-import { Crop } from 'lucide-react';
-import { Button } from '@nextui-org/react';
-import { Dispatch, SetStateAction, useState } from 'react';
-import Modal from 'react-modal';
-import transparentLogo from 'public/images/transparentLogo.png';
-import NextImage from 'next/image';
-import ReactCrop, { type Crop as CropType } from 'react-image-crop';
-import 'react-image-crop/dist/ReactCrop.css';
+import React, { useState, useRef, useEffect } from 'react';
+import { Button } from "@nextui-org/react";
+import Image from 'next/image';
+import { FaCamera, FaPlus, FaUser, FaImage } from 'react-icons/fa';
 
-type SecondStepProps = {
-  setStep: Dispatch<SetStateAction<number>>;
-  handleAvatarSelection: (avatar: string) => void;
-  profilePicture: string | null;
-  setProfilePicture: Dispatch<SetStateAction<string | null>>;
+interface SelectedFiles {
+    profile: File | null;
+    cover: File | null;
+}
+
+type SecondStepOptionalProps = {
+    setStep: (step: number) => void;
+    handleAvatarSelection: (avatar: string) => void;
+    profilePicture: string;
+    setProfilePicture: (url: string) => void;
+    selectedFiles: SelectedFiles;
+    setSelectedFiles: (files: SelectedFiles) => void;
 };
 
-export default function SecondStep({
-  setStep,
-  handleAvatarSelection,
-  profilePicture,
-  setProfilePicture,
-}: SecondStepProps) {
-  const [imageUpload, setImageUpload] = useState(false);
-  const [selectedImages, setSelectedImages] = useState<string[]>(Array(6).fill(null));
-  const [cropperVisible, setCropperVisible] = useState<number | null>(null);
-  const [imgRef, setImgRef] = useState<HTMLImageElement | null>(null);
-  const [crop, setCrop] = useState<CropType>({
-    unit: '%',
-    x: 0,
-    y: 0,
-    width: 0,
-    height: 0
-  });
-  const totalSteps = 5;
-  const currentStep = 2;
-  const progressPercentage = (currentStep / totalSteps) * 100;
-
-  const handleImageChange = (index: number) => (event: React.ChangeEvent<HTMLInputElement>) => {
-    const file = event.target.files?.[0];
-    if (file) {
-      const reader = new FileReader();
-      reader.onloadend = () => {
-        const newImages = [...selectedImages];
-        newImages[index] = reader.result as string;
-        setSelectedImages(newImages);
-      };
-      reader.readAsDataURL(file);
-    }
-  };
-
-  const handleCropClick = (index: number) => {
-    setCropperVisible(index);
-    setCrop({
-      unit: '%',
-      x: 0,
-      y: 0,
-      width: 100,
-      height: 100
-    });
-  };
-
-  const createImage = (url: string): Promise<HTMLImageElement> =>
-    new Promise((resolve, reject) => {
-      const image = new window.Image();
-      image.addEventListener('load', () => resolve(image));
-      image.addEventListener('error', error => reject(error));
-      image.src = url;
-    });
-
-
-  const Image = async (imageSrc: string, pixelCrop: any) => {
-    const image = await createImage(imageSrc);
-    const canvas = document.createElement('canvas');
-    const ctx = canvas.getContext('2d');
-
-    // Set canvas size to match crop dimensions
-    canvas.width = pixelCrop.width;
-    canvas.height = pixelCrop.height;
-
-    if (ctx) {
-      ctx.drawImage(
-        image,
-        pixelCrop.x,
-        pixelCrop.y,
-        pixelCrop.width,
-        pixelCrop.height,
-        0,
-        0,
-        pixelCrop.width,
-        pixelCrop.height
-      );
-    }
-
-    return new Promise((resolve) => {
-      canvas.toBlob((blob) => {
-        if (blob) {
-          resolve(URL.createObjectURL(blob));
+export default function SecondStepOptional({
+    setStep,
+    setProfilePicture,
+    selectedFiles,
+    setSelectedFiles
+}: SecondStepOptionalProps) {
+    const [previews, setPreviews] = useState<{ profile: string; cover: string }>(() => {
+        const savedPreviews = sessionStorage.getItem('imagePreviews');
+        if (savedPreviews) {
+            const parsed = JSON.parse(savedPreviews);
+            return {
+                profile: parsed.profile || '',
+                cover: parsed.cover || ''
+            };
         }
-      }, 'image/jpeg', 1);
+        return {
+            profile: '',
+            cover: ''
+        };
     });
-  };
 
-  const processSelectedImage = async (file: File) => {
-    const reader = new FileReader();
-    reader.onloadend = () => {
-      const base64String = reader.result as string;
-      setProfilePicture(base64String);
+    const profileInputRef = useRef<HTMLInputElement>(null);
+    const coverInputRef = useRef<HTMLInputElement>(null);
+
+    const handleFileSelect = (type: 'profile' | 'cover') => (event: React.ChangeEvent<HTMLInputElement>) => {
+        const file = event.target.files?.[0];
+        if (file) {
+            const previewUrl = URL.createObjectURL(file);
+            setSelectedFiles({ ...selectedFiles, [type]: file });
+            setPreviews(prev => {
+                const newPreviews = { ...prev, [type]: previewUrl };
+                sessionStorage.setItem('imagePreviews', JSON.stringify(newPreviews));
+                return newPreviews;
+            });
+
+            if (type === 'profile') {
+                setProfilePicture(previewUrl);
+                sessionStorage.setItem('profilePicture', previewUrl);
+            }
+        }
     };
-    reader.readAsDataURL(file);
-  };
 
+    useEffect(() => {
+        // Load saved files on component mount
+        const savedProfile = sessionStorage.getItem('profileFile');
+        const savedCover = sessionStorage.getItem('coverFile');
+        const savedPreviews = sessionStorage.getItem('imagePreviews');
 
+        if (savedPreviews) {
+            setPreviews(JSON.parse(savedPreviews));
+        }
 
-  return (
-    <div className="step-2-optional">
-      <div className="relative w-full px-4 mb-4 mt-6">
-        <div className="w-full bg-gray-300 h-4 rounded-full">
-          <div
-            className="bg-greenTheme h-full relative rounded-full transition-all duration-300"
-            style={{ width: `${progressPercentage}%` }}
-          >
-            <NextImage
-              src={transparentLogo}
-              alt="Logo"
-              className="absolute top-1 right-0 transform translate-x-1/2 -translate-y-1/2"
-              width={40}
-              height={40}
-            />
-          </div>
-        </div>
-      </div>
-      <div className="flex flex-col justify-center items-center py-40 bg-gray-100 bg-opacity-50 rounded-xl lg:py-20">
-        <h1 className="text-xl font-bold text-white mb-4">Select your photo</h1>
+        return () => {
+            // Cleanup blob URLs
+            Object.values(previews).forEach(url => {
+                if (url) URL.revokeObjectURL(url);
+            });
+        };
+    }, []);
 
-        <div className="flex flex-wrap justify-center items-center w-full lg:gap-6 2xl:gap-12 h-auto">
-          {Array.from({ length: 6 }).map((_, index) => (
-            <div
-              key={index}
-              className="relative flex justify-center items-center w-2/5 h-64 border-2 border-dashed border-black rounded-xl bg-gray-200 bg-opacity-50 cursor-pointer hover:opacity-90 transition-opacity lg:w-1/5 xl:h-64 m-2"
-              onClick={() => document.getElementById(`fileInput-${index}`)?.click()}
-            >
-              {selectedImages[index] ? (
-                <>
-                  <div className="w-full h-full flex items-center justify-center relative">
-                    <NextImage
-                      width={150}
-                      height={150}
-                      src={selectedImages[index]}
-                      alt={`Uploaded ${index + 1}`}
-                      className="absolute inset-0 w-full h-full object-cover" // Changed from object-contain
-                      // fill
-                      sizes="(max-width: 768px) 40vw, (max-width: 1200px) 20vw"
-                      priority
-                    />
-                  </div>
+    return (
+        <div className="step-2_1 p-6 bg-white rounded-xl shadow-lg">
+            <h2 className="text-2xl font-bold text-gray-800 mb-6">Customize Your Profile</h2>
 
-                  <div className="absolute top-1 right-2">
-                    <Button
-                      onClick={(e) => {
-                        e.stopPropagation();
-                        handleCropClick(index);
-                      }}
-                      className="bg-greenTheme rounded-full p-1 w-8 h-8 min-w-0"
+            <div className="mb-8">
+                <label className="block text-gray-700 text-sm font-bold mb-4" htmlFor="profile-picture">
+                    Profile Picture
+                </label>
+                <div className="relative w-32 h-32 mx-auto mb-4">
+                    <div className="w-full h-full rounded-full overflow-hidden border-4 border-greenTheme">
+                        {previews.profile ? (
+                            <Image
+                                src={previews.profile}
+                                alt="Profile Preview"
+                                fill
+                                className="object-cover"
+                            />
+                        ) : (
+                            <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                                <FaUser className="text-4xl text-gray-400" />
+                            </div>
+                        )}
+                    </div>
+                    <button
+                        onClick={() => profileInputRef.current?.click()}
+                        className="absolute bottom-0 right-0 p-2 bg-greenTheme rounded-full text-white hover:bg-green-600 transition-colors"
+                        title="Upload profile picture"
+                        aria-label="Upload profile picture"
                     >
-                      <Crop className="text-white size-3" />
-                    </Button>
-                  </div>
-                </>
-              ) : (
-                <div className="absolute flex items-center justify-center w-full h-full">
-                  <div className="flex justify-center w-12 h-12 bg-greenTheme rounded-full">
-                    <div className="text-white text-4xl">+</div>
-                  </div>
+                        <FaCamera className="text-lg" />
+                    </button>
                 </div>
-              )}
-              <label htmlFor={`fileInput-${index}`} className="sr-only">Upload image {index + 1}</label>
-              <input
-                type="file"
-                id={`fileInput-${index}`}
-                accept="image/*"
-                onChange={handleImageChange(index)}
-                className="hidden"
-                aria-label={`Upload image ${index + 1}`}
-              />
             </div>
-          ))}
-        </div>
 
-        {cropperVisible !== null && (
-          <Modal
-            isOpen={true}
-            onRequestClose={() => setCropperVisible(null)}
-            contentLabel="Crop Image"
-            style={{
-              overlay: {
-                backgroundColor: 'rgba(0, 0, 0, 0.75)',
-                display: 'flex',
-                alignItems: 'center',
-                justifyContent: 'center'
-              },
-              content: {
-                position: 'relative',
-                inset: 'auto',
-                width: '90%',
-                maxWidth: '500px',
-                height: 'auto',
-                padding: '20px',
-                border: '1px solid #ccc',
-                borderRadius: '8px',
-                margin: '0 auto'
-              }
-            }}
-          >
-            <h2 className="text-xl font-bold mb-4">Crop Image</h2>
-            <div className="relative w-full h-[320px]">
-              <ReactCrop
-                crop={crop}
-                onChange={(newCrop) => setCrop(newCrop)}
-                aspect={undefined}
-                className="max-w-full max-h-full"
-              >
-                <NextImage
-                  width={150}
-                  height={150}
-                  ref={(img) => setImgRef(img)}
-                  src={selectedImages[cropperVisible]}
-                  alt="Crop me"
-                  style={{ maxHeight: '70vh', width: '100%', objectFit: 'contain' }}
-                />
-              </ReactCrop>
+            <div className="mb-8">
+                <label className="block text-gray-700 text-sm font-bold mb-4" htmlFor="cover-photo">
+                    Cover Photo
+                </label>
+                <div className="relative w-full h-48 rounded-xl overflow-hidden">
+                    {previews.cover ? (
+                        <Image
+                            src={previews.cover}
+                            alt="Cover Preview"
+                            fill
+                            className="object-cover"
+                        />
+                    ) : (
+                        <div className="w-full h-full bg-gray-100 flex items-center justify-center">
+                            <FaImage className="text-4xl text-gray-400" />
+                        </div>
+                    )}
+                    <button
+                        onClick={() => coverInputRef.current?.click()}
+                        className="absolute bottom-4 right-4 p-3 bg-white/80 backdrop-blur-sm rounded-full hover:bg-white transition-colors"
+                        title="Upload cover photo"
+                        aria-label="Upload cover photo"
+                    >
+                        <FaPlus className="text-lg text-gray-800" />
+                    </button>
+                </div>
             </div>
-            <div className="flex gap-2 mt-4 justify-end">
-              <Button
-                onClick={() => setCropperVisible(null)}
-                className="bg-gray-500 text-white px-4 py-2"
-              >
-                Cancel
-              </Button>
-              <Button
-                onClick={async () => {
-                  if (crop && imgRef && selectedImages[cropperVisible]) {
-                    const croppedImage = await Image(
-                      selectedImages[cropperVisible],
-                      {
-                        x: (crop.x * imgRef.width) / 100,
-                        y: (crop.y * imgRef.height) / 100,
-                        width: (crop.width * imgRef.width) / 100,
-                        height: (crop.height * imgRef.height) / 100
-                      }
-                    );
-                    const newImages = [...selectedImages];
-                    newImages[cropperVisible] = croppedImage as string;
-                    setSelectedImages(newImages);
-                    setCropperVisible(null);
-                  }
-                }}
-                className="bg-greenTheme text-white px-4 py-2"
-              >
-                Accept
-              </Button>
+
+            <input
+                type="file"
+                ref={profileInputRef}
+                onChange={handleFileSelect('profile')}
+                accept="image/*"
+                className="hidden"
+                id="profile-picture"
+                aria-label="Upload profile picture"
+            />
+            <input
+                type="file"
+                ref={coverInputRef}
+                onChange={handleFileSelect('cover')}
+                accept="image/*"
+                className="hidden"
+                id="cover-photo"
+                aria-label="Upload cover photo"
+            />
+
+            <div className="flex justify-between gap-4">
+                <Button
+                    onClick={() => setStep(2)}
+                    className="flex-1 bg-gray-200 hover:bg-gray-300 text-gray-800"
+                >
+                    Back
+                </Button>
+                <Button
+                    onClick={() => setStep(3)}
+                    className="flex-1 bg-greenTheme text-white hover:bg-green-600"
+                >
+                    Continue
+                </Button>
             </div>
-          </Modal>
-        )}
-      </div>
-      <div className="flex w-full flex-col justify-center gap-1 md:flex-row md:px-20 md:gap-8">
-        <Button
-          onClick={() => setStep(2)}
-          type="button"
-          className="submit my-4 w-1/4 rounded-full bg-white px-4 py-2 text-greenTheme hover:bg-gray-300"
-        >
-          Previous Step
-        </Button>
-        <Button
-          onClick={() => setStep(3)}
-          type="button"
-          className="submit my-4 w-1/4 rounded-full bg-greenTheme px-4 py-2 text-white hover:bg-green-600 disabled:cursor-not-allowed disabled:opacity-50"
-        >
-          Next Step!
-        </Button>
-      </div>
-    </div>
-  );
+        </div>
+    );
 }

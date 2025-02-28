@@ -7,6 +7,7 @@ import { auth, db } from '@/lib/firebaseConfig';
 import {
 	createUserWithEmailAndPassword,
 	onAuthStateChanged,
+	signInWithEmailAndPassword,
 	User
 } from 'firebase/auth';
 import { addDoc, collection, deleteDoc, doc, getDoc, getDocs, increment, query, setDoc, updateDoc, where } from 'firebase/firestore';
@@ -25,7 +26,7 @@ import SecondStep from '@/components/register/SecondStep';
 import SecondStepOptional from '@/components/register/SecondStepOptional';
 import SixthStep from '@/components/register/SixthStep';
 import ThirdStep from '@/components/register/ThirdStep';
-import { UserService } from '@/helpers/Auth';
+import { EmailVerificationService, UserService } from '@/helpers/Auth';
 
 interface SelectedFiles {
 	profile: File | null;
@@ -335,9 +336,14 @@ export default function Page() {
 
 		try {
 			// Step 1: Create user authentication
-			const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
-			const user = userCredentials.user;
+			const userCredential = await signInWithEmailAndPassword(auth, email, password);
+			const isVerified = await EmailVerificationService.checkEmailVerification(userCredential.user);
 			
+			if (!isVerified) {
+				setError('Please verify your email before logging in.');
+				return;
+			}
+
 			// Step 2: Create user profile document
 			await setDoc(doc(db, 'users', user.uid), {
 				firstName,
@@ -354,6 +360,7 @@ export default function Page() {
 				createdAt: new Date(),
 				interests: selectedInterests
 			});
+			console.log('User document created');
 
 			// Step 3: Create address document
 			const addressRef = doc(collection(db, 'addresses'));
@@ -366,10 +373,12 @@ export default function Page() {
 				createdAt: new Date(),
 				updatedAt: new Date()
 			});
+
 			await setDoc(doc(collection(db, 'addressSetAs')), {
 				setAs: 'home',
 				addressId: addressRef.id
 			});
+			console.log('Address documents created');
 
 			// Step 4: Handle profile and cover images
 			const profileImageRef = doc(collection(db, 'profileImages'));
@@ -422,6 +431,7 @@ export default function Page() {
 					userId: user.uid
 				});
 			}
+			console.log('Image documents created');
 
 			// Step 5: Create contact document
 			const contactRef = doc(collection(db, 'contact'));
@@ -436,6 +446,7 @@ export default function Page() {
 				setAs: 'personal',
 				contactId: contactRef.id
 			});
+			console.log('Contact documents created');
 
 			// Step 6: Create interests documents
 			await Promise.all(selectedInterests.map(async (interestName) => {
@@ -459,6 +470,8 @@ export default function Page() {
 				}
 			}));
 
+			console.log('Interest documents created');
+
 			// Step 7: Create authentication document
 			const faceImageURL = await uploadFile(idFaceRef.current?.files[0], `authentication/${user.uid}/faceID`);
 			const frontImageURL = await uploadFile(idFrontRef.current?.files[0], `authentication/${user.uid}/frontID`);
@@ -471,10 +484,12 @@ export default function Page() {
 				idBack: backImageURL,
 				createdAt: new Date()
 			});
+			console.log('Authentication documents created');
 
 			// Clear session storage and redirect
 			sessionStorage.clear();
-			router.push('/login');
+			console.log('Registration completed successfully');
+			router.push('/');
 
 		} catch (error: any) {
 			console.error('Registration failed:', error);

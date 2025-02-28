@@ -5,6 +5,10 @@ import { Heart, MessageCircle, X, Star, Shield, Clock, Package, Truck, ExternalL
 import Image from 'next/image';
 import { Product, ColorVariants, SizeVariants, ProductVariant } from '@/types/productTypes';
 
+import { TempMessagingService } from '@/lib/messaging/TempMessagingService';
+import { useTempMessages } from '@/src/hooks/useTempMessages';
+import { useProfileStore } from '@/src/store/useProfileStore';
+
 interface OwnershipData {
     id: string;
     productId: string;
@@ -46,7 +50,6 @@ interface OwnershipData {
     };
 }
 
-
 interface ProductDetailsSidebarProps {
     isOpen: boolean;
     onClose: () => void;
@@ -58,23 +61,24 @@ interface ProductDetailsSidebarProps {
         subImages: any[];
         ownership: OwnershipData[];
     };
+    onContactSeller: (sellerData: any, productContext: any) => void;
 }
 
-export default function ProductDetailsSidebar({ isOpen, onClose, product, marketData }: ProductDetailsSidebarProps) {
+export default function ProductDetailsSidebar({ isOpen, onClose, product, marketData, onContactSeller }: ProductDetailsSidebarProps) {
     const [selectedImage, setSelectedImage] = useState(product?.thumbnailImage);
     const [selectedColor, setSelectedColor] = useState('');
     const [selectedSize, setSelectedSize] = useState('');
     const [selectedVariantPrice, setSelectedVariantPrice] = useState<number | null>(null);
-
     // Get ownership data for this product
     const ownership = marketData.ownership.find(o => o.productId === product.id);
-
     // Filter data specific to this product
     const productColorVariants = marketData.colorVariants.filter(cv => cv.productId === product.id);
     const productSizeVariants = marketData.sizeVariants.filter(sv => sv.productId === product.id);
     const productVariants = marketData.variants.filter(v => v.productId === product.id);
     const productSubImages = marketData.subImages.filter(si => si.productId === product.id);
 
+    // Inside component:
+    const { sendTempMessage } = useTempMessages();
     // Set initial selections
     useEffect(() => {
         if (productColorVariants.length > 0) {
@@ -120,6 +124,45 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                 className={`${index < Math.floor(rating) ? 'text-yellow-400 fill-yellow-400' : 'text-gray-300'}`}
             />
         ));
+    };
+
+    const handleOpenWindow = () => {
+        console.log("ready to open window");
+    };
+
+    const handleProductInquiry = () => {
+        const userData = useProfileStore.getState();
+        const productOwnership = marketData.ownership.find(o => o.productId === product.id);
+        
+        const selectedColorVariant = productColorVariants.find(cv => cv.id === selectedColor);
+        const selectedSizeVariant = productSizeVariants.find(sv => sv.id === selectedSize);
+        
+        const productContext = {
+            productTitle: product.title,
+            productImage: product.thumbnailImage,
+            price: selectedVariantPrice?.toString() || 
+                (productVariants.length > 0 ? productVariants[0].price.toString() : null),
+            colorVariant: selectedColorVariant?.colorVariantName || null,
+            sizeVariant: selectedSizeVariant?.sizeVariantName || null
+        };
+    
+        sendTempMessage(
+            productOwnership?.userId,
+            `Hi, I'm interested in ${product.title}${selectedColorVariant ? ` in ${selectedColorVariant.colorVariantName}` : ''}${selectedSizeVariant ? `, size ${selectedSizeVariant.sizeVariantName}` : ''}. Is this available?`,
+            productContext
+        );
+    };
+    
+    
+    const handleAddToWishlist = () => {
+        const userData = useProfileStore.getState();
+        console.log("adding to wishlist:", {
+            productTitle: product.title,
+            productImage: product.thumbnailImage,
+            colorVariant: productColorVariants.find(cv => cv.id === selectedColor)?.colorVariantName || null,
+            sizeVariant: productSizeVariants.find(sv => sv.id === selectedSize)?.sizeVariantName || null,
+            userId: userData.id
+        });
     };
 
     if (!product) return null;
@@ -261,7 +304,6 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                                 </div>
                             </div>
                         )}
-
 
                         {/* Product Info */}
                         <div>
@@ -453,14 +495,21 @@ export default function ProductDetailsSidebar({ isOpen, onClose, product, market
                                 <span className="text-xs sm:text-sm">Add to Wishlist</span>
                             </button>
                         )}
+
                         <button
+                            onClick={() => {
+                                handleOpenWindow();
+                                handleProductInquiry();
+                            }}
                             className="flex-1 px-3 py-2 bg-greenTheme text-white rounded-lg font-medium
-                                        hover:bg-green-600 active:bg-green-700 transition-colors flex items-center justify-center gap-2"
+                            hover:bg-green-600 active:bg-green-700 transition-colors flex items-center justify-center gap-2"
                             title="Contact seller"
                         >
                             <MessageCircle size={16} className="sm:w-[18px] sm:h-[18px]" />
                             <span className="text-xs sm:text-sm">Contact Seller</span>
                         </button>
+
+
                     </div>
                 </div>
             </div>

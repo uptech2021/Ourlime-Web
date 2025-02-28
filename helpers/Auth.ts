@@ -75,21 +75,27 @@ class UserService {
         }
     }
 
-    static async checkUserExists(email: string, username: string): Promise<boolean> {
+    static async checkUserExists(email: string, username: string, contactNumber?: string): Promise<boolean> {
         const usersRef = collection(db, 'users');
+        const contactRef = collection(db, 'contact');
         const queries = [];
-
+    
         if (email) {
             queries.push(getDocs(query(usersRef, where('email', '==', email))));
         }
-
+    
         if (username) {
             queries.push(getDocs(query(usersRef, where('userName', '==', username))));
         }
-
+    
+        if (contactNumber) {
+            queries.push(getDocs(query(contactRef, where('contactNumber', '==', contactNumber))));
+        }
+    
         const results = await Promise.all(queries);
         return results.some(snapshot => !snapshot.empty);
     }
+    
 }
 
 // Future implementation for email verification
