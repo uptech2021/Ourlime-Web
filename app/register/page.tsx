@@ -25,7 +25,7 @@ import SecondStep from '@/components/register/SecondStep';
 import SecondStepOptional from '@/components/register/SecondStepOptional';
 import SixthStep from '@/components/register/SixthStep';
 import ThirdStep from '@/components/register/ThirdStep';
-import { UserService } from '@/helpers/Auth';
+import { RegisterService, UserService } from '@/helpers/Auth';
 
 interface SelectedFiles {
 	profile: File | null;
@@ -145,21 +145,6 @@ export default function Page() {
 		const valid = validateStep6();
 		setIsStepValid(valid);
 	}, [faceFileName, frontFileName, backFileName]);
-
-	// Authentication Check Effect
-	useEffect(() => {
-		const unsubscribe = onAuthStateChanged(auth, (currentUser) => {
-			setUser(currentUser);
-			setLoading(false);
-		});
-		return () => unsubscribe();
-	}, []);
-
-	useEffect(() => {
-		if (user) {
-			router.push('/');
-		}
-	}, [user, router]);
 
 	// Step Animation Effect
 	useEffect(() => {
@@ -331,151 +316,36 @@ export default function Page() {
 
 	const handleRegister = async (e: React.FormEvent) => {
 		e.preventDefault();
-		console.log('Starting registration process...');
-
+		
 		try {
-			// Step 1: Create user authentication
-			const userCredentials = await createUserWithEmailAndPassword(auth, email, password);
-			const user = userCredentials.user;
-			
-			// Step 2: Create user profile document
-			await setDoc(doc(db, 'users', user.uid), {
+			await RegisterService.registerUser({
 				firstName,
 				lastName,
 				userName,
-				email: user.email,
-				emailVerified: false,
+				email,
+				password,
 				gender,
 				birthday,
 				country,
-				isAdmin: false,
-				last_loggedIn: new Date(),
-				userTier: 1,
-				createdAt: new Date(),
-				interests: selectedInterests
-			});
-
-			// Step 3: Create address document
-			const addressRef = doc(collection(db, 'addresses'));
-			await setDoc(addressRef, {
-				userId: user.uid,
-				Address,
-				city,
-				postalCode,
-				zipCode,
-				createdAt: new Date(),
-				updatedAt: new Date()
-			});
-			await setDoc(doc(collection(db, 'addressSetAs')), {
-				setAs: 'home',
-				addressId: addressRef.id
-			});
-
-			// Step 4: Handle profile and cover images
-			const profileImageRef = doc(collection(db, 'profileImages'));
-			const coverImageRef = doc(collection(db, 'profileImages'));
-
-			// Upload profile image
-			const profileImageURL = selectedFiles.profile
-				? await uploadFile(selectedFiles.profile, `profiles/${user.uid}/profile`)
-				: await uploadFile(
-					new File(
-						[await fetch(`/images/register/${profilePicture}`).then(res => res.blob())],
-						profilePicture,
-						{ type: 'image/svg+xml' }
-					),
-					`profiles/${user.uid}/${profilePicture}`
-				);
-
-			// Upload cover image if exists
-			const coverImageURL = selectedFiles.cover
-				? await uploadFile(selectedFiles.cover, `profiles/${user.uid}/cover`)
-				: null;
-
-			// Create profile image documents
-			await setDoc(profileImageRef, {
-				imageURL: profileImageURL,
-				typeOfImage: 'profile',
-				userId: user.uid,
-				createdAt: new Date(),
-				updatedAt: new Date()
-			});
-
-			await setDoc(doc(collection(db, 'profileImageSetAs')), {
-				setAs: 'profile',
-				profileImageId: profileImageRef.id,
-				userId: user.uid
-			});
-
-			if (coverImageURL) {
-				await setDoc(coverImageRef, {
-					imageURL: coverImageURL,
-					typeOfImage: 'cover',
-					userId: user.uid,
-					createdAt: new Date(),
-					updatedAt: new Date()
-				});
-
-				await setDoc(doc(collection(db, 'profileImageSetAs')), {
-					setAs: 'coverProfile',
-					profileImageId: coverImageRef.id,
-					userId: user.uid
-				});
-			}
-
-			// Step 5: Create contact document
-			const contactRef = doc(collection(db, 'contact'));
-			await setDoc(contactRef, {
-				userId: user.uid,
-				contactNumber: phone,
-				isVerified: false,
-				createdAt: new Date(),
-				updatedAt: new Date()
-			});
-			await setDoc(doc(collection(db, 'contactSetAs')), {
-				setAs: 'personal',
-				contactId: contactRef.id
-			});
-
-			// Step 6: Create interests documents
-			await Promise.all(selectedInterests.map(async (interestName) => {
-				// Query to find if interest already exists
-				const interestsRef = collection(db, 'interests');
-				const q = query(interestsRef, where('name', '==', interestName));
-				const querySnapshot = await getDocs(q);
-
-				if (querySnapshot.empty) {
-					// Create new interest with auto-generated ID
-					await addDoc(collection(db, 'interests'), {
-						name: interestName,
-						likeCount: 1
-					});
-				} else {
-					// Update existing interest's likeCount
-					const interestDoc = querySnapshot.docs[0];
-					await updateDoc(interestDoc.ref, {
-						likeCount: increment(1)
-					});
+				phone,
+				address: {
+					street: Address,
+					city,
+					postalCode,
+					zipCode
+				},
+				selectedFiles,
+				profilePicture,
+				selectedInterests,
+				idDocuments: {
+					face: idFaceRef.current?.files[0] || null,
+					front: idFrontRef.current?.files[0] || null,
+					back: idBackRef.current?.files[0] || null
 				}
-			}));
-
-			// Step 7: Create authentication document
-			const faceImageURL = await uploadFile(idFaceRef.current?.files[0], `authentication/${user.uid}/faceID`);
-			const frontImageURL = await uploadFile(idFrontRef.current?.files[0], `authentication/${user.uid}/frontID`);
-			const backImageURL = await uploadFile(idBackRef.current?.files[0], `authentication/${user.uid}/backID`);
-
-			await setDoc(doc(db, 'authentication', user.uid), {
-				userId: user.uid,
-				proofOfId: faceImageURL,
-				idFront: frontImageURL,
-				idBack: backImageURL,
-				createdAt: new Date()
 			});
-
-			// Clear session storage and redirect
-			sessionStorage.clear();
+	
+			setSuccessMessage('Registration successful! Please check your email for verification.');
 			router.push('/login');
-
 		} catch (error: any) {
 			console.error('Registration failed:', error);
 			setError(error.code === 'auth/email-already-in-use'
@@ -483,7 +353,7 @@ export default function Page() {
 				: 'Registration failed. Please try again.');
 		}
 	};
-
+	
 	const handleEmailChange = async (e: React.ChangeEvent<HTMLInputElement>) => {
 		const email = e.target.value;
 		setEmail(email);
@@ -518,14 +388,6 @@ export default function Page() {
 			}
 		}
 	};
-
-	if (loading) {
-		return <AnimatedLogo />;
-	}
-
-	if (user && user.emailVerified) {
-		return <AnimatedLogo />;
-	}
 
 	return (
 		<div className="fixed inset-0 bg-gray-100">

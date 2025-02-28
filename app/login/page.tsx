@@ -2,7 +2,7 @@
 
 import AnimatedLogo from '@/components/AnimatedLoader';
 import { auth } from '@/lib/firebaseConfig';
-import { AuthService, UserService } from '@/helpers/Auth';
+import { AuthService, EmailVerificationService, UserService } from '@/helpers/Auth';
 import { Button } from '@nextui-org/react';
 import { signInWithEmailAndPassword } from 'firebase/auth';
 import Image from 'next/image';
@@ -52,10 +52,16 @@ export default function LoginPage() {
 	
 		try {
 			const userCredential = await signInWithEmailAndPassword(auth, email, password);
+			
+			const isVerified = await EmailVerificationService.checkEmailVerification(userCredential.user.uid);
+			
+			if (!isVerified) {
+				setError('Please verify your email before logging in.');
+				setIsSubmitting(false);
+				return;
+			}
 	
-			// Save to store
 			await fetchInitialUserData(userCredential.user.uid);
-
 			setSuccess(true);
 			setTimeout(() => {
 				window.location.replace('/');
